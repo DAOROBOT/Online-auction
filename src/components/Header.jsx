@@ -79,9 +79,12 @@ export default function Header({ darkMode, toggleTheme }) {
                   <div className="flex flex-col gap-6 p-6">
                     {categories.map((cat) => (
                       <div className="group/item relative" key={cat.id}>
-                        <Link to={`/search?category=${cat.name}`} className="px-4 py-2 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 flex justify-between items-center transition-colors">
-                          {cat.name}
-                          {cat.subcategories.length > 0 && <ArrowRight className="w-3 h-3 text-gray-400" />}
+                        <Link 
+                          // to={`/search?category=${cat.name}`}
+                          to="/search"
+                          className="px-4 py-2 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 flex justify-between items-center transition-colors">
+                            {cat.name}
+                            {cat.subcategories.length > 0 && <ArrowRight className="w-3 h-3 text-gray-400" />}
                         </Link>
                         {cat.subcategories.length > 0 && (
                           <div className="hidden group-hover/item:block absolute left-full top-0 w-48 pl-1">
@@ -89,7 +92,8 @@ export default function Header({ darkMode, toggleTheme }) {
                               {cat.subcategories.map((sub, sIdx) => (
                                 <Link 
                                   key={sIdx} 
-                                  to={`/search?category=${cat.name}&subcategory=${sub}`}
+                                  // to={`/search?category=${cat.name}&subcategory=${sub}`}
+                                  to="/search"
                                   className="block px-4 py-2 hover:bg-blue-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 text-sm transition-colors">
                                   {sub.name}
                                 </Link>
@@ -185,7 +189,7 @@ export default function Header({ darkMode, toggleTheme }) {
                         </Link>
                         <div className="border-t border-white/5 mt-1 pt-1">
                           <button 
-                            onClick={() => {setIsLoggedIn(false); setIsUserDropdownOpen(false);}}
+                            onClick={() => {setIsLoggedIn(false); setIsUserDropdownOpen(false); navigate('/');}}
                             className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[#C0341D] hover:bg-white/5 transition-colors text-left"
                           >
                             <LogOut size={16} /> Logout
