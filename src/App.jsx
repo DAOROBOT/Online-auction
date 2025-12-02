@@ -1,9 +1,12 @@
 import { useState } from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { products as initialProducts, bids as initialBids, questions as initialQuestions } from './data/mockData.js';
 import Header from './components/Header.jsx';
 import Footer from './components/Footer.jsx';
 import HomePage from './components/HomePage.jsx';
-import ListProduct from './components/ListProduct.jsx';
+import ProductDetail from './components/ProductDetail.jsx';
+import ListProducts from './components/ListProducts.jsx';
+import Login from './components/AuthPage.jsx';
 
 function App() {
   const initialUser = {
