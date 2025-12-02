@@ -1,11 +1,19 @@
 import { useState } from 'react'
-import { products as initialProducts, currentUser as initialUser, bids as initialBids, questions as initialQuestions } from './data/mockData.js';
+import { products as initialProducts, bids as initialBids, questions as initialQuestions } from './data/mockData.js';
 import Header from './components/Header.jsx';
 import Footer from './components/Footer.jsx';
 import HomePage from './components/HomePage.jsx';
+import ListProduct from './components/ListProduct.jsx';
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('home');
+  const initialUser = {
+    id: 1,
+    name: 'John Doe',
+    avatar: 'https://i.pravatar.cc/150?u=1',
+    rating: 95,
+    isSeller: true,
+  };
+  const [currentPage, setCurrentPage] = useState('listproduct'); // 'home', 'listproduct', 'productdetail', etc.
   const [selectedProductId, setSelectedProductId] = useState(null);
   const [currentUser, setCurrentUser] = useState(initialUser);
   const [products, setProducts] = useState(initialProducts);
@@ -38,7 +46,10 @@ function App() {
       {/* Main Content based on currentPage */}
       <main>
         {currentPage === 'home' && (
-          <HomePage />
+          <HomePage  />
+        )}
+        {currentPage === 'listproduct' && (
+          <ListProduct />
         )}
       </main>
       <Footer />
