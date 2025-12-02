@@ -1,1 +1,23 @@
 @import 'tailwindcss';
+
+.custom-scrollbar{
+    scrollbar-width: thin;
+    scrollbar-color: rgba(156, 163, 175, 1) transparent; /* thumb color and track color */
+}
+
+.custom-allscrollbar {
+    scrollbar-width: none; /* Firefox */
+}
+
+.custom-allscrollbar::-webkit-scrollbar {
+    width: 0px; /* Chrome, Safari, Edge */
+    height: 0px;
+}
+
+.custom-allscrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-allscrollbar::-webkit-scrollbar-thumb {
+    background: transparent;
+}

@@ -1,14 +1,19 @@
 import { useState } from 'react'
-import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { products as initialProducts, currentUser as initialUser, bids as initialBids, questions as initialQuestions } from './data/mockData.js';
+import { products as initialProducts, bids as initialBids, questions as initialQuestions } from './data/mockData.js';
 import Header from './components/Header.jsx';
 import Footer from './components/Footer.jsx';
 import HomePage from './components/HomePage.jsx';
-import ListProducts from './components/ListProducts.jsx';
-import ProductDetail from './components/ProductDetail.jsx';
-import Login from './components/AuthPage.jsx';
+import ListProduct from './components/ListProduct.jsx';
 
 function App() {
+  const initialUser = {
+    id: 1,
+    name: 'John Doe',
+    avatar: 'https://i.pravatar.cc/150?u=1',
+    rating: 95,
+    isSeller: true,
+  };
+  const [currentPage, setCurrentPage] = useState('listproduct'); // 'home', 'listproduct', 'productdetail', etc.
   const [selectedProductId, setSelectedProductId] = useState(null);
   const [currentUser, setCurrentUser] = useState(initialUser);
   const [products, setProducts] = useState(initialProducts);
