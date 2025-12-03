@@ -6,8 +6,7 @@ import Footer from './components/Footer.jsx';
 import HomePage from './components/HomePage.jsx';
 import ProductDetail from './components/ProductDetail.jsx';
 import ListProducts from './components/ListProducts.jsx';
-import Login from './components/AuthPage.jsx';
-
+import Login, { Register } from './components/AuthPage.jsx';
 function App() {
   const initialUser = {
     id: 1,
@@ -41,6 +40,7 @@ function App() {
               <Route path="/search" element={<ListProducts />} />
               <Route path="/product/:id" element={<ProductDetail />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
             </Routes>
           </main>
 

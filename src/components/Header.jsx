@@ -203,12 +203,12 @@ export default function Header({ darkMode, toggleTheme }) {
                 /* GUEST STATE */
                 <div className="hidden sm:flex items-center gap-3">
                   <button
-                    onClick={() => navigate("\login")}
+                    onClick={() => navigate("/login")}
                     className="text-white hover:text-[#E0B84C] font-medium text-sm transition-colors px-3 py-2">
                     Log In
                   </button>
                   <button
-                    onClick={() => navigate("\login")}
+                    onClick={() => navigate("/register")}
                     className="bg-gradient-to-r from-[#E0B84C] to-[#B88A20] hover:brightness-110 text-[#1A1225] font-bold text-sm px-5 py-2.5 rounded-full shadow-lg transition-all transform hover:-translate-y-0.5">
                     Register
                   </button>
@@ -317,10 +317,10 @@ export default function Header({ darkMode, toggleTheme }) {
                  </button>
               ) : (
                 <div className="grid grid-cols-2 gap-4">
-                  <button className="text-white border border-white/20 py-3 rounded-lg font-medium hover:bg-white/5 hover:border-white/40 transition-all">
+                  <button onClick={() => navigate("/login")} className="text-white border border-white/20 py-3 rounded-lg font-medium hover:bg-white/5 hover:border-white/40 transition-all">
                     Log In
                   </button>
-                  <button className="bg-[#E0B84C] text-[#1A1225] py-3 rounded-lg font-bold hover:brightness-110 shadow-lg transition-all">
+                  <button onClick={() => navigate("/register")} className="bg-[#E0B84C] text-[#1A1225] py-3 rounded-lg font-bold hover:brightness-110 shadow-lg transition-all">
                     Register
                   </button>
                 </div>
