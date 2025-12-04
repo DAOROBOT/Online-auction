@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Bookmark, Heart, Flame, Clock, Gavel, Star, User } from 'lucide-react';
+import { Bookmark, Heart, Flame, Clock, Gavel, Star, User, Zap, ArrowRight } from 'lucide-react';
 
 // --- Helpers ---
 
@@ -20,134 +20,139 @@ const formatTimeLeft = (seconds) => {
 };
 
 export default function AuctionCard({ item }) {
-  // Use a state to handle the live countdown locally
-  const calculateTimeLeftInSeconds = () => {
-    const now = new Date();
-    const end = new Date(item.endDate);
-    const diff = Math.floor((end - now) / 1000);
-    return diff > 0 ? diff : 0;
-  };
-
-  const [timeLeft, setTimeLeft] = useState(calculateTimeLeftInSeconds());
+  const [isLiked, setIsLiked] = useState(false);
+  const [timeLeft, setTimeLeft] = useState('');
+  const [urgencyLevel, setUrgencyLevel] = useState('normal');
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft(calculateTimeLeftInSeconds());
-    }, 1000);
+    const calculateTimeLeft = () => {
+      const difference = new Date(item.endTime) - new Date();
+      if (difference > 0) {
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((difference / 1000 / 60) % 60);
+        
+        if (days === 0 && hours < 1) setUrgencyLevel('critical');
+        else if (days === 0) setUrgencyLevel('warning');
+        else setUrgencyLevel('normal');
+
+        if (days > 0) return `${days}d ${hours}h left`;
+        return `${hours}h ${minutes}m left`;
+      }
+      return 'Ended';
+    };
+
+    setTimeLeft(calculateTimeLeft());
+    const timer = setInterval(() => { setTimeLeft(calculateTimeLeft()); }, 60000);
     return () => clearInterval(timer);
-  }, [item.endDate]);
+  }, [item.endTime]);
 
-  const isUrgent = timeLeft < 3600 && timeLeft > 0;
-  const isEnded = timeLeft <= 0;
-
-  // Badge mapping
-  const renderBadge = (badge) => {
-    switch (badge) {
-      case 'hot':
-        return (
-          <div key={badge} className="bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded shadow-sm flex items-center gap-1">
-            <Flame className="w-3 h-3 fill-current" />
-            HOT
-          </div>
-        );
-      case 'ending-soon':
-        return (
-          <div key={badge} className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded shadow-sm flex items-center gap-1">
-            <Clock className="w-3 h-3" /> ENDING
-          </div>
-        );
-      case 'high-bids':
-        return (
-          <div key={badge} className="bg-purple-500 text-white text-xs font-bold px-2 py-1 rounded shadow-sm flex items-center gap-1">
-            <Gavel className="w-3 h-3" /> POPULAR
-          </div>
-        );
-      case 'premium':
-        return (
-          <div key={badge} className="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded shadow-sm flex items-center gap-1">
-            <Star className="w-3 h-3 fill-current" /> RARE
-          </div>
-        );
-      default:
-        return null;
-    }
+  const timerStyles = {
+    normal: 'bg-black/50 text-white',
+    warning: 'bg-orange-500/90 text-white',
+    critical: 'bg-red-600/90 text-white animate-pulse'
   };
 
   return (
-    <div key={item.id} 
-      className="bg-[#2A2038] rounded-xl overflow-hidden border border-white/5 hover:border-[#E0B84C]/50 transition-all group hover:-translate-y-1 shadow-lg"
-      style={{ backgroundColor: "var(--bg-soft)", color: "var(--text)" }}
-    >
-      {/* Image Area */}
-      <div className="relative aspect-4/3 overflow-hidden bg-gray-100 dark:bg-gray-700">
+    <div className="group relative w-full max-w-sm bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col">
+      
+      {/* --- Image Section --- */}
+      <div className="relative aspect-4/3 overflow-hidden bg-slate-100">
         <img 
-          src={item.images?.[0]} 
-          alt={item.name} 
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          src={item.image} 
+          alt={item.title} 
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
         />
         
-        {/* Watch Button */}
-        <div className="flex flex-row gap-2 absolute top-3 right-3">
-          <button className="p-2 bg-white/90 dark:bg-gray-900/80 backdrop-blur-sm rounded-full text-gray-400 hover:text-red-500 hover:bg-white dark:hover:bg-gray-900 transition-colors z-10 shadow-sm">
-            <Heart className="w-4 h-4" />
-          </button>
-          <button className="p-2 bg-white/90 dark:bg-gray-900/80 backdrop-blur-sm rounded-full text-gray-400 hover:text-yellow-500 hover:bg-white dark:hover:bg-gray-900 transition-colors z-10 shadow-sm">
-            <Bookmark className="w-4 h-4" />
-          </button>
+        <div className="absolute top-3 left-3 flex gap-2">
+          <span className="px-2.5 py-1 bg-white/95 backdrop-blur-sm text-slate-700 text-xs font-bold rounded-full shadow-sm">
+            {item.category}
+          </span>
         </div>
 
-        {/* Badges Container */}
-        <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
-          {item.badges?.map(badge => renderBadge(badge))}
-        </div>
+        <button 
+          onClick={() => setIsLiked(!isLiked)}
+          className="absolute top-3 right-3 p-2 rounded-full bg-white/80 hover:bg-white text-slate-400 hover:text-rose-500 transition-colors shadow-sm z-10"
+        >
+          <Heart size={18} className={isLiked ? 'fill-rose-500 text-rose-500' : ''} />
+        </button>
 
-        {/* Masked Bidder Overlay (Shows on Hover) */}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-          <p className="text-white text-xs font-medium">Highest Bidder:</p>
-          <div className="flex items-center gap-2">
-            <User className="w-3 h-3 text-blue-400" />
-            <span className="text-white font-bold text-sm tracking-wide">{item.highestBidderName || 'No bids'}</span>
-          </div>
+        {/* Timer Badge */}
+        <div className={`absolute bottom-3 left-3 px-3 py-1.5 rounded-lg backdrop-blur-md text-xs font-bold flex items-center gap-1.5 shadow-sm ${timerStyles[urgencyLevel]}`}>
+          <Clock size={14} />
+          <span>{timeLeft}</span>
         </div>
       </div>
-      <div className="p-4">
-        <div className="flex justify-between items-start mb-2">
-            <h4 className="font-semibold text-white group-hover:text-[#E0B84C] transition-colors truncate pr-2">{item.title}</h4>
-        </div>
-        <p className="text-gray-400 text-xs mb-4">{item.sellerName}</p>
-        <div className="flex justify-between items-end mb-1">
-            <div>
-              <p className="text-xs text-gray-500 mb-0.5">Current Bid</p>
-              <p className="text-white font-bold text-lg">${formatCurrency(item.currentPrice)}</p>
-            </div>
-            {item.buyNowPrice && (
-              <span className="text-[10px] text-green-600 font-medium bg-green-900/20 px-1.5 py-0.5 rounded">
-                Buy Now: {formatCurrency(item.buyNowPrice)}
-              </span>
-            )}
-        </div>
+
+      {/* --- Content Section --- */}
+      <div className="p-5 flex flex-col flex-grow">
+        <h3 className="text-lg font-bold text-slate-800 line-clamp-1 mb-4 group-hover:text-indigo-600 transition-colors">
+          {item.title}
+        </h3>
         
-        {/* Action Button */}
-        <button 
-          disabled={isEnded}
-          className={`w-full px-3 py-2.5 rounded-lg font-bold transition-all duration-200 flex items-center justify-center gap-2 ${
-            isEnded 
-              ? 'bg-gray-200 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400'
-              : 'text-[#E0B84C] hover:text-white border border-[#E0B84C] hover:bg-[#E0B84C] shadow-md hover:shadow-lg'
-          }`}
-        >
-          {isEnded ? 'Auction Ended' : 'Place Bid'}
-        </button>
-        {/* Timer */}
-        <div className={`flex items-center gap-2 text-sm font-medium rounded-lg p-2 ${
-          isEnded 
-            ? 'bg-gray-100 text-gray-500' 
-            : isUrgent 
-              ? 'bg-red-50 text-red-600' 
-              : 'bg-green-900/20 text-green-600'
-        }`}>
-          <Clock className={`w-4 h-4 ${isUrgent && !isEnded ? 'animate-pulse' : ''}`} />
-          <span>{formatTimeLeft(timeLeft)} {isEnded ? '' : 'left'}</span>
+        {/* --- DUAL PRICE BOX --- */}
+        <div className="grid grid-cols-2 gap-px bg-slate-200 rounded-xl overflow-hidden border border-slate-200 mb-5">
+          
+          {/* === LEFT: Hover Reveal Logic === */}
+          <div className="bg-slate-50 relative group/bid cursor-help overflow-hidden">
+            
+            {/* 1. Default View: The Price */}
+            <div className="absolute inset-0 flex flex-col justify-center px-3 transition-all duration-300 transform group-hover/bid:-translate-y-full group-hover/bid:opacity-0">
+                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1 flex items-center gap-1">
+                    <Gavel size={12} /> Highest Bid
+                </span>
+                <span className="text-xl font-black text-slate-900">
+                    {formatCurrency(item.currentBid)}
+                </span>
+            </div>
+
+            {/* 2. Hover View: The Person */}
+            <div className="absolute inset-0 flex flex-col justify-center items-center bg-indigo-50 transition-all duration-300 transform translate-y-full opacity-0 group-hover/bid:translate-y-0 group-hover/bid:opacity-100">
+                 {item.highestBidder ? (
+                    <div className="flex flex-col items-center gap-1">
+                        <div className="relative">
+                            <img 
+                                src={item.highestBidder.avatar} 
+                                alt={item.highestBidder.name} 
+                                className="w-8 h-8 rounded-full border-2 border-white shadow-sm"
+                            />
+                            <div className="absolute -top-2 -right-2 bg-yellow-400 text-white p-0.5 rounded-full ring-2 ring-white">
+                                <Crown size={8} fill="currentColor" />
+                            </div>
+                        </div>
+                        <span className="text-xs font-bold text-indigo-900">
+                            {item.highestBidder.name}
+                        </span>
+                    </div>
+                 ) : (
+                    <span className="text-xs text-slate-400 font-medium">No Bids Yet</span>
+                 )}
+            </div>
+          </div>
+
+          {/* === RIGHT: Buy Now === */}
+          <div className="bg-white p-3 flex flex-col justify-center border-l border-slate-100 relative group/buy hover:bg-emerald-50 transition-colors cursor-pointer">
+             <div className="h-full flex flex-col justify-center">
+                <span className="text-[10px] uppercase font-bold text-emerald-600 tracking-wider mb-1 flex items-center gap-1">
+                    <Zap size={12} className="fill-emerald-600" /> Buy Now
+                </span>
+                <span className="text-lg font-bold text-emerald-700">
+                    {item.buyNowPrice ? formatCurrency(item.buyNowPrice) : 'N/A'}
+                </span>
+             </div>
+          </div>
+        </div>
+
+        {/* --- Footer --- */}
+        <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-3">
+          <div className="text-xs font-medium text-slate-500">
+             Total <span className="text-slate-900 font-bold">{item.bidCount}</span> bids placed
+          </div>
+
+          <button className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-indigo-600 text-white text-sm font-bold rounded-full transition-all duration-300 shadow-md hover:shadow-lg group/btn">
+            Place Bid
+            <ArrowRight size={16} className="transition-transform group-hover/btn:translate-x-1" />
+          </button>
         </div>
       </div>
     </div>
