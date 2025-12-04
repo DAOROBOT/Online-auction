@@ -2,16 +2,25 @@
 import React, {useState} from "react";
 import { products } from "../data/mockData";
 import AuctionCard from "./ui/AuctionCard";
-import { House } from "lucide-react";
+import { House, ChevronLeft, ChevronRight } from "lucide-react";
 import FilterSidebar from "./ui/FilterSidebar";
 export default function ListProduct() {
     const category = "electronics";
     const subcategory = "smartphones";
 
-
     // Filter products based on category and subcategory if provided
     // For simplicity, using all products here
-    const [items, setItems] = useState(products);
+    const [filteredProducts, setItems] = useState(products);
+    const [currentPage, setCurrentPage] = useState(1);
+
+    // Pagination Logic
+    const itemsPerPage = 9;
+    const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+    const items = filteredProducts.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage
+    );
+
     return (
         <div className="flex gap-6 px-4 sm:px-6 lg:px-8 py-8 max-w-7xl mx-auto w-full">
             <FilterSidebar isOpen={true} onClose={() => {}} />
@@ -53,6 +62,40 @@ export default function ListProduct() {
                     <AuctionCard key={item.id} item={item} />
                   ))}
                 </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex justify-center mt-12 gap-2">
+                    <button 
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="p-2.5 rounded-lg border border-stone-200 dark:border-stone-700 disabled:invisible hover:bg-stone-100 dark:hover:bg-stone-700 dark:text-white transition-colors"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    
+                    {Array.from({ length: totalPages }).map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setCurrentPage(i + 1)}
+                        className={`w-10 h-10 rounded-lg font-bold text-sm transition-all shadow-sm ${
+                          currentPage === i + 1
+                            ? 'bg-[var(--theme-primary)] text-white shadow-[var(--theme-primary)]/30'
+                            : 'text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700 border border-stone-200 dark:border-stone-700'
+                        }`}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
+                    <button 
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="p-2.5 rounded-lg border border-stone-200 dark:border-stone-700 disabled:invisible hover:bg-stone-100 dark:hover:bg-stone-700 dark:text-white transition-colors"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </div>
+                )}
               
                 {/* Nút xem thêm ở mobile */}
                 <div className="mt-6 flex md:hidden justify-center">
