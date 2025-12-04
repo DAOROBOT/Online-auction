@@ -47,13 +47,13 @@ function App() {
 
   return (
     <Router>
-      <div className='min-h-screen transition-colors duration-1000' style={{backgroundColor: "var(--bg)", color: "var(--text)"}}>
+      <div className='min-h-screen transition-colors duration-300' style={{backgroundColor: "var(--bg)", color: "var(--text)"}}>
       {/* <div className={darkMode ? "dark" : ""} style={{ '--theme-primary': THEME.primary, '--theme-secondary': THEME.secondary, '--theme-highlight': THEME.highlight, '--theme-urgent': THEME.urgent }}>   */}
         {/* <div className="min-h-screen bg-gray-50 dark:bg-gray-900 font-sans text-gray-900 dark:text-gray-100 transition-colors duration-300 flex flex-col grow"> */}
           <Routes>
             <Route path="/" element={<HomePage darkMode={darkMode} toggleDarkMode={toggleTheme} />} />
-            <Route path="/search" element={<ListProducts />} />
-            <Route path="/product/:id" element={<ProductDetail />} />
+            <Route path="/search" element={<ListProducts darkMode={darkMode} toggleDarkMode={toggleTheme} />} />
+            <Route path="/product/:id" element={<ProductDetail darkMode={darkMode} toggleDarkMode={toggleTheme} />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
           </Routes>

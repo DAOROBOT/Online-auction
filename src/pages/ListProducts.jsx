@@ -7,7 +7,7 @@ import FilterSidebar from "../components/FilterSidebar";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 
-export default function ListProduct() {
+export default function ListProduct({ darkMode, toggleDarkMode }) {
     const category = "electronics";
     const subcategory = "smartphones";
 
@@ -26,10 +26,10 @@ export default function ListProduct() {
 
     return (
       <>
-      <Header />
+      <Header darkMode={darkMode} toggleTheme={toggleDarkMode} />
       <div className="flex gap-6 px-4 sm:px-6 lg:px-8 py-8 max-w-7xl mx-auto w-full">
           <FilterSidebar isOpen={true} onClose={() => {}} />
-          <section className="bg-[#120A1F] py-10 w-[75%]">
+          <section className="py-10 w-[75%] rounded-2xl shadow-lg transition-colors duration-300" style={{ backgroundColor: "var(--bg-soft)", color: "var(--text)" }}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex items-center justify-between mb-6">
                 <div>
@@ -56,9 +56,9 @@ export default function ListProduct() {
                   </h1>
                 </div>
 
-                <button className="hidden md:inline-flex items-center gap-2 text-xs md:text-sm font-medium text-[#E0B84C] hover:text-white border border-[#E0B84C] px-3 py-1.5 rounded-full transition-colors">
+                {/* <button className="hidden md:inline-flex items-center gap-2 text-xs md:text-sm font-medium text-[#E0B84C] hover:text-white border border-[#E0B84C] px-3 py-1.5 rounded-full transition-colors">
                   Xem tất cả
-                </button>
+                </button> */}
               </div>
 
               {/* Grid sản phẩm */}

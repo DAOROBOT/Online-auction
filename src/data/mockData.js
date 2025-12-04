@@ -132,7 +132,7 @@ export const generateTopBidders = (count = 100) => {
 // --- 4. Execution (Generate the Data) ---
 
 // Generate 100 Products
-export const products = generateProducts(5);
+export const products = generateProducts(50);
 
 // Generate 150 Bids (linked to those products)
 export const bids = generateBids(150, products);
