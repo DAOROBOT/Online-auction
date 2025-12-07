@@ -16,6 +16,8 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { categories } from '../data/mockData.js';
+import { mockNotifications } from '../data/mockData.js';
+import NotificationDropper from './NotificationDropper.jsx';
 
 /**
  * Header Component - Online Auction Platform
@@ -29,6 +31,11 @@ export default function Header({ darkMode, toggleTheme }) {
   // State for Mobile Category Accordion
   const [activeMobileCategory, setActiveMobileCategory] = useState(null);
 
+  // State for Notifications Dropper
+  const [notifications, setNotifications] = useState(mockNotifications);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+
+
   // State for User Dropdown (Desktop)
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
 
@@ -36,6 +43,7 @@ export default function Header({ darkMode, toggleTheme }) {
   const [isLoggedIn, setIsLoggedIn] = useState(true);
 
   const navigate = useNavigate();
+
 
   // Toggle scrolling lock when mobile menu is open
   useEffect(() => {
@@ -183,12 +191,7 @@ export default function Header({ darkMode, toggleTheme }) {
                 /* LOGGED IN STATE */
                 <div className="flex items-center gap-4">
                   {/* Notifications */}
-                  <button className="relative text-gray-300 hover:text-[var(--theme-secondary)] transition-colors duration-300 hidden sm:block">
-                    <Bell size={22} />
-                    <span className="absolute -top-1 -right-1 bg-[#C0341D] text-[10px] font-bold text-white w-4 h-4 rounded-full flex items-center justify-center">
-                      3
-                    </span>
-                  </button>
+                  <NotificationDropper />
 
                   {/* User Avatar Dropdown */}
                   <div className="relative">
