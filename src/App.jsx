@@ -5,9 +5,6 @@ import HomePage from './pages/HomePage.jsx';
 import ProductDetail from './pages/ProductDetail.jsx';
 import ListProducts from './pages/ListProducts.jsx';
 import Login, { Register } from './pages/AuthPage.jsx';
-<<<<<<< HEAD
-import AdminDashboard from './pages/Admin/AdminDashboard.jsx';
-=======
 import Profile from './pages/ViewProfile.jsx';
 
 import ViewAllActiveBid from './pages/ViewAllActiveBid.jsx';
@@ -17,7 +14,8 @@ import ViewAllReviews from './pages/ViewAllReviews.jsx';
 import ViewAllSoldItems from './pages/ViewAllSoldItems.jsx';
 import ViewAllWonAuctions from './pages/ViewAllWonAuctions.jsx';
 
->>>>>>> c8f86ba2f95be5c744670a1f242cd8a7409732b6
+import AdminDashboard from './pages/Admin/AdminDashboard.jsx';
+
 
 function App() {
   const initialUser = {
