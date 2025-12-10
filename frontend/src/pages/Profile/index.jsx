@@ -3,17 +3,18 @@ import { Heart, Gavel, Trophy, Clock, CheckCircle, Plus } from "lucide-react";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 // Profile Components
-import ProfileHeader from "./ProfileHeader";
-import ProfileTabs from "./ProfileTabs";
-import ReviewsSection from "./ReviewsSection";
-import EditProfileModal from "./EditProfileModal";
-import ChangePasswordModal from "./ChangePasswordModal";
-import ReviewModal from "./ReviewModal";
-import ProductCard from "./ProductCard";
-import SellerListingCard from "./SellerListingCard";
-import WonAuctionCard from "../../components/AuctionCard/WonAuctionCard";
-import SoldAuctionCard from "../../components/AuctionCard/SoldAuctionCard";
+import ProfileHeader from "./HeaderProfile/ProfileHeader.jsx";
+import ProfileTabs from "./ProfileTab/ProfileTabs.jsx";
+import ReviewsSection from "./RoleSection/BuyerSections/ReviewSection/ReviewsSection.jsx";
+import EditProfileModal from "./HeaderProfile/Modal/EditProfileModal.jsx";
+import ChangePasswordModal from "./HeaderProfile/Modal/ChangePasswordModal.jsx";
+import ReviewModal from "./RoleSection/BuyerSections/ReviewSection/ReviewModal.jsx";
+import ViewAllButton from "../../components/ViewAllButton.jsx";
 
+import UserSections from "./RoleSection/index.jsx";
+import CardSection from "./CardSection/index.jsx";
+
+import AuctionCard from "../../components/AuctionCard/index.jsx";
 // Mock User Data
 import { mockUserData } from "../../data/users.js";
 
@@ -174,104 +175,24 @@ export default function Profile({darkMode, toggleDarkMode}) {
 
           {/* Buyer Tab Content */}
           {activeTab === 'buyer' && (
-            <div className="space-y-8">
-              <ReviewsSection reviews={userData.reviews} />
-
-              {/* Favorite Products */}
-              <section>
-                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text)' }}>
-                  <Heart size={24} style={{ color: 'var(--danger)' }} />
-                  Favorite Products
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {userData.favoriteProducts.map(product => (
-                    <ProductCard 
-                      key={product.id} 
-                      product={product} 
-                      type="favorite" 
-                      formatTime={formatTime} 
-                    />
-                  ))}
-                </div>
-              </section>
-
-              {/* Active Bids */}
-              <section>
-                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text)' }}>
-                  <Gavel size={24} style={{ color: 'var(--accent)' }} />
-                  Active Bids
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {userData.activeBids.map(product => (
-                    <ProductCard 
-                      key={product.id} 
-                      product={product} 
-                      type="activeBid" 
-                      formatTime={formatTime} 
-                    />
-                  ))}
-                </div>
-              </section>
-
-              {/* Won Auctions */}
-              <section>
-                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text)' }}>
-                  <Trophy size={24} style={{ color: 'var(--accent)' }} />
-                  Won Auctions
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {userData.wonAuctions.map(product => (
-                    <WonAuctionCard 
-                      key={product.id} 
-                      product={product} 
-                      onReview={(item) => setReviewModal({ isOpen: true, item, type: 'buyer' })}
-                    />
-                  ))}
-                </div>
-              </section>
-            </div>
+            <UserSections 
+              userData={userData} 
+              type="buyer" 
+              formatTime={formatTime} 
+              setReviewModal={setReviewModal} 
+            />
           )}
 
           {/* Seller Tab Content */}
           {activeTab === 'seller' && userData.isSeller && (
-            <div className="space-y-8">
-              {/* Active Listings */}
-              <section>
-                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text)' }}>
-                  <Clock size={24} style={{ color: 'var(--accent)' }} />
-                  Active Listings
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {userData.activeListings.map(product => (
-                    <SellerListingCard 
-                      key={product.id} 
-                      product={product} 
-                      formatTime={formatTime} 
-                    />
-                  ))}
-                </div>
-              </section>
-
-              {/* Sold Items */}
-              <section>
-                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text)' }}>
-                  <CheckCircle size={24} style={{ color: 'var(--success)' }} />
-                  Sold Items
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {userData.soldItems.map(product => (
-                    <SoldAuctionCard 
-                      key={product.id} 
-                      product={product}
-                      onReview={(item) => setReviewModal({ isOpen: true, item, type: 'seller' })}
-                      onCancel={handleCancelTransaction}
-                    />
-                  ))}
-                </div>
-              </section>
-            </div>
+            <UserSections 
+              userData={userData} 
+              type="seller" 
+              formatTime={formatTime} 
+              setReviewModal={setReviewModal} 
+              handleCancelTransaction={handleCancelTransaction} 
+            />
           )}
-
         </div>
       </div>
 

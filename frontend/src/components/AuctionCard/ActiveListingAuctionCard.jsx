@@ -1,6 +1,6 @@
-import { Clock } from "lucide-react";
+import { Clock } from 'lucide-react';
 
-export default function SellerListingCard({ product, formatTime }) {
+export default function ActiveListingAuctionCard({product, formatTime}){
   return (
     <div 
       className="rounded-xl overflow-hidden border"
@@ -8,12 +8,6 @@ export default function SellerListingCard({ product, formatTime }) {
     >
       <div className="relative">
         <img src={product.image} alt={product.title} className="w-full h-48 object-cover" />
-        <div 
-          className="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold"
-          style={{ backgroundColor: 'var(--info)', color: 'white' }}
-        >
-          Active
-        </div>
       </div>
       <div className="p-4">
         <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>

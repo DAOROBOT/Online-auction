@@ -4,7 +4,7 @@ import { useNav } from '../../hooks/useNavigate.js';
 import { formatCurrency, calculateTimeLeft } from '../../utils/timeFormat.js';
 import './defaultAuctionCard.css';
 
-export default function AuctionCard({ item }) {
+export default function DefaultAuctionCard({ item }) {
   const nav = useNav();
   const [isLiked, setIsLiked] = useState(false);
   const [timeLeft, setTimeLeft] = useState('');
