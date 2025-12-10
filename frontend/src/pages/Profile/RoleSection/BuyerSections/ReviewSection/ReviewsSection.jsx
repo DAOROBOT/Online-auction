@@ -1,5 +1,5 @@
 import { Star, ThumbsUp, ThumbsDown, ArrowRight } from "lucide-react";
-import ViewAllButton from "./ViewAllButton";
+import ViewAllButton from "../../../../../components/ViewAllButton";
 
 export default function ReviewsSection({ reviews }) {
 

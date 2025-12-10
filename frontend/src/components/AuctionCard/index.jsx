@@ -1,7 +1,9 @@
 import DefaultAuctionCard from './DefaultAuctionCard';
 import WonAuctionCard from './WonAuctionCard';
 import SoldAuctionCard from './SoldAuctionCard';
-
+import ActiveBidsAuctionCard from './ActiveBidsAuctionCard';
+import ActiveListingAuctionCard from './ActiveListingAuctionCard';
+import FavoriteAuctionCard from './FavoriteAuctionCard';
 /**
  * AuctionCard Controller Component
  * Routes to different auction card layouts based on type prop
@@ -16,11 +18,12 @@ import SoldAuctionCard from './SoldAuctionCard';
 export default function AuctionCard({
   product,
   type = 'default',
+  formatTime,
   onReview,
   onCancel,
 }) {
   switch (type) {
-    case 'won':
+    case 'wonItem':
       return (
         <WonAuctionCard
           product={product}
@@ -28,12 +31,33 @@ export default function AuctionCard({
         />
       );
     
-    case 'sold':
+    case 'soldItem':
       return (
         <SoldAuctionCard
           product={product}
           onReview={onReview}
           onCancel={onCancel}
+        />
+      );
+    case 'activeBids':
+      return (
+        <ActiveBidsAuctionCard
+          product={product}
+          formatTime={formatTime}
+        />
+      );
+    case 'activeListings':
+      return (
+        <ActiveListingAuctionCard
+          product={product}
+          formatTime={formatTime}
+        />
+      );
+    case 'favorites':
+      return (
+        <FavoriteAuctionCard
+          product={product}
+          formatTime={formatTime}
         />
       );
     
@@ -48,4 +72,4 @@ export default function AuctionCard({
 }
 
 // Export all variants for direct imports if needed
-export { DefaultAuctionCard, WonAuctionCard, SoldAuctionCard };
+export { DefaultAuctionCard, WonAuctionCard, SoldAuctionCard, ActiveBidsAuctionCard, ActiveListingAuctionCard, FavoriteAuctionCard };
