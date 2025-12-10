@@ -155,153 +155,149 @@ export default function Profile({darkMode, toggleDarkMode}) {
 
   return (
     <>
-      <Header darkMode={darkMode} toggleTheme={toggleDarkMode} />
-      
-      <div className="min-h-screen py-8" style={{ backgroundColor: 'var(--bg)' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <ProfileHeader 
-            userData={userData}
-            onEditProfile={() => setIsEditingProfile(true)}
-            onChangePassword={() => setIsEditingPassword(true)}
-          />
+    <div className="min-h-screen py-8" style={{ backgroundColor: 'var(--bg)' }}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <ProfileHeader 
+          userData={userData}
+          onEditProfile={() => setIsEditingProfile(true)}
+          onChangePassword={() => setIsEditingPassword(true)}
+        />
 
-          <ProfileTabs 
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            isSeller={userData.isSeller}
-          />
+        <ProfileTabs 
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          isSeller={userData.isSeller}
+        />
 
-          {/* Buyer Tab Content */}
-          {activeTab === 'buyer' && (
-            <div className="space-y-8">
-              <ReviewsSection reviews={userData.reviews} />
+        {/* Buyer Tab Content */}
+        {activeTab === 'buyer' && (
+          <div className="space-y-8">
+            <ReviewsSection reviews={userData.reviews} />
 
-              {/* Favorite Products */}
-              <section>
-                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text)' }}>
-                  <Heart size={24} style={{ color: 'var(--danger)' }} />
-                  Favorite Products
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {userData.favoriteProducts.map(product => (
-                    <ProductCard 
-                      key={product.id} 
-                      product={product} 
-                      type="favorite" 
-                      formatTime={formatTime} 
-                    />
-                  ))}
-                </div>
-              </section>
+            {/* Favorite Products */}
+            <section>
+              <h2 className="text-2xl font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text)' }}>
+                <Heart size={24} style={{ color: 'var(--danger)' }} />
+                Favorite Products
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {userData.favoriteProducts.map(product => (
+                  <ProductCard 
+                    key={product.id} 
+                    product={product} 
+                    type="favorite" 
+                    formatTime={formatTime} 
+                  />
+                ))}
+              </div>
+            </section>
 
-              {/* Active Bids */}
-              <section>
-                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text)' }}>
-                  <Gavel size={24} style={{ color: 'var(--accent)' }} />
-                  Active Bids
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {userData.activeBids.map(product => (
-                    <ProductCard 
-                      key={product.id} 
-                      product={product} 
-                      type="activeBid" 
-                      formatTime={formatTime} 
-                    />
-                  ))}
-                </div>
-              </section>
+            {/* Active Bids */}
+            <section>
+              <h2 className="text-2xl font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text)' }}>
+                <Gavel size={24} style={{ color: 'var(--accent)' }} />
+                Active Bids
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {userData.activeBids.map(product => (
+                  <ProductCard 
+                    key={product.id} 
+                    product={product} 
+                    type="activeBid" 
+                    formatTime={formatTime} 
+                  />
+                ))}
+              </div>
+            </section>
 
-              {/* Won Auctions */}
-              <section>
-                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text)' }}>
-                  <Trophy size={24} style={{ color: 'var(--accent)' }} />
-                  Won Auctions
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {userData.wonAuctions.map(product => (
-                    <WonAuctionCard 
-                      key={product.id} 
-                      product={product} 
-                      onReview={(item) => setReviewModal({ isOpen: true, item, type: 'buyer' })}
-                    />
-                  ))}
-                </div>
-              </section>
-            </div>
-          )}
+            {/* Won Auctions */}
+            <section>
+              <h2 className="text-2xl font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text)' }}>
+                <Trophy size={24} style={{ color: 'var(--accent)' }} />
+                Won Auctions
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {userData.wonAuctions.map(product => (
+                  <WonAuctionCard 
+                    key={product.id} 
+                    product={product} 
+                    onReview={(item) => setReviewModal({ isOpen: true, item, type: 'buyer' })}
+                  />
+                ))}
+              </div>
+            </section>
+          </div>
+        )}
 
-          {/* Seller Tab Content */}
-          {activeTab === 'seller' && userData.isSeller && (
-            <div className="space-y-8">
-              {/* Active Listings */}
-              <section>
-                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text)' }}>
-                  <Clock size={24} style={{ color: 'var(--accent)' }} />
-                  Active Listings
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {userData.activeListings.map(product => (
-                    <SellerListingCard 
-                      key={product.id} 
-                      product={product} 
-                      formatTime={formatTime} 
-                    />
-                  ))}
-                </div>
-              </section>
+        {/* Seller Tab Content */}
+        {activeTab === 'seller' && userData.isSeller && (
+          <div className="space-y-8">
+            {/* Active Listings */}
+            <section>
+              <h2 className="text-2xl font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text)' }}>
+                <Clock size={24} style={{ color: 'var(--accent)' }} />
+                Active Listings
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {userData.activeListings.map(product => (
+                  <SellerListingCard 
+                    key={product.id} 
+                    product={product} 
+                    formatTime={formatTime} 
+                  />
+                ))}
+              </div>
+            </section>
 
-              {/* Sold Items */}
-              <section>
-                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text)' }}>
-                  <CheckCircle size={24} style={{ color: 'var(--success)' }} />
-                  Sold Items
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {userData.soldItems.map(product => (
-                    <SoldAuctionCard 
-                      key={product.id} 
-                      product={product}
-                      onReview={(item) => setReviewModal({ isOpen: true, item, type: 'seller' })}
-                      onCancel={handleCancelTransaction}
-                    />
-                  ))}
-                </div>
-              </section>
-            </div>
-          )}
+            {/* Sold Items */}
+            <section>
+              <h2 className="text-2xl font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text)' }}>
+                <CheckCircle size={24} style={{ color: 'var(--success)' }} />
+                Sold Items
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {userData.soldItems.map(product => (
+                  <SoldAuctionCard 
+                    key={product.id} 
+                    product={product}
+                    onReview={(item) => setReviewModal({ isOpen: true, item, type: 'seller' })}
+                    onCancel={handleCancelTransaction}
+                  />
+                ))}
+              </div>
+            </section>
+          </div>
+        )}
 
-        </div>
       </div>
+    </div>
 
-      {/* Modals */}
-      <EditProfileModal
-        isOpen={isEditingProfile}
-        profileForm={profileForm}
-        setProfileForm={setProfileForm}
-        onSave={handleProfileUpdate}
-        onCancel={handleCancelProfileEdit}
-      />
+    {/* Modals */}
+    <EditProfileModal
+      isOpen={isEditingProfile}
+      profileForm={profileForm}
+      setProfileForm={setProfileForm}
+      onSave={handleProfileUpdate}
+      onCancel={handleCancelProfileEdit}
+    />
 
-      <ChangePasswordModal
-        isOpen={isEditingPassword}
-        passwordForm={passwordForm}
-        setPasswordForm={setPasswordForm}
-        onSave={handlePasswordUpdate}
-        onCancel={handleCancelPasswordEdit}
-      />
+    <ChangePasswordModal
+      isOpen={isEditingPassword}
+      passwordForm={passwordForm}
+      setPasswordForm={setPasswordForm}
+      onSave={handlePasswordUpdate}
+      onCancel={handleCancelPasswordEdit}
+    />
 
-      <ReviewModal
-        isOpen={reviewModal.isOpen}
-        reviewModal={reviewModal}
-        reviewForm={reviewForm}
-        setReviewForm={setReviewForm}
-        onSubmit={handleSubmitReview}
-        onClose={() => setReviewModal({ isOpen: false, item: null, type: 'buyer' })}
-      />
-
-      <Footer />
+    <ReviewModal
+      isOpen={reviewModal.isOpen}
+      reviewModal={reviewModal}
+      reviewForm={reviewForm}
+      setReviewForm={setReviewForm}
+      onSubmit={handleSubmitReview}
+      onClose={() => setReviewModal({ isOpen: false, item: null, type: 'buyer' })}
+    />
     </>
   );
 }
