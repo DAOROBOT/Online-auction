@@ -1,12 +1,10 @@
 import { useState } from "react";
 import { Clock, Eye, Users, TrendingUp, Edit, Trash2, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import Header from "../../components/Header";
-import Footer from "../../components/Footer";
 import FilterSection from "../../components/FilterSection";
 import { mockUserData } from "../../data/users";
 
-export default function ViewAllActiveListings({ darkMode, toggleDarkMode }) {
+export default function ViewAllActiveListings() {
     const navigate = useNavigate();
     const [filters, setFilters] = useState({});
     const activeListings = mockUserData.activeListings || [];
@@ -25,11 +23,66 @@ export default function ViewAllActiveListings({ darkMode, toggleDarkMode }) {
         return 'Ending soon';
     };
     
-    const filteredListings = activeListings.filter(item => true);
+    // Apply filters
+    const filteredListings = activeListings.filter(item => {
+        // Category filter
+        if (filters.category && filters.category.length > 0) {
+            if (!filters.category.includes(item.category)) return false;
+        }
+
+        // Price range filter
+        if (filters.minPrice !== undefined && item.currentBid < filters.minPrice) return false;
+        if (filters.maxPrice !== undefined && item.currentBid > filters.maxPrice) return false;
+
+        // Time remaining filter
+        if (filters.timeRemaining && filters.timeRemaining !== 'any') {
+            const now = new Date();
+            const endTime = new Date(item.auctionEndTime);
+            const hoursRemaining = (endTime - now) / (1000 * 60 * 60);
+
+            switch (filters.timeRemaining) {
+                case '1h':
+                    if (hoursRemaining > 1 || hoursRemaining <= 0) return false;
+                    break;
+                case '24h':
+                    if (hoursRemaining > 24 || hoursRemaining <= 0) return false;
+                    break;
+                case '3d':
+                    if (hoursRemaining > 72 || hoursRemaining <= 0) return false;
+                    break;
+                case '7d':
+                    if (hoursRemaining > 168 || hoursRemaining <= 0) return false;
+                    break;
+            }
+        }
+
+        return true;
+    });
+
+    // Apply sorting
+    const sortedListings = [...filteredListings].sort((a, b) => {
+        switch (filters.sortBy) {
+            case 'bids-high':
+                return (b.totalBids || 0) - (a.totalBids || 0);
+            case 'bids-low':
+                return (a.totalBids || 0) - (b.totalBids || 0);
+            case 'price-low':
+                return a.currentBid - b.currentBid;
+            case 'price-high':
+                return b.currentBid - a.currentBid;
+            case 'ending-soon':
+                return new Date(a.auctionEndTime) - new Date(b.auctionEndTime);
+            case 'newly-listed':
+                return new Date(b.createdAt) - new Date(a.createdAt);
+            case 'views-high':
+                return (b.views || 0) - (a.views || 0);
+            default:
+                return 0;
+        }
+    });
 
     return (
-        <>
-            <div className="min-h-screen py-8" style={{ backgroundColor: 'var(--bg)' }}>
+        <div className="min-h-screen py-8" style={{ backgroundColor: 'var(--bg)' }}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     
                     <button onClick={() => navigate(-1)} className="flex items-center gap-2 mb-6 transition-colors" style={{ color: 'var(--text-muted)' }}>
@@ -102,7 +155,7 @@ export default function ViewAllActiveListings({ darkMode, toggleDarkMode }) {
                         </div>
 
                         <div className="lg:col-span-3">
-                            {filteredListings.length === 0 ? (
+                            {sortedListings.length === 0 ? (
                                 <div className="text-center py-16 rounded-xl" style={{ backgroundColor: 'var(--bg-soft)' }}>
                                     <Clock size={64} style={{ color: 'var(--text-muted)', margin: '0 auto 1rem' }} />
                                     <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--text)' }}>No Active Listings</h3>
@@ -110,7 +163,7 @@ export default function ViewAllActiveListings({ darkMode, toggleDarkMode }) {
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {filteredListings.map(item => (
+                                    {sortedListings.map(item => (
                                         <div key={item.id} className="rounded-xl overflow-hidden border hover:shadow-xl transition-all" style={{ backgroundColor: 'var(--bg-soft)', borderColor: 'var(--border)' }}>
                                             <div className="relative">
                                                 <img src={item.image} alt={item.title} className="w-full h-48 object-cover" />
@@ -128,7 +181,7 @@ export default function ViewAllActiveListings({ darkMode, toggleDarkMode }) {
                                                 <div className="flex items-center justify-between mb-4">
                                                     <div>
                                                         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Current Bid</p>
-                                                        <p className="text-xl font-bold" style={{ color: 'var(--accent)' }}>${item.currentPrice}</p>
+                                                        <p className="text-xl font-bold" style={{ color: 'var(--accent)' }}>${item.currentBid}</p>
                                                     </div>
                                                     <div className="text-right">
                                                         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Bids</p>
@@ -151,7 +204,5 @@ export default function ViewAllActiveListings({ darkMode, toggleDarkMode }) {
                     </div>
                 </div>
             </div>
-            <Footer />
-        </>
     );
 }

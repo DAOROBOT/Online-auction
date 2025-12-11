@@ -1,11 +1,9 @@
 import { useState } from "react";
 import { Star, ArrowLeft, ThumbsUp, ThumbsDown, MessageSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import Header from "../../components/Header";
-import Footer from "../../components/Footer";
 import { mockUserData } from "../../data/users";
 
-export default function ViewAllReviews({ darkMode, toggleDarkMode }) {
+export default function ViewAllReviews() {
     const navigate = useNavigate();
     const [activeFilter, setActiveFilter] = useState('all');
     const [ratingFilter, setRatingFilter] = useState('all');
@@ -32,8 +30,7 @@ export default function ViewAllReviews({ darkMode, toggleDarkMode }) {
     });
 
     return (
-        <>
-            <div className="min-h-screen py-8" style={{ backgroundColor: 'var(--bg)' }}>
+        <div className="min-h-screen py-8" style={{ backgroundColor: 'var(--bg)' }}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     
                     <button onClick={() => navigate(-1)} className="flex items-center gap-2 mb-6 transition-colors" style={{ color: 'var(--text-muted)' }}>
@@ -167,7 +164,5 @@ export default function ViewAllReviews({ darkMode, toggleDarkMode }) {
                     </div>
                 </div>
             </div>
-            <Footer />
-        </>
     );
 }

@@ -36,8 +36,63 @@ export default function ViewAllFavoriteProducts() {
 
     // Apply filters
     const filteredFavorites = favorites.filter(item => {
-        // Add filter logic here
+        // Category filter
+        if (filters.category && filters.category.length > 0) {
+            if (!filters.category.includes(item.category)) {
+                return false;
+            }
+        }
+
+        // Price range filter
+        if (filters.minPrice !== undefined && item.currentBid < filters.minPrice) {
+            return false;
+        }
+        if (filters.maxPrice !== undefined && item.currentBid > filters.maxPrice) {
+            return false;
+        }
+
+        // Status filter
+        if (filters.status) {
+            const now = new Date();
+            const endTime = new Date(item.auctionEndTime);
+            const hoursRemaining = (endTime - now) / (1000 * 60 * 60);
+
+            switch (filters.status) {
+                case 'active':
+                    if (endTime <= now) return false;
+                    break;
+                case 'ending-soon':
+                    if (hoursRemaining > 24 || hoursRemaining <= 0) return false;
+                    break;
+                case 'ended':
+                    if (endTime > now) return false;
+                    break;
+                case 'all':
+                default:
+                    break;
+            }
+        }
+
         return true;
+    });
+
+    // Apply sorting
+    const sortedFavorites = [...filteredFavorites].sort((a, b) => {
+        switch (filters.sortBy) {
+            case 'price-low':
+                return a.currentBid - b.currentBid;
+            case 'price-high':
+                return b.currentBid - a.currentBid;
+            case 'ending-soon':
+                return new Date(a.auctionEndTime) - new Date(b.auctionEndTime);
+            case 'newly-listed':
+                return new Date(b.createdAt) - new Date(a.createdAt);
+            case 'most-bids':
+                return (b.totalBids || 0) - (a.totalBids || 0);
+            case 'newest':
+            default:
+                return new Date(b.createdAt) - new Date(a.createdAt);
+        }
     });
 
     return (
@@ -92,7 +147,7 @@ export default function ViewAllFavoriteProducts() {
 
                         {/* Favorites Grid */}
                         <div className="lg:col-span-3">
-                            {filteredFavorites.length === 0 ? (
+                            {sortedFavorites.length === 0 ? (
                                 <div className="text-center py-16 rounded-xl" style={{ backgroundColor: 'var(--bg-soft)' }}>
                                     <Heart size={64} style={{ color: 'var(--text-muted)', margin: '0 auto 1rem' }} />
                                     <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--text)' }}>No Favorites Yet</h3>
@@ -107,7 +162,7 @@ export default function ViewAllFavoriteProducts() {
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {filteredFavorites.map(product => (
+                                    {sortedFavorites.map(product => (
                                         <div key={product.id} className="relative group">
                                             {/* Remove Button */}
                                             <button
@@ -130,7 +185,7 @@ export default function ViewAllFavoriteProducts() {
                                                         <div>
                                                             <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Current Price</p>
                                                             <p className="text-xl font-bold" style={{ color: 'var(--accent)' }}>
-                                                                ${product.currentPrice}
+                                                                ${product.currentBid}
                                                             </p>
                                                         </div>
                                                     </div>

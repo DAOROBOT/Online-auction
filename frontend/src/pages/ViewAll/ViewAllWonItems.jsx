@@ -1,12 +1,10 @@
 import { useState } from "react";
 import { Trophy, DollarSign, Star, ArrowLeft, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import Header from "../../components/Header";
-import Footer from "../../components/Footer";
 import FilterSection from "../../components/FilterSection";
 import { mockUserData } from "../../data/users";
 
-export default function ViewAllWonItems({ darkMode, toggleDarkMode }) {
+export default function ViewAllWonItems() {
     const navigate = useNavigate();
     const [filters, setFilters] = useState({});
     const [reviewModal, setReviewModal] = useState({ isOpen: false, item: null });
@@ -24,11 +22,69 @@ export default function ViewAllWonItems({ darkMode, toggleDarkMode }) {
         });
     };
     
-    const filteredWonItems = wonAuctions.filter(item => true);
+    // Apply filters
+    const filteredWonItems = wonAuctions.filter(item => {
+        // Category filter
+        if (filters.category && filters.category.length > 0) {
+            if (!filters.category.includes(item.category)) return false;
+        }
+
+        // Review filter
+        if (filters.hasReview !== undefined) {
+            if (filters.hasReview && !item.reviewed) return false;
+            if (!filters.hasReview && item.reviewed) return false;
+        }
+
+        // Date range filter
+        if (filters.dateRange && filters.dateRange !== 'all-time') {
+            const wonDate = new Date(item.wonDate);
+            const now = new Date();
+            const daysDiff = (now - wonDate) / (1000 * 60 * 60 * 24);
+
+            switch (filters.dateRange) {
+                case 'today':
+                    if (daysDiff > 1) return false;
+                    break;
+                case '7days':
+                    if (daysDiff > 7) return false;
+                    break;
+                case '30days':
+                    if (daysDiff > 30) return false;
+                    break;
+                case 'custom':
+                    if (filters.startDate) {
+                        const startDate = new Date(filters.startDate);
+                        if (wonDate < startDate) return false;
+                    }
+                    if (filters.endDate) {
+                        const endDate = new Date(filters.endDate);
+                        if (wonDate > endDate) return false;
+                    }
+                    break;
+            }
+        }
+
+        return true;
+    });
+
+    // Apply sorting
+    const sortedWonItems = [...filteredWonItems].sort((a, b) => {
+        switch (filters.sortBy) {
+            case 'time-desc':
+                return new Date(b.wonDate) - new Date(a.wonDate);
+            case 'time-asc':
+                return new Date(a.wonDate) - new Date(b.wonDate);
+            case 'price-high':
+                return b.winningBid - a.winningBid;
+            case 'price-low':
+                return a.winningBid - b.winningBid;
+            default:
+                return 0;
+        }
+    });
 
     return (
-        <>
-            <div className="min-h-screen py-8" style={{ backgroundColor: 'var(--bg)' }}>
+        <div className="min-h-screen py-8" style={{ backgroundColor: 'var(--bg)' }}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     
                     <button onClick={() => navigate(-1)} className="flex items-center gap-2 mb-6 transition-colors" style={{ color: 'var(--text-muted)' }}>
@@ -93,7 +149,7 @@ export default function ViewAllWonItems({ darkMode, toggleDarkMode }) {
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {filteredWonItems.map(item => (
+                                    {sortedWonItems.map(item => (
                                         <div key={item.id} className="rounded-xl overflow-hidden border hover:shadow-xl transition-all" style={{ backgroundColor: 'var(--bg-soft)', borderColor: 'var(--border)' }}>
                                             <img src={item.image} alt={item.title} className="w-full h-48 object-cover" />
                                             <div className="p-4">
@@ -132,7 +188,5 @@ export default function ViewAllWonItems({ darkMode, toggleDarkMode }) {
                     </div>
                 </div>
             </div>
-            <Footer />
-        </>
     );
 }
