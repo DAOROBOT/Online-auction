@@ -1,19 +1,20 @@
 import { useState } from "react";
-import { CheckCircle, DollarSign, Star, Calendar, ArrowLeft, XCircle } from "lucide-react";
+import { Trophy, DollarSign, Star, ArrowLeft, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import FilterSection from "../../components/FilterSection";
 import { mockUserData } from "../../data/users";
 
-export default function ViewAllSoldItems({ darkMode, toggleDarkMode }) {
+export default function ViewAllWonItems({ darkMode, toggleDarkMode }) {
     const navigate = useNavigate();
     const [filters, setFilters] = useState({});
-    const soldItems = mockUserData.soldItems || [];
+    const [reviewModal, setReviewModal] = useState({ isOpen: false, item: null });
+    const wonAuctions = mockUserData.wonAuctions || [];
     
-    const totalSales = soldItems.length;
-    const totalRevenue = soldItems.reduce((sum, item) => sum + item.soldPrice, 0);
-    const pendingReviews = soldItems.filter(item => !item.reviewed).length;
+    const totalWon = wonAuctions.length;
+    const totalSpent = wonAuctions.reduce((sum, item) => sum + item.winningBid, 0);
+    const pendingReviews = wonAuctions.filter(item => !item.reviewed).length;
     
     const formatDate = (date) => {
         return new Date(date).toLocaleDateString('en-US', { 
@@ -23,7 +24,7 @@ export default function ViewAllSoldItems({ darkMode, toggleDarkMode }) {
         });
     };
     
-    const filteredSoldItems = soldItems.filter(item => true);
+    const filteredWonItems = wonAuctions.filter(item => true);
 
     return (
         <>
@@ -37,29 +38,29 @@ export default function ViewAllSoldItems({ darkMode, toggleDarkMode }) {
 
                     <div className="mb-8">
                         <h1 className="text-3xl font-bold mb-2 flex items-center gap-3" style={{ color: 'var(--text)' }}>
-                            <CheckCircle size={32} style={{ color: 'var(--success)' }} />
-                            Sold Items
+                            <Trophy size={32} style={{ color: 'var(--accent)' }} />
+                            Won Auctions
                         </h1>
-                        <p style={{ color: 'var(--text-muted)' }}>Your successful sales history</p>
+                        <p style={{ color: 'var(--text-muted)' }}>Congratulations on your winning bids!</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                        <div className="p-6 rounded-xl" style={{ backgroundColor: 'var(--bg-soft)', borderLeft: '4px solid var(--success)' }}>
+                        <div className="p-6 rounded-xl" style={{ backgroundColor: 'var(--bg-soft)', borderLeft: '4px solid var(--accent)' }}>
                             <div className="flex items-center gap-3">
-                                <CheckCircle size={24} style={{ color: 'var(--success)' }} />
+                                <Trophy size={24} style={{ color: 'var(--accent)' }} />
                                 <div>
-                                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Total Sales</p>
-                                    <p className="text-2xl font-bold" style={{ color: 'var(--text)' }}>{totalSales}</p>
+                                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Total Won</p>
+                                    <p className="text-2xl font-bold" style={{ color: 'var(--text)' }}>{totalWon}</p>
                                 </div>
                             </div>
                         </div>
                         
-                        <div className="p-6 rounded-xl" style={{ backgroundColor: 'var(--bg-soft)', borderLeft: '4px solid var(--accent)' }}>
+                        <div className="p-6 rounded-xl" style={{ backgroundColor: 'var(--bg-soft)', borderLeft: '4px solid var(--success)' }}>
                             <div className="flex items-center gap-3">
-                                <DollarSign size={24} style={{ color: 'var(--accent)' }} />
+                                <DollarSign size={24} style={{ color: 'var(--success)' }} />
                                 <div>
-                                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Total Revenue</p>
-                                    <p className="text-2xl font-bold" style={{ color: 'var(--text)' }}>${totalRevenue.toLocaleString()}</p>
+                                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Total Spent</p>
+                                    <p className="text-2xl font-bold" style={{ color: 'var(--text)' }}>${totalSpent.toLocaleString()}</p>
                                 </div>
                             </div>
                         </div>
@@ -79,20 +80,20 @@ export default function ViewAllSoldItems({ darkMode, toggleDarkMode }) {
                         <div className="lg:col-span-1">
                             <div className="p-6 rounded-xl sticky top-8" style={{ backgroundColor: 'var(--bg-soft)' }}>
                                 <h3 className="text-lg font-bold mb-4" style={{ color: 'var(--text)' }}>Filters</h3>
-                                <FilterSection type="soldItem" onFilterChange={setFilters} />
+                                <FilterSection type="wonItem" onFilterChange={setFilters} />
                             </div>
                         </div>
 
                         <div className="lg:col-span-3">
-                            {filteredSoldItems.length === 0 ? (
+                            {filteredWonItems.length === 0 ? (
                                 <div className="text-center py-16 rounded-xl" style={{ backgroundColor: 'var(--bg-soft)' }}>
-                                    <CheckCircle size={64} style={{ color: 'var(--text-muted)', margin: '0 auto 1rem' }} />
-                                    <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--text)' }}>No Sold Items</h3>
-                                    <p style={{ color: 'var(--text-muted)' }}>Your sold items will appear here</p>
+                                    <Trophy size={64} style={{ color: 'var(--text-muted)', margin: '0 auto 1rem' }} />
+                                    <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--text)' }}>No Won Auctions</h3>
+                                    <p style={{ color: 'var(--text-muted)' }}>Keep bidding to win amazing items!</p>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {filteredSoldItems.map(item => (
+                                    {filteredWonItems.map(item => (
                                         <div key={item.id} className="rounded-xl overflow-hidden border hover:shadow-xl transition-all" style={{ backgroundColor: 'var(--bg-soft)', borderColor: 'var(--border)' }}>
                                             <img src={item.image} alt={item.title} className="w-full h-48 object-cover" />
                                             <div className="p-4">
@@ -100,8 +101,8 @@ export default function ViewAllSoldItems({ darkMode, toggleDarkMode }) {
                                                 
                                                 <div className="flex items-center justify-between mb-4">
                                                     <div>
-                                                        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Final Sale Price</p>
-                                                        <p className="text-xl font-bold" style={{ color: 'var(--success)' }}>${item.soldPrice}</p>
+                                                        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Winning Bid</p>
+                                                        <p className="text-xl font-bold" style={{ color: 'var(--accent)' }}>${item.winningBid}</p>
                                                     </div>
                                                 </div>
                                                 
@@ -110,25 +111,18 @@ export default function ViewAllSoldItems({ darkMode, toggleDarkMode }) {
                                                         <Calendar size={14} />
                                                         {formatDate(item.endTime)}
                                                     </span>
-                                                    <span>Buyer: {item.buyerName}</span>
+                                                    <span>Seller: {item.sellerName}</span>
                                                 </div>
                                                 
-                                                <div className="flex gap-2">
-                                                    {!item.reviewed ? (
-                                                        <button className="flex-1 py-2 rounded-lg font-medium transition-all" style={{ backgroundColor: 'var(--accent)', color: 'var(--bg)' }}>
-                                                            Review Buyer
-                                                        </button>
-                                                    ) : (
-                                                        <div className="flex-1 text-center py-2 rounded-lg" style={{ backgroundColor: 'var(--success-soft)', color: 'var(--success)' }}>
-                                                            ✓ Reviewed
-                                                        </div>
-                                                    )}
-                                                    {item.status === 'completed' && (
-                                                        <button className="px-4 py-2 rounded-lg font-medium border" style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
-                                                            <XCircle size={16} />
-                                                        </button>
-                                                    )}
-                                                </div>
+                                                {!item.reviewed ? (
+                                                    <button className="w-full py-2 rounded-lg font-medium transition-all" style={{ backgroundColor: 'var(--accent)', color: 'var(--bg)' }}>
+                                                        Leave Review
+                                                    </button>
+                                                ) : (
+                                                    <div className="text-center py-2 rounded-lg" style={{ backgroundColor: 'var(--success-soft)', color: 'var(--success)' }}>
+                                                        ✓ Reviewed
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     ))}

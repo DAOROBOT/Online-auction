@@ -1,0 +1,160 @@
+import { useState } from "react";
+import { Heart, X, ArrowLeft, Grid, List } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import FilterSection from "../../components/FilterSection";
+import AuctionCard from "../../components/AuctionCard";
+import { useAuth } from "../../context/AuthContext";
+
+export default function ViewAllFavoriteProducts() { 
+    const { user } = useAuth();
+    const navigate = useNavigate();
+    const [filters, setFilters] = useState({});
+    const [favorites, setFavorites] = useState(user?.favoriteProducts || []);
+    console.log('User:', user);
+    // console.log('Favorites:', favorites);
+    // Format time remaining
+    const formatTime = (endTime) => {
+        const now = new Date();
+        const diff = endTime - now;
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        
+        if (days > 0) return `${days}d ${hours}h`;
+        if (hours > 0) return `${hours}h`;
+        return 'Ending soon';
+    };
+    
+    const handleRemoveFavorite = (productId) => {
+        setFavorites(favorites.filter(item => item.id !== productId));
+    };
+    
+    const handleRemoveAll = () => {
+        if (window.confirm('Are you sure you want to remove all favorites?')) {
+            setFavorites([]);
+        }
+    };
+
+    // Apply filters
+    const filteredFavorites = favorites.filter(item => {
+        // Add filter logic here
+        return true;
+    });
+
+    return (
+        <div className="min-h-screen py-8" style={{ backgroundColor: 'var(--bg)' }}>
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    
+                    {/* Back Button */}
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="flex items-center gap-2 mb-6 transition-colors"
+                        style={{ color: 'var(--text-muted)' }}
+                    >
+                        <ArrowLeft size={20} />
+                        <span>Back to Profile</span>
+                    </button>
+
+                    {/* Page Header */}
+                    <div className="flex items-center justify-between mb-8">
+                        <div>
+                            <h1 className="text-3xl font-bold mb-2 flex items-center gap-3" style={{ color: 'var(--text)' }}>
+                                <Heart size={32} style={{ color: 'var(--danger)' }} />
+                                Favorite Products
+                            </h1>
+                            <p style={{ color: 'var(--text-muted)' }}>
+                                {favorites.length} {favorites.length === 1 ? 'item' : 'items'} saved
+                            </p>
+                        </div>
+                        
+                        {favorites.length > 0 && (
+                            <button
+                                onClick={handleRemoveAll}
+                                className="px-4 py-2 rounded-lg border transition-colors"
+                                style={{ 
+                                    borderColor: 'var(--border)',
+                                    color: 'var(--danger)'
+                                }}
+                            >
+                                Remove All
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Main Content Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                        {/* Filters Sidebar */}
+                        <div className="lg:col-span-1">
+                            <div className="p-6 rounded-xl sticky top-8" style={{ backgroundColor: 'var(--bg-soft)' }}>
+                                <h3 className="text-lg font-bold mb-4" style={{ color: 'var(--text)' }}>Filters</h3>
+                                <FilterSection type="favoriteProduct" onFilterChange={setFilters} />
+                            </div>
+                        </div>
+
+                        {/* Favorites Grid */}
+                        <div className="lg:col-span-3">
+                            {filteredFavorites.length === 0 ? (
+                                <div className="text-center py-16 rounded-xl" style={{ backgroundColor: 'var(--bg-soft)' }}>
+                                    <Heart size={64} style={{ color: 'var(--text-muted)', margin: '0 auto 1rem' }} />
+                                    <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--text)' }}>No Favorites Yet</h3>
+                                    <p style={{ color: 'var(--text-muted)' }}>Start adding items to your favorites</p>
+                                    <button
+                                        onClick={() => navigate('/products')}
+                                        className="mt-4 px-6 py-2 rounded-lg font-medium"
+                                        style={{ backgroundColor: 'var(--accent)', color: 'var(--bg)' }}
+                                    >
+                                        Browse Products
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {filteredFavorites.map(product => (
+                                        <div key={product.id} className="relative group">
+                                            {/* Remove Button */}
+                                            <button
+                                                onClick={() => handleRemoveFavorite(product.id)}
+                                                className="absolute top-4 right-4 z-10 p-2 rounded-full transition-all opacity-0 group-hover:opacity-100"
+                                                style={{ backgroundColor: 'var(--bg)', border: '1px solid var(--border)' }}
+                                            >
+                                                <X size={16} style={{ color: 'var(--danger)' }} />
+                                            </button>
+                                            
+                                            <div className="rounded-xl overflow-hidden border hover:shadow-xl transition-all"
+                                                 style={{ backgroundColor: 'var(--bg-soft)', borderColor: 'var(--border)' }}>
+                                                <img src={product.image} alt={product.title} className="w-full h-48 object-cover" />
+                                                <div className="p-4">
+                                                    <h3 className="font-bold mb-2" style={{ color: 'var(--text)' }}>
+                                                        {product.title}
+                                                    </h3>
+                                                    
+                                                    <div className="flex items-center justify-between mb-4">
+                                                        <div>
+                                                            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Current Price</p>
+                                                            <p className="text-xl font-bold" style={{ color: 'var(--accent)' }}>
+                                                                ${product.currentPrice}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div className="flex items-center justify-between text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
+                                                        <span>{formatTime(product.endTime)}</span>
+                                                        <span>{product.totalBids} bids</span>
+                                                    </div>
+                                                    
+                                                    <button
+                                                        className="w-full py-2 rounded-lg font-medium transition-all"
+                                                        style={{ backgroundColor: 'var(--accent)', color: 'var(--bg)' }}
+                                                    >
+                                                        Bid Now
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+    );
+}
