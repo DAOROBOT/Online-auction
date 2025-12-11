@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
+import AuthLayout from './layouts/AuthLayout';
 import MainLayout from './layouts/MainLayout';
 import HomePage from './pages/HomePage';
 import ProductDetail from './pages/ProductDetail';
@@ -15,13 +16,19 @@ import ViewAllReviews from './pages/ViewAllReviews';
 import ViewAllSoldItems from './pages/ViewAllSoldItems';
 import ViewAllWonAuctions from './pages/ViewAllWonAuctions';
 import AdminDashboard from './pages/Admin';
+import NotFound from './pages/NotFound';
 
 function App() {
   return (
     <Router>
       <Routes className='min-h-screen transition-colors duration-100 bg-[var(--bg)] color-[var(--text)]'>
+        {/* Auth Routes */}
+        <Route element={<AuthLayout />}>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+        </Route>
+        
         <Route element={<MainLayout />}>
-          
           {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
           <Route path="/search" element={<ListProducts />} />
@@ -48,11 +55,9 @@ function App() {
             <Route path="/admin" element={<AdminDashboard />} />
           </Route>
 
+          {/* Fallback Route */}
+          <Route path="*" element={<NotFound />} />
         </Route>
-
-        {/* Auth Routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
       </Routes>
     </Router>
   )

@@ -18,22 +18,24 @@ export default function ProductTabs({ nav }) {
   const getFilteredProducts = () => {
     if (!products.length) return [];
     
+    // UPDATED: Limit slice to (0, 5) instead of 10
     switch (activeTab) {
       case 'endingSoon':
-        return products.filter(p => p.status === 'active').slice(0, 10);
+        return products.filter(p => p.status === 'active').slice(0, 5);
       case 'mostBids':
-        return products.filter(p => p.status === 'active').slice(0, 10);
+        return products.filter(p => p.status === 'active').slice(0, 5);
       case 'highestPrice':
-        return [...products].sort((a, b) => parseFloat(b.price) - parseFloat(a.price)).slice(0, 10);
+        return [...products].sort((a, b) => parseFloat(b.price) - parseFloat(a.price)).slice(0, 5);
       default:
-        return products.slice(0, 10);
+        return products.slice(0, 5);
     }
   };
 
   const displayProducts = getFilteredProducts();
 
   return (
-    <section className="py-16 container mx-auto px-4">
+    <section className="container mx-auto px-4">
+      {/* Tab Navigation */}
       <div className="flex flex-wrap justify-center gap-4 mb-10">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
@@ -59,7 +61,10 @@ export default function ProductTabs({ nav }) {
         })}
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 mx-10 animate-fade-in">
+      {/* UPDATED GRID: lg:grid-cols-5 
+         This ensures all 5 items sit in a single clean row on large screens 
+      */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 animate-fade-in">
         {displayProducts.length > 0 ? (
           displayProducts.map((item) => (
             <div key={item.id} className="transform transition-all duration-500 hover:-translate-y-1">
@@ -68,7 +73,7 @@ export default function ProductTabs({ nav }) {
           ))
         ) : (
           <div className="col-span-full text-center py-10 text-gray-500">
-            {!loading && products.length === 0 ? 'No products found' : 'Loading...'}
+            No products found
           </div>
         )}
       </div>

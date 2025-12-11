@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../contexts/AuthContext.jsx";
 
 import ViewAllButton from "../../components/ViewAllButton";
 import AuctionCard from "../../components/AuctionCard";

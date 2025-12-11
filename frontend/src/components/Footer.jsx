@@ -1,5 +1,4 @@
-import React from 'react';
-import { useNav } from '../hooks/useNavigate.js';
+import { useNav } from '../hooks/useNavigate';
 import { 
   Facebook, 
   Twitter, 
@@ -17,7 +16,7 @@ import {
  * Matches the global "Dark Premium" theme.
  */
 
-const Footer = ({darkMode}) => {
+const Footer = () => {
   const nav = useNav();
   return (
     <footer 

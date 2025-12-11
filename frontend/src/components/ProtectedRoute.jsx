@@ -1,7 +1,7 @@
 // src/components/ProtectedRoute.jsx
 import { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useNav } from '../hooks/useNavigate'; // Adjust path to your hook
 
 const ProtectedRoute = ({ requiredRole }) => {

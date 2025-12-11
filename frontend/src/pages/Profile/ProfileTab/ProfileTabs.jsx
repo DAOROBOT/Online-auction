@@ -1,5 +1,5 @@
 import { ShoppingBag, Package } from "lucide-react";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../contexts/AuthContext";
 
 export default function ProfileTabs({ activeTab, setActiveTab }) {
   const { user } = useAuth();

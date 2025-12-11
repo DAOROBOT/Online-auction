@@ -17,7 +17,7 @@ import { categories } from '../../data/constants.js';
 import NotificationDropper from './NotificationDropper.jsx';
 import ProfileDropper from './ProfileDropper.jsx';
 import ThemeToggle from '../ThemeToggle.jsx';
-import { useAuth } from '../../context/AuthContext.jsx';
+import { useAuth } from '../../contexts/AuthContext.jsx';
 
 /**
  * Header Component - Online Auction Platform

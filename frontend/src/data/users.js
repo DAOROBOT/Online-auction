@@ -2,7 +2,9 @@
  * Mock user data for the auction platform
  */
 
-export const mockUserData = {
+export const mockUserData = 
+// null;
+{
   id: 'u1',
   name: 'John Doe',
   username: 'johndoe123',
