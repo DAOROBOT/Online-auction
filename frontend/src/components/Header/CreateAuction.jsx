@@ -1,13 +1,11 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
-import Header from ".";
-import Footer from "../Footer";
+import { useNav } from "../../hooks/useNavigate";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function CreateAuction() {
-  const navigate = useNavigate();
+  const nav = useNav();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -117,7 +115,7 @@ export default function CreateAuction() {
 
       // Redirect to product detail or profile after 2 seconds
       setTimeout(() => {
-        navigate(`/product/${data.data.id}`);
+        nav.auction(data.id);
       }, 2000);
     } catch (err) {
       setError(err.message || "An error occurred while creating the auction");
@@ -133,7 +131,7 @@ export default function CreateAuction() {
         {/* Header with Back Button */}
         <div className="flex items-center gap-4 mb-8">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => nav.back()}
             className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition"
           >
             <ArrowLeft size={24} style={{ color: "var(--text)" }} />
@@ -389,7 +387,7 @@ export default function CreateAuction() {
               </button>
               <button
                 type="button"
-                onClick={() => navigate(-1)}
+                onClick={() => nav.back()}
                 disabled={loading}
                 className="flex-1 border rounded-lg font-semibold py-3 px-6 transition"
                 style={{

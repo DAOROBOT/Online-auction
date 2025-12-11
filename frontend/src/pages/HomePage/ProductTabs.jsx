@@ -3,7 +3,7 @@ import { Clock, Gavel, Star, ArrowRight } from 'lucide-react';
 import AuctionCard from '../../components/AuctionCard';
 import { products } from '../../data/index.js';
 
-export default function ProductTabs({ nav }) {
+export default function ProductTabs() {
   const [activeTab, setActiveTab] = useState('endingSoon');
 
   const tabs = [
@@ -80,7 +80,7 @@ export default function ProductTabs({ nav }) {
 
       <div className="mt-12 text-center">
         <button 
-          onClick={() => nav.search()}
+          // onClick={() => nav.search()}
           className="inline-flex items-center gap-2 font-bold uppercase tracking-widest text-xs border-b-2 border-transparent hover:border-current pb-1 transition-all"
           style={{ color: activeTabData.color }}
         >

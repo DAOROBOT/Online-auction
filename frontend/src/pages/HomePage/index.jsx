@@ -27,7 +27,7 @@ export default function HomePage() {
 
             {/* --- CONTENT START --- */}
 
-            {/* 1. HERO (Now Transparent) */}
+            {/* 1. HERO */}
             <div className="mb-8">
                 <Hero />
             </div>
@@ -58,7 +58,7 @@ export default function HomePage() {
 
             {/* 3. PRODUCTS CARD */}
             <div className={`${cardClass} py-8`} style={{ backgroundColor: "var(--bg)" }}>
-                <ProductTabs nav={nav} />
+                <ProductTabs />
             </div>
 
             {/* 4. HOW IT WORKS CARD */}
@@ -188,7 +188,7 @@ export default function HomePage() {
                 </div>
             </div>
 
-            {/* 7. CTA SECTION (Transparent Background) */}
+            {/* 7. CTA SECTION */}
             <CTA />
 
         </div>
