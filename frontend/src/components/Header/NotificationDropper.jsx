@@ -84,7 +84,7 @@ export default function NotificationDropper() {
       {/* Dropdown Menu */}
       {isOpen && (
         <div
-          className="notification-dropdown absolute right-0 mt-3 w-80 sm:w-96 rounded-xl shadow-2xl border overflow-hidden animate-in fade-in zoom-in-95 duration-100 z-50"
+          className="notification-dropdown bg-[var(--bg)] absolute right-0 mt-3 w-80 sm:w-96 rounded-xl shadow-2xl border overflow-hidden animate-in fade-in zoom-in-95 duration-100 z-50"
         >
           {/* Header */}
           <div
