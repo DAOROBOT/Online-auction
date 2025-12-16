@@ -41,7 +41,7 @@ export default function ProfileDropper() {
           
           <div className="py-1">
             {[
-              { label: "My Profile", action: () => nav.profile(mockUserData.id) },
+              { label: "My Profile", action: () => nav.me() },
               { label: "My Bids", action: () => nav.activeBids() }, // Assuming method exists
               { label: "Watchlist", action: () => nav.favouriteProducts() }, // Assuming method exists
               { label: "Logout", action: () => console.log("Logout"), isDanger: true }

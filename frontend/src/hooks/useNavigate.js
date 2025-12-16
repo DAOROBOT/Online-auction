@@ -16,6 +16,6 @@ export function useNav() {
     create: () => n("/create"),
     notifications: () => n("/notifications"),
     auction: (id) => n(`/auction/${id}`),
-    viewAll: (p) => n(`/${p}`),
+    viewAll: (p) => n(`/me/${p}`),
   };
 }

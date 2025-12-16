@@ -137,7 +137,7 @@ export default function Header() {
                 <div className="flex items-center gap-4">
                   {user.role === 'seller' && (
                     <Link
-                      to="/create-auction"
+                      to="/create"
                       className="hidden sm:flex items-center gap-2 font-bold py-2 px-4 rounded-lg transition text-sm shadow-lg hover:shadow-xl hover:-translate-y-0.5"
                       style={{ backgroundColor: 'var(--theme-secondary)', color: '#fff' }}
                     >
