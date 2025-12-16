@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
-import { useNav } from "../../hooks/useNavigate";
+import { useNav } from "../hooks/useNavigate";
 
 const API_URL = import.meta.env.VITE_API_URL;
 

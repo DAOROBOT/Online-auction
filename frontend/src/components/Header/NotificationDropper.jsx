@@ -89,7 +89,7 @@ export default function NotificationDropper() {
                         <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{formatTime(n.time)}</p>
                       </div>
                       <button onClick={() => setNotifications(p => p.filter((_, i) => i !== idx))} 
-                              className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-[var(--danger-soft)] transition-opacity"
+                              className="h-fit my-auto opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-[var(--danger-soft)] transition-opacity"
                               style={{ color: 'var(--text-muted)' }}>
                         <X size={14} />
                       </button>

@@ -1,23 +1,23 @@
 import { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext.jsx";
 
-import ViewAllButton from "../../components/ViewAllButton";
-import AuctionCard from "../../components/AuctionCard";
+import ViewAllButton from "../../components/ViewAllButton.jsx";
+import AuctionCard from "../../components/AuctionCard/index.jsx";
 
 // Mock User Data
 import { mockUserData } from "../../data/users.js";
 
 // Profile Components
-import ProfileHeader from "./HeaderProfile/ProfileHeader";
-import ProfileTabs from "./ProfileTab/ProfileTabs";
-import ReviewsSection from "./RoleSection/BuyerSections/ReviewSection/ReviewsSection";
-import EditProfileModal from "./HeaderProfile/Modal/EditProfileModal";
-import ChangePasswordModal from "./HeaderProfile/Modal/ChangePasswordModal";
-import ReviewModal from "./RoleSection/BuyerSections/ReviewSection/ReviewModal";
-import UserSections from "./RoleSection";
-import CardSection from "./RoleSection/CardSections";
+import ProfileHeader from "./HeaderProfile/ProfileHeader.jsx";
+import ProfileTabs from "./ProfileTab/ProfileTabs.jsx";
+import ReviewsSection from "./RoleSection/BuyerSections/ReviewSection/ReviewsSection.jsx";
+import EditProfileModal from "./HeaderProfile/Modal/EditProfileModal.jsx";
+import ChangePasswordModal from "./HeaderProfile/Modal/ChangePasswordModal.jsx";
+import ReviewModal from "./RoleSection/BuyerSections/ReviewSection/ReviewModal.jsx";
+import UserSections from "./RoleSection/index.jsx";
+import CardSection from "./RoleSection/CardSections/index.jsx";
 
-export default function Profile() {
+export default function UserDashboard() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('buyer');
   const [userData, setUserData] = useState(mockUserData);

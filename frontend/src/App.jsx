@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
 import AuthLayout from './layouts/AuthLayout';
 import MainLayout from './layouts/MainLayout';
@@ -8,19 +8,17 @@ import ProductDetail from './pages/ProductDetail';
 import ListProducts from './pages/ListProducts';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import Profile from './pages/Profile';
-import CreateAuction from './components/Header/CreateAuction';
-
+import UserDashboard from './pages/UserDashboard';
+import PublicProfile from './pages/PublicProfile';
+import CreateAuction from './pages/CreateAuction';
 import ViewAll from './pages/ViewAll';
-
-
-import AdminDashboard from './pages/Admin';
+import AdminDashboard from './pages/AdminDashboard';
 import NotFound from './pages/NotFound';
 
 function App() {
   return (
-    <Router>
-      <Routes className='min-h-screen transition-colors duration-100 bg-[var(--bg)] color-[var(--text)]'>
+    <div className='min-h-screen transition-colors duration-100 bg-[var(--bg)] color-[var(--text)]'>
+      <Routes>
         {/* Auth Routes */}
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<Login />} />
@@ -41,13 +39,14 @@ function App() {
 
           {/* --- LEVEL 1: STANDARD USERS (Just need to be logged in) --- */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/profile/:id" element={<Profile />} />
-            <Route path="/:type" element={<ViewAll />} />
+            <Route path="/me" element={<UserDashboard />} />
+            <Route path="/me/:variant" element={<ViewAll />} />
+            <Route path="/profile/:id" element={<PublicProfile />} />
           </Route>
 
           {/* --- LEVEL 2: SELLER ONLY (Needs 'seller' role) --- */}
           <Route element={<ProtectedRoute requiredRole="seller" />}>
-            <Route path="/create" element={<CreateAuction />} />
+            <Route path="/create-auction" element={<CreateAuction />} />
           </Route>
 
           {/* --- LEVEL 3: ADMIN ONLY (Needs 'admin' role) --- */}
@@ -59,7 +58,7 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
-    </Router>
+    </div>
   )
 }
 
