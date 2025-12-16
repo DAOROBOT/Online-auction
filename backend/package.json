@@ -24,7 +24,7 @@
     "winston": "^3.19.0",
     "zod": "^4.1.13"
   },
-  "main": "testGetProducts.js",
+  "main": "testGetauctions.js",
   "keywords": [],
   "author": "",
   "license": "ISC",

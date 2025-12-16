@@ -15,25 +15,25 @@ Routes → Controllers → Services → Database
 1. **Schema** (`src/models/schema.js`)
    - Defines database table structures using Drizzle ORM
 
-2. **Service** (`src/services/product.service.js`)
+2. **Service** (`src/services/auction.service.js`)
    - Contains all database operations (CRUD)
    - Handles data validation and error handling
 
-3. **Controller** (`src/controllers/product.controller.js`)
+3. **Controller** (`src/controllers/auction.controller.js`)
    - Handles HTTP requests and responses
    - Calls services for database operations
    - Formats response JSON
 
-4. **Routes** (`src/routes/product.route.js`)
+4. **Routes** (`src/routes/auction.route.js`)
    - Maps HTTP endpoints to controller methods
    - Defines request/response structure
 
 ## Database Schema
 
-### Products Table
+### auctions Table
 
 ```sql
-products (
+auctions (
   id SERIAL PRIMARY KEY,
   name VARCHAR(256) NOT NULL,
   description TEXT,
@@ -94,9 +94,9 @@ All required dependencies are already in `package.json`:
 
 ## API Endpoints
 
-### Get All Products
+### Get All auctions
 ```
-GET /products
+GET /auctions
 ```
 
 **Query Parameters:**
@@ -108,30 +108,30 @@ GET /products
 ```json
 {
   "success": true,
-  "message": "Products retrieved successfully",
+  "message": "auctions retrieved successfully",
   "data": [...],
   "count": 10
 }
 ```
 
-### Get Active Products
+### Get Active auctions
 ```
-GET /products/active/list
-```
-
-### Get Product by ID
-```
-GET /products/:id
+GET /auctions/active/list
 ```
 
-### Get Products by Seller
+### Get auction by ID
 ```
-GET /products/seller/:sellerId
+GET /auctions/:id
 ```
 
-### Create Product
+### Get auctions by Seller
 ```
-POST /products
+GET /auctions/seller/:sellerId
+```
+
+### Create auction
+```
+POST /auctions
 ```
 
 **Request Body:**
@@ -150,9 +150,9 @@ POST /products
 }
 ```
 
-### Update Product
+### Update auction
 ```
-PUT /products/:id
+PUT /auctions/:id
 ```
 
 **Request Body:** (all fields optional)
@@ -164,9 +164,9 @@ PUT /products/:id
 }
 ```
 
-### Delete Product
+### Delete auction
 ```
-DELETE /products/:id
+DELETE /auctions/:id
 ```
 
 ## Error Handling
@@ -182,37 +182,37 @@ All endpoints follow a consistent error response format:
 
 ## Service Methods
 
-The `productService` provides these methods:
+The `auctionService` provides these methods:
 
 ```javascript
-// Get all products with optional filters
-await productService.findAll(filters);
+// Get all auctions with optional filters
+await auctionService.findAll(filters);
 
-// Get product by ID
-await productService.findById(id);
+// Get auction by ID
+await auctionService.findById(id);
 
-// Create product
-await productService.create(productData);
+// Create auction
+await auctionService.create(auctionData);
 
-// Update product
-await productService.update(id, productData);
+// Update auction
+await auctionService.update(id, auctionData);
 
-// Delete product
-await productService.delete(id);
+// Delete auction
+await auctionService.delete(id);
 
-// Get products by seller
-await productService.findBySellerId(sellerId);
+// Get auctions by seller
+await auctionService.findBySellerId(sellerId);
 
-// Get active products
-await productService.findActive();
+// Get active auctions
+await auctionService.findActive();
 ```
 
 ## Example Usage
 
-### Creating a Product
+### Creating a auction
 
 ```javascript
-const newProduct = await productService.create({
+const newauction = await auctionService.create({
   name: "Vintage Camera",
   description: "Retro 35mm camera",
   price: 250.00,
@@ -222,29 +222,29 @@ const newProduct = await productService.create({
 });
 ```
 
-### Fetching Products
+### Fetching auctions
 
 ```javascript
-// All products
-const products = await productService.findAll();
+// All auctions
+const auctions = await auctionService.findAll();
 
-// Active products only
-const active = await productService.findActive();
+// Active auctions only
+const active = await auctionService.findActive();
 
 // By seller
-const sellerProducts = await productService.findBySellerId(5);
+const sellerauctions = await auctionService.findBySellerId(5);
 
 // With filters
-const filtered = await productService.findAll({
+const filtered = await auctionService.findAll({
   status: 'active',
   category: 'Antiques'
 });
 ```
 
-### Updating a Product
+### Updating a auction
 
 ```javascript
-const updated = await productService.update(1, {
+const updated = await auctionService.update(1, {
   currentBid: 300.00,
   status: 'sold'
 });
@@ -268,9 +268,9 @@ The `prepare: false` option disables prepared statement prefetching as it's not 
 
 The following indexes are created for performance:
 
-- `idx_products_seller_id` - For filtering by seller
-- `idx_products_status` - For filtering by status
-- `idx_products_category` - For filtering by category
+- `idx_auctions_seller_id` - For filtering by seller
+- `idx_auctions_status` - For filtering by status
+- `idx_auctions_category` - For filtering by category
 
 ## Future Enhancements
 
