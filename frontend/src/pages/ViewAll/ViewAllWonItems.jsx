@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Trophy, DollarSign, Star, ArrowLeft, Calendar } from "lucide-react";
 import { useNav } from "../../hooks/useNavigate.js";
-import FilterSection from "../../components/FilterSection";
+// import FilterSection from "../../components/FilterSection";
 import { mockUserData } from "../../data/users";
 import AuctionCard from "../../components/AuctionCard"
 
@@ -129,7 +129,7 @@ export default function ViewAllWonItems() {
                     <div className="lg:col-span-1">
                         <div className="p-6 rounded-xl sticky top-8" style={{ backgroundColor: 'var(--bg-soft)' }}>
                             <h3 className="text-lg font-bold mb-4" style={{ color: 'var(--text)' }}>Filters</h3>
-                            <FilterSection type="wonItem" onFilterChange={setFilters} />
+                            {/* <FilterSection type="wonItem" onFilterChange={setFilters} /> */}
                         </div>
                     </div>
 

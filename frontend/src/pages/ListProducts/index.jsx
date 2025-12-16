@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { House, ChevronLeft, ChevronRight } from "lucide-react";
 import { products } from "../../data/index.js";
 import AuctionCard from "../../components/AuctionCard/DefaultAuctionCard";
-import FilterBar from "./FilterBar";
+import FilterBar from "../../components/Filter/FilterBar.jsx";
 import './ListProducts.css'
 
 export default function ListProduct() {

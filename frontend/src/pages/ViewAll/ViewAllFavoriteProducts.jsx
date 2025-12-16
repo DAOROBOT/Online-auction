@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Heart, X, ArrowLeft, Grid, List } from "lucide-react";
 import { useNav } from "../../hooks/useNavigate";
-import FilterSection from "../../components/FilterSection";
+// import FilterSection from "../../components/FilterSection";
 import AuctionCard from "../../components/AuctionCard";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -128,7 +128,7 @@ export default function ViewAllFavoriteProducts() {
                         <div className="lg:col-span-1">
                             <div className="p-6 rounded-xl sticky top-8" style={{ backgroundColor: 'var(--bg-soft)' }}>
                                 <h3 className="text-lg font-bold mb-4" style={{ color: 'var(--text)' }}>Filters</h3>
-                                <FilterSection type="favoriteProduct" onFilterChange={setFilters} />
+                                {/* <FilterSection type="favoriteProduct" onFilterChange={setFilters} /> */}
                             </div>
                         </div>
 

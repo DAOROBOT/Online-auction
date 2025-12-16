@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Clock, Eye, Users, TrendingUp, ArrowLeft } from "lucide-react";
 import { useNav } from "../../hooks/useNavigate";
-import FilterSection from "../../components/FilterSection";
+// import FilterSection from "../../components/FilterSection";
 import { mockUserData } from "../../data/users";
 import AuctionCard from "../../components/AuctionCard"
 
@@ -141,7 +141,7 @@ export default function ViewAllActiveListings() {
                     <div className="lg:col-span-1">
                         <div className="p-6 rounded-xl sticky top-8" style={{ backgroundColor: 'var(--bg-soft)' }}>
                             <h3 className="text-lg font-bold mb-4" style={{ color: 'var(--text)' }}>Filters</h3>
-                            <FilterSection type="activeListing" onFilterChange={setFilters} />
+                            {/* <FilterSection type="activeListing" onFilterChange={setFilters} /> */}
                         </div>
                     </div>
 
