@@ -3,6 +3,7 @@ import bodyParser from 'body-parser';
 import morgan from 'morgan';
 import cors from 'cors';
 import productRouter from './routes/product.route.js';
+import { notFound, errorHandler } from './middlewares/error.js';
 
 const app = express();
 
@@ -32,7 +33,7 @@ app.get('/', (req, res) => {
 app.use('/products', productRouter);
 
 // Error handling
-// app.use(notFound);
-// app.use(errorHandler);
+app.use(notFound);
+app.use(errorHandler);
 
 export default app;
