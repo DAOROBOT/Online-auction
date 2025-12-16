@@ -52,7 +52,6 @@ export default function Header() {
                   style={{ color: 'var(--header-text)' }}
                 >
                   Categories
-                  <ChevronDown size={16} />
                 </button>
 
                 {/* Dropdown Panel */}
