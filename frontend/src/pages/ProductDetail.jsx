@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useNav } from '../hooks/useNavigate';
-import { formatCurrency, calculateTimeLeft } from '../utils/format.js';
+import { formatCurrency, formatTimeLeft } from '../utils/format.js';
 import productService from '../services/productService.js';
 import {
   ProductImageGallery,
@@ -54,7 +54,7 @@ export default function ProductDetail() {
   useEffect(() => {
     if (product) {
       const updateTime = () => {
-        const time = calculateTimeLeft(product.endTime);
+        const time = formatTimeLeft(product.endTime);
         setTimeLeft(time);
       };
       updateTime();
