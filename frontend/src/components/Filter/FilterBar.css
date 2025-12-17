@@ -1,10 +1,81 @@
+/* --- FILTER BAR THEME (Glassmorphism) --- */
+.filter-bar-glass {
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.dark .filter-bar-glass {
+  background-color: rgba(15, 23, 42, 0.85); 
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+/* --- DROPDOWN PANEL DESIGN --- */
+.filter-dropdown-panel {
+  background-color: var(--card-bg); /* Solid bg for readability */
+  border: 1px solid var(--border);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); /* Deep Shadow */
+  color: var(--text);
+  animation: slideDown 0.2s ease-out forwards;
+  transform-origin: top center;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* --- ITEMS & INTERACTIONS --- */
+.dropdown-item {
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+.dropdown-item:hover {
+  background-color: var(--bg-hover);
+  color: var(--accent);
+}
+.dropdown-item.selected {
+  background-color: var(--accent-soft);
+  color: var(--accent-strong);
+  font-weight: 600;
+}
+
+/* Filter Buttons (Pills) - Existing styles preserved/refined */
+.filter-btn-default {
+  background-color: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+}
+.filter-btn-default:hover {
+  border-color: var(--text);
+  color: var(--text);
+  background-color: var(--bg-soft);
+}
+
+.filter-btn-active {
+  background-color: var(--accent);
+  border: 1px solid var(--accent);
+  color: #1A1205; /* Force dark text on the gold button */
+  box-shadow: 0 4px 12px rgba(234, 179, 8, 0.2);
+}
+
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
+}
+
 .order-list {
     letter-spacing: 0.5px;
 }
 
 /* Select dropdown styling */
+
 select {
-    background-color: var(--bg-secondary);
+    background-color: var(--card-bg);
     color: var(--text);
     border: 1px solid var(--border);
     border-radius: 6px;
@@ -13,12 +84,7 @@ select {
     font-weight: 500;
     cursor: pointer;
     outline: none;
-    transition: all 0.2s ease;
     appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 8px center;
-    background-size: 16px;
 }
 
 select:hover {
@@ -42,7 +108,7 @@ option {
 option:hover,
 option:checked {
     background-color: var(--primary);
-    color: white;
+    color: var(--accent-fg);
 }
 
 option:disabled {

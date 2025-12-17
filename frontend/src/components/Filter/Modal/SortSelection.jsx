@@ -1,11 +1,13 @@
-import React, { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ArrowUpDown } from "lucide-react";
 
 export default function SortSelection({orderBy, setOrderBy}){
     return (
         <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
             <div className="flex items-center gap-2">
-                <span className="text-xs uppercase font-bold order-list" style={{ color: 'var(--text-muted)' }}>Sort by:</span>
+                <div className="flex items-center gap-2 mr-2" style={{ color: 'var(--text-muted)' }}>
+                    <ArrowUpDown size={16} />
+                    <span className="text-xs uppercase font-bold order-list">Sort by:</span>
+                </div>
                 <select value={orderBy} className="bg-transparent text-sm font-medium outline-none cursor-pointer p-1" style={{ color: 'var(--text)' }} onChange={(e) => setOrderBy(e.target.value)}>
                     <option value="default" disabled>-- Select --</option>
                     <option value="popularity">Popularity</option>

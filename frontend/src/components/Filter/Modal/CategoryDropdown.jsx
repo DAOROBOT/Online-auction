@@ -1,19 +1,23 @@
+import { Layers, Check } from "lucide-react";
 import FilterButton from "../FilterButton";
 
 export default function CategoryDropdown({ selectedCategory, setSelectedCategory, activeDropdown, categories, toggleDropdown, setActiveDropdown}) {
     return (
         <div className="relative">
             <FilterButton 
-            name="category" 
-            label={!selectedCategory ? "Category" : selectedCategory} 
-            isActive={selectedCategory}
+                name="category" 
+                label={!selectedCategory ? "Category" : selectedCategory} 
                 toggleDropdown={toggleDropdown}
+                activeDropdown={activeDropdown}
             />
         {activeDropdown === "category" && (
             <div className="filter-dropdown-panel absolute top-full mt-2 left-0 w-64 rounded-xl p-2 z-40 max-h-80 overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-100">
-                <button onClick={() => { setSelectedCategory("All"); setActiveDropdown(null); }}
-                    className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-[var(--bg-hover)] transition-colors font-medium">
-                All Categories
+                <button 
+                    onClick={() => { setSelectedCategory(null); setActiveDropdown(null); }}
+                    className={`w-full text-left px-3 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors ${!selectedCategory ? 'bg-[var(--accent-soft)] text-[var(--accent-strong)]' : 'hover:bg-[var(--bg-hover)]'}`}>
+                        <Layers size={16} />
+                        <span>All Categories</span>
+                        {!selectedCategory && <Check size={16} className="ml-auto" />}
                 </button>
                 {categories.map((cat) => (
                 <div key={cat.id}>

@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from "react";
+import {useState, useEffect} from "react";
 import CategoryDropdown from "./Modal/CategoryDropdown";
 import PriceDropdown from "./Modal/PriceDropdown";
 import SortSelection from "./Modal/SortSelection";
@@ -6,7 +6,7 @@ import ChoiceSelected from "./ChoiceSelected";
 
 import './FilterBar.css';
 import {categories} from "../../data";
-import { Filter, X, Check } from "lucide-react";
+import { Filter } from "lucide-react";
 import { useRef } from "react";
 // import FilterButton from "./FilterButton";
 
@@ -31,18 +31,6 @@ export default function FilterBar() {
   const toggleDropdown = (name) => {
     setActiveDropdown(activeDropdown === name ? null : name);
   };
-
-//   const FilterButton = ({ label, isActive, name }) => (
-//     <button
-//       onClick={() => toggleDropdown(name)}
-//       className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium ${
-//         isActive || activeDropdown === name ? "filter-btn-active" : "filter-btn-default"
-//       }`}
-//     >
-//       {label}
-//       <ChevronDown size={14} className={`transition-transform duration-200 ${activeDropdown === name ? "rotate-180" : ""}`} />
-//     </button>
-//   );
 
   return (
     <div ref={barRef} className="sticky top-24 z-30 mb-8 transition-all duration-300">
