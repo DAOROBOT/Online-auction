@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { useParams, Navigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { mockUserData } from "../../data/users"; // In real app, fetch from API
 
 // Reusing your existing components
-import ProfileHeader from "../UserDashboard/HeaderProfile/ProfileHeader";
+import ProfileHeader from "./HeaderProfile/ProfileHeader";
 import AuctionCard from "../../components/AuctionCard";
 import ViewAllButton from "../../components/ViewAllButton"; // Assuming you have this
 import { Package, ShoppingBag, ShieldCheck } from "lucide-react";

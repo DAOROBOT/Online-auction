@@ -88,7 +88,7 @@ export default function DefaultAuctionCard({ product }) {
       </div>
 
       {/* --- Content Section --- */}
-      <div className="p-5 flex flex-col flex-grow relative">
+      <div className="p-5 flex flex-col grow relative">
         
         {/* Title */}
         <h3 className="text-lg font-bold line-clamp-1 mb-2 transition-colors duration-100" style={{ color: 'var(--auction-text)' }}>
@@ -117,7 +117,7 @@ export default function DefaultAuctionCard({ product }) {
                     <Gavel size={12} /> Highest Bid
                 </span>
                 <span className="text-xl font-black" style={{ color: 'var(--auction-text)' }}>
-                    {formatCurrency(product.currentBid)}
+                    {formatCurrency(product.currentPrice)}
                 </span>
             </div>
 
@@ -167,7 +167,7 @@ export default function DefaultAuctionCard({ product }) {
               color: isNew ? 'var(--auction-accent-fg)' : 'var(--auction-bg)' 
             }}
             onClick={() => nav.auction(product.id)}>
-            Place Bid
+            Bid Now
             <ArrowRight size={16} className="transition-transform group-hover/btn:translate-x-1" />
           </button>
         </div>

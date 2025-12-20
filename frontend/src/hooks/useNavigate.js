@@ -34,7 +34,6 @@ export function useNav() {
     editProfile: () => n("/edit-profile"),
     profile: (id) => n(`/profile/${id}`),
     notifications: () => n("/notifications"),
-    viewAll: (p) => n(`/me/${p}`),
 
     // Actions
     create: () => n("/create-auction"),

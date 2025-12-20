@@ -13,7 +13,6 @@ export const AuthProvider = ({ children }) => {
       try {
         const userData = await userService.getAll(); 
         setUser(userData);
-        console.log("User data fetched:", userData);
       } catch (error) {
         console.log("User not logged in");
       } finally {
