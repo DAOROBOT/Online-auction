@@ -1,0 +1,117 @@
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import { House } from "lucide-react";
+import FilterBar from "../../components/Filter/FilterBar.jsx";
+import ProductGrid from "../../components/ProductGrid.jsx";
+import Pagination from "../../components/Pagination.jsx";
+import './SearchPage.css'
+
+export default function SearchPage() {
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    const query = searchParams.get("q") || "";
+    const category = searchParams.get("category") || "All Categories";
+    const currentPage = parseInt(searchParams.get("page") || "1");
+
+    const [products, setProducts] = useState([]);
+    const [totalPages, setTotalPages] = useState(1);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    // --- 1. FETCH DATA ---
+    useEffect(() => {
+        const fetchAuctions = async () => {
+            setLoading(true);
+            setError(null);
+            
+            try {
+                // Construct URL with standard browser API
+                const apiUrl = new URL("http://localhost:3000/auctions/search");
+                
+                // Append all existing params from the URL (q, category, page, etc.)
+                searchParams.forEach((value, key) => {
+                    apiUrl.searchParams.append(key, value);
+                });
+                
+                // Ensure page is set if missing
+                if (!apiUrl.searchParams.has("page")) {
+                    apiUrl.searchParams.append("page", "1");
+                }
+
+                const response = await fetch(apiUrl.toString());
+                if (!response.ok) throw new Error('Failed to fetch auctions');
+                
+                const responseData = await response.json();
+                
+                setProducts(responseData.data || []);
+                setTotalPages(responseData.totalPages || 1);
+            } catch (err) {
+                console.error("Error fetching auctions:", err);
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchAuctions();
+
+        window.scrollTo({
+            top: 0,
+            left: 0,
+            behavior: 'smooth'
+        });
+    }, [searchParams]);
+
+    const handlePageChange = (newPage) => {
+        setSearchParams(prev => {
+            prev.set("page", newPage);
+            return prev;
+        });
+    };
+
+    return (
+        <div className="bg-[var(--bg)] px-4 sm:px-6 lg:px-8 py-8 max-w-7xl mx-auto w-full min-h-screen">
+            {/* Breadcrumbs */}
+            <div className="mb-8">
+                <ul className="flex items-center gap-2 text-sm">
+                    <li className="flex items-center gap-2 transition-colors cursor-pointer hover:underline" style={{ color: 'var(--text-muted)' }}>
+                        <House size={16} />
+                        <span>Home</span>
+                    </li>
+                    <li style={{ color: 'var(--border-strong)' }}>/</li>
+                    {/* <li className="transition-colors cursor-pointer hover:underline" style={{ color: 'var(--text-muted)' }}>
+                        {category.charAt(0).toUpperCase() + category.slice(1)}
+                    </li>
+                    <li style={{ color: 'var(--border-strong)' }}>/</li>
+                    <li className="font-semibold" style={{ color: 'var(--accent)' }}>
+                        {subcategory.charAt(0).toUpperCase() + subcategory.slice(1)}
+                    </li> */}
+                    <li className="font-semibold" style={{ color: 'var(--accent)' }}>
+                        Search Results
+                    </li>
+                </ul>
+                <h1 className="mt-2 text-3xl font-bold tracking-tight" style={{ color: 'var(--text)' }}>
+                    {/* {subcategory.charAt(0).toUpperCase() + subcategory.slice(1)} */}
+                    {query ? `Results for "${query}"` : category}
+                </h1>
+            </div>
+
+            <FilterBar />
+
+            <section className="transition-colors duration-100">
+                {loading && (<div className="min-h-screen flex items-center justify-center">Loading auctions...</div>)}
+                {error && (<div className="min-h-screen flex items-center justify-center text-red-500">Error: {error}</div>)}
+                <ProductGrid 
+                    items={products} 
+                    cardVariant="default"
+                    columns="grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+                />
+                <Pagination 
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                />
+            </section>
+        </div>
+    );
+}
