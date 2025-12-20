@@ -1,7 +1,7 @@
 import { Clock, Edit, Trash2 } from 'lucide-react';
 import { formatTimeLeft } from '../../utils/format'
 
-export default function ActiveListingAuctionCard({product}){
+export default function ListingAuctionCard({product}){
   return (
     <div className="rounded-xl overflow-hidden border hover:shadow-xl transition-all" 
       style={{ 
@@ -30,7 +30,7 @@ export default function ActiveListingAuctionCard({product}){
           <div className="flex items-center justify-between mb-4">
               <div>
                   <p className="text-sm" style={{ color: 'var(--auction-text-muted)' }}>Current Bid</p>
-                  <p className="text-xl font-bold" style={{ color: 'var(--auction-accent)' }}>${product.currentBid}</p>
+                  <p className="text-xl font-bold" style={{ color: 'var(--auction-accent)' }}>${product.currentPrice}</p>
               </div>
               <div className="text-right">
                   <p className="text-sm" style={{ color: 'var(--auction-text-muted)' }}>Bids</p>

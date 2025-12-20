@@ -32,7 +32,7 @@ export default function ProfileDropper() {
   };
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative hidden lg:block" ref={dropdownRef}>
       
       {/* --- TRIGGER: AVATAR --- */}
       <button

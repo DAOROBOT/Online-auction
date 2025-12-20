@@ -5,13 +5,11 @@ import MainLayout from './layouts/MainLayout';
 import AdminLayout from './layouts/AdminLayout';
 import HomePage from './pages/HomePage';
 import ProductDetail from './pages/ProductDetail';
-import ListProducts from './pages/ListProducts';
+import SearchPage from './pages/SearchPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import UserDashboard from './pages/UserDashboard';
-import PublicProfile from './pages/PublicProfile';
+import Profile from './pages/Profile';
 import CreateAuction from './pages/CreateAuction';
-import ViewAll from './pages/ViewAll';
 import AdminDashboard from './pages/AdminDashboard';
 import NotFound from './pages/NotFound';
 
@@ -34,14 +32,13 @@ function App() {
         <Route element={<MainLayout />}>
           {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
-          <Route path="/search" element={<ListProducts />} />
+          <Route path="/search" element={<SearchPage />} />
           <Route path="/auction/:id" element={<ProductDetail />} />
 
           {/* --- LEVEL 1: STANDARD USERS (Just need to be logged in) --- */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/me" element={<UserDashboard />} />
-            <Route path="/me/:variant" element={<ViewAll />} />
-            <Route path="/profile/:id" element={<PublicProfile />} />
+            <Route path="/me" element={<Profile />} />
+            <Route path="/profile/:id" element={<Profile />} />
           </Route>
 
           {/* --- LEVEL 2: SELLER ONLY (Needs 'seller' role) --- */}

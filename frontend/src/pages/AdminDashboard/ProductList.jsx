@@ -10,7 +10,7 @@ export default function ProductList() {
       seller: "John Doe",
       status: "active",
       endTime: "2025-12-20T10:00:00",
-      currentBid: 250
+      currentPrice: 250
     },
     { 
       id: 2, 
@@ -19,7 +19,7 @@ export default function ProductList() {
       seller: "Jane Smith",
       status: "active",
       endTime: "2025-12-18T15:30:00",
-      currentBid: 500
+      currentPrice: 500
     },
     { 
       id: 3, 
@@ -28,7 +28,7 @@ export default function ProductList() {
       seller: "Tech Store",
       status: "ended",
       endTime: "2025-12-10T12:00:00",
-      currentBid: 1200
+      currentPrice: 1200
     },
   ]);
 
@@ -151,7 +151,7 @@ export default function ProductList() {
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="profile-name font-semibold">${product.currentBid}</span>
+                    <span className="profile-name font-semibold">${product.currentPrice}</span>
                   </td>
                   <td className="profile-text-muted px-6 py-4 text-sm">
                     {new Date(product.endTime).toLocaleString()}

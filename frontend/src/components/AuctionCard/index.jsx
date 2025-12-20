@@ -1,8 +1,8 @@
 import DefaultAuctionCard from './DefaultAuctionCard';
 import WonAuctionCard from './WonAuctionCard';
 import SoldAuctionCard from './SoldAuctionCard';
-import ActiveBidsAuctionCard from './ActiveBidsAuctionCard';
-import ActiveListingAuctionCard from './ActiveListingAuctionCard';
+import BiddingAuctionCard from './BiddingAuctionCard';
+import ListingAuctionCard from './ListingAuctionCard';
 import FavoriteAuctionCard from './FavoriteAuctionCard';
 import './AuctionCard.css'
 
@@ -18,25 +18,24 @@ import './AuctionCard.css'
  * @returns {JSX.Element} Rendered auction card variant
  */
 export default function AuctionCard({ product, variant, ...props }) {
-  console.log(`Card: "${product?.title}" | Variant Received: "${variant}"`);
   switch (variant) {
-    case 'wonItem':
+    case 'won':
       return (
         <WonAuctionCard product={product} {...props}/>
       );
-    case 'soldItem':
+    case 'sold':
       return (
         <SoldAuctionCard product={product} {...props}/>
       );
-    case 'activeBids':
+    case 'bidding':
       return (
-        <ActiveBidsAuctionCard product={product} {...props}/>
+        <BiddingAuctionCard product={product} {...props}/>
       );
-    case 'activeListings':
+    case 'listing':
       return (
-        <ActiveListingAuctionCard product={product} {...props}/>
+        <ListingAuctionCard product={product} {...props}/>
       );
-    case 'favorites':
+    case 'favorite':
       return (
         <FavoriteAuctionCard product={product} {...props}/>
       );
@@ -48,4 +47,4 @@ export default function AuctionCard({ product, variant, ...props }) {
 }
 
 // Export all variants for direct imports if needed
-export { DefaultAuctionCard, WonAuctionCard, SoldAuctionCard, ActiveBidsAuctionCard, ActiveListingAuctionCard, FavoriteAuctionCard };
+export { DefaultAuctionCard, WonAuctionCard, SoldAuctionCard, BiddingAuctionCard, ListingAuctionCard, FavoriteAuctionCard };
