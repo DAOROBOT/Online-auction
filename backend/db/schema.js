@@ -1,5 +1,4 @@
-import { pgTable, serial, varchar, text, decimal, date, timestamp, boolean, integer, pgEnum } from "drizzle-orm/pg-core";
-// import { relations } from "drizzle-orm";
+import { pgTable, serial, varchar, text, decimal, timestamp, boolean, integer, pgEnum, date } from "drizzle-orm/pg-core";
 
 // --- ENUMS ---
 export const userRoleEnum = pgEnum('user_role', ['unauthorized', 'buyer', 'seller', 'admin']);
@@ -7,19 +6,23 @@ export const auctionStatusEnum = pgEnum('auction_status', ['active', 'sold', 'en
 
 // --- 1. USERS TABLE ---
 export const users = pgTable('users', {
-  userId: serial('user_id').primaryKey(),
-  username: varchar('username', { length: 50 }).notNull(),
-  email: varchar('email', { length: 100 }).notNull(),
+  id: serial('user_id').primaryKey(),
+  username: varchar('username', { length: 50 }).notNull().unique(),
+  email: varchar('email', { length: 100 }).notNull().unique(),
   encryptedPassword: varchar('encrypted_password', { length: 255 }).notNull(),
   fullName: text('full_name'),
-  role: userRoleEnum('role').default('buyer'),
+  role: userRoleEnum('role').default('unauthorized'),
   avatarUrl: text('avatar_url'),
   birthday: date('birthday'),
   bio: text('bio'),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  birthday: date('birthday'), // or date mode
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   ratingCount: integer('rating_count').default(0),
   positiveRatingCount: integer('positive_rating_count').default(0),
-  otp: varchar('otp')
+  otp: varchar('otp'),
+  googleId: varchar('google_id', { length: 100 }),
+  facebookId: varchar('facebook_id', { length: 100 }),
+  isVerified: boolean('is_verified').default(false),
 });
 
 // --- 2. CATEGORIES TABLE ---

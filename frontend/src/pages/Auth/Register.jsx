@@ -1,12 +1,21 @@
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useNav } from '../hooks/useNavigate';
-import { useAuth } from '../contexts/AuthContext';
+import { useNav } from '../../hooks/useNavigate';
+import { useAuth } from '../../contexts/AuthContext';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 export default function Register() {
     const nav = useNav();
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [recaptchaToken, setRecaptchaToken] = useState(null);
+    const [formData, setFormData] = useState({
+        username: '',
+        email: '',
+        password: '',
+        confirmPassword: ''
+    });
     const location = useLocation();
-    const { register } = useAuth();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -18,21 +27,38 @@ export default function Register() {
         if (formData.password.length < 6) {
             return setError("Password must be at least 6 characters");
         }
+        if (!recaptchaToken) {
+            return setError("Please verify you are human using reCAPTCHA");
+        }
 
         setError('');
         setLoading(true);
 
         try {
-            // 2. Register Logic
-            await register(formData.email, formData.password, formData.fullName);
-            
-            // 3. Smart Redirect (Same as Login)
-            const from = location.state?.from || '/';
-            nav.replace(from);
-            
+            const response = await fetch('http://localhost:3000/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: formData.username,
+                    email: formData.email,
+                    password: formData.password,
+                    recaptchaToken: recaptchaToken
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Registration failed');
+            }
+
+            // Registration successful - redirect to validation
+            nav.validate({state: { email: formData.email }});
         } catch (err) {
             console.error(err);
-            setError('Failed to create account. Email may already be in use.');
+            setError(err.message || 'Registration failed. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -50,14 +76,14 @@ export default function Register() {
 
             <form className="space-y-6" onSubmit={handleSubmit}>
                 <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-300">Full Name</label>
+                    <label className="block text-sm font-medium text-gray-300">Username</label>
                     <input 
-                        name="fullName"
+                        name="username"
                         type="text" 
                         required
-                        value={formData.fullName}
-                        onChange={(e) => setFormData({...formData, fullName: e.target.value})}
-                        placeholder="Enter your full name" 
+                        value={formData.username}
+                        onChange={(e) => setFormData({...formData, username: e.target.value})}
+                        placeholder="Enter your username" 
                         className="w-full px-4 py-3 rounded-lg bg-[#120A1F] border border-white/10 text-white placeholder:text-gray-500 focus:outline-none focus:border-[#E0B84C] transition-colors"
                     />
                 </div>
@@ -95,6 +121,12 @@ export default function Register() {
                         onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
                         placeholder="Confirm your password" 
                         className="w-full px-4 py-3 rounded-lg bg-[#120A1F] border border-white/10 text-white placeholder:text-gray-500 focus:outline-none focus:border-[#E0B84C] transition-colors"
+                    />
+                </div>
+                <div className="flex justify-center">
+                    <ReCAPTCHA
+                        sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+                        onChange={(token) => setRecaptchaToken(token)}
                     />
                 </div>
                 <button 

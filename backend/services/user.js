@@ -16,7 +16,8 @@ const service = {
         return db.select().from(users);
     },
     getById: async function(id){
-        return db.select().from(users).where(eq(users.userId, id));
+        const result = await db.select().from(users).where(eq(users.id, id));
+        return result.length > 0 ? result[0] : null;
     },
     getByEmail: async function(email){
         const result = await db.select().from(users).where(eq(users.email, email));
@@ -35,10 +36,10 @@ const service = {
         if(user.createdAt) {
             user.createdAt = new Date(user.createdAt);
         }
-        return db.update(users).set(user).where(eq(users.userId, id));
+        return db.update(users).set(user).where(eq(users.id, id));
     },
     delete: async function(id){
-        return db.delete(users).where(eq(users.userId, id));
+        return db.delete(users).where(eq(users.id, id));
     }
 }
 
