@@ -1,5 +1,6 @@
 import userService from "../services/user.js";
 import authService from "../services/auth.js";
+
 const controller = {
     listUser: function(req, res, next){
         userService.findAll().then((users) => {
@@ -18,20 +19,20 @@ const controller = {
             })
         }
         console.log(password);
-        const result = await authService.validatePassword(password, found.encryptedPassword);
-        if(!result){
-            return res.status(404).json({
-                message: 'Wrong Password',
-            });
-        }
-        const token = await authService.generateToken({
-            userId: found.userId,
-            username: found.username,
-            email: found.email,
-        }) 
+        // const result = await authService.validatePassword(password, found.encryptedPassword);
+        // if(!result){
+        //     return res.status(404).json({
+        //         message: 'Wrong Password',
+        //     });
+        // }
+        // const token = await authService.generateToken({
+        //     userId: found.userId,
+        //     username: found.username,
+        //     email: found.email,
+        // }) 
         res.status(201).json({
-            token,
-            
+            // token,
+            found
         })
     },
 
@@ -51,15 +52,7 @@ const controller = {
             username,
             email,
             encryptedPassword: await authService.hashPassword(password),
-            fullName: null,
-            role: "buyer",
-            avatarUrl: null,
-            birthday: null,
-            bio: null,
-            createdAt: null,
-            ratingCount: null,
-            positiveRatingCount: null,
-            
+            createdAt: new Date()
         });
 
         res.status(201).json({

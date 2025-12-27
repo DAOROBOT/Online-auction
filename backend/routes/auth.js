@@ -10,4 +10,5 @@ route.post('/login', authController.getUser);
 
 // GET: get current user
 route.get('/me', authController.getCurrentUser);
+
 export default route;
