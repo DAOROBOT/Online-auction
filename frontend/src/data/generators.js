@@ -92,6 +92,7 @@ export const generateBids = (count = 100, products) => {
       productId: product.id,
       bidderId: generateId('u', getRandomInt(1, 200)),
       bidderName: `bidder${getRandomInt(100, 999)}`,
+      bidderRating: (Math.random() * 5).toFixed(1),
       amount: product.currentPrice - getRandomInt(10, 100), // Historical bid
       timestamp: new Date(
         now.getTime() - getRandomInt(1, 300) * 60 * 1000

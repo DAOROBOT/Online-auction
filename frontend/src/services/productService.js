@@ -127,6 +127,7 @@ const productService = {
                             productId,
                             bidderId: `user-${Math.floor(Math.random() * 5) + 1}`, // Random user 1-5
                             bidderName: i % 3 === 0 ? 'JohnCollector' : (i % 2 === 0 ? 'LuxuryBuyer88' : 'VintageHunter'),
+                            bidderRating: (Math.random() * 5).toFixed(1),
                             amount: currentAmount,
                             timestamp: new Date(now - (i * 1000 * 60 * 15)).toISOString(), // Every 15 mins
                             status: 'active'

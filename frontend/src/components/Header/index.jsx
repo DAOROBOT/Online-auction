@@ -98,7 +98,7 @@ export default function Header() {
 
             {/* RIGHT: Actions */}
             <div className="flex items-center gap-4">
-              <button onClick={() => setIsMobileMenuOpen(true)} className="md:hidden p-2 hover:bg-[var(--header-hover)] rounded-full transition-colors" style={{ color: 'var(--header-text)' }}>
+              <button onClick={() => setIsMobileMenuOpen(true)} className="md:hidden p-2 hover:bg-(--header-hover) rounded-full transition-colors" style={{ color: 'var(--header-text)' }}>
                 <Search size={24} />
               </button>
 
@@ -110,7 +110,7 @@ export default function Header() {
                   {/* DYNAMIC ACTION BUTTONS */}
                   <Link
                     to={user.role === 'admin' ? "/admin" : (user.role === 'seller') ? "/create-auction" : "/become-seller"}
-                    className="hidden sm:flex items-center gap-2 font-bold py-2 px-4 rounded-lg transition text-sm shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                    className="hidden sm:flex items-center gap-2 font-bold py-2 px-4 rounded-lg transition text-sm shadow-lg hover:shadow-xl hover:scale-105"
                     style={{ 
                       backgroundColor: user.role === 'admin' ? 'var(--text)' : (user.role === 'seller') ? 'var(--theme-secondary)' : 'var(--accent)', 
                       color: user.role === 'admin' ? 'var(--bg)' : (user.role === 'seller') ? '#fff' : '#1A1205'
@@ -127,15 +127,15 @@ export default function Header() {
                 </div>
               ) : (
                 <div className="hidden sm:flex items-center gap-3">
-                  <button onClick={() => nav.login()} 
-                    className="font-medium text-sm transition-colors px-4 py-2 rounded-lg hover:bg-[var(--header-hover)]" 
-                    style={{ color: 'var(--header-text)' }}
+                  <button 
+                    onClick={() => nav.login()} 
+                    className="font-medium text-sm text-(--header-text) transition-colors px-4 py-2 rounded-lg hover:bg-(--header-hover)"
                   >
                     Log In
                   </button>
-                  <button onClick={() => nav.register()} 
-                    className="font-bold text-sm px-6 py-2.5 rounded-full shadow-lg transition-all transform hover:-translate-y-0.5 hover:brightness-110"
-                    style={{ backgroundColor: 'var(--accent)', color: '#1A1205' }}
+                  <button 
+                    onClick={() => nav.register()} 
+                    className="bg-(--accent) font-bold text-sm text-[#1A1205] px-6 py-2.5 rounded-full shadow-lg transition-all transform hover:-translate-y-0.5 hover:brightness-110"
                   >
                     Register
                   </button>
@@ -143,7 +143,7 @@ export default function Header() {
               )}
 
               {/* Mobile Menu Trigger */}
-              <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden p-2 rounded-lg hover:bg-[var(--header-hover)] transition-colors text-[var(--header-text)]">
+              <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden p-2 rounded-lg hover:bg-(--header-hover) transition-colors text-(--header-text)">
                 <Menu size={24} />
               </button>
             </div>

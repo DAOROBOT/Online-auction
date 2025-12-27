@@ -84,7 +84,7 @@ export default function ProductList() {
               placeholder="Search by product name or seller..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="profile-input w-full pl-10 pr-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              className="profile-input w-full pl-10 pr-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-(--accent)"
             />
           </div>
 

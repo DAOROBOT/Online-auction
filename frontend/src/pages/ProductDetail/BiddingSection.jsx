@@ -62,15 +62,21 @@ export default function BiddingSection({ product }) {
 
           {/* Seller Info */}
           <div className="flex items-center justify-between mb-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border"
-                  style={{ 
-                    backgroundColor: 'var(--accent-soft)', 
-                    borderColor: 'var(--accent)',
-                    color: 'var(--accent)'
-                  }}>
-              <User size={12} />
-              {product.sellerName}
-              <ShieldCheck size={12} className="text-(--success)" />
+            <div className='flex gap-2'>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border"
+                style={{ 
+                  backgroundColor: 'var(--accent-soft)', 
+                  borderColor: 'var(--accent)',
+                  color: 'var(--accent)'
+                }}>
+                <User size={12} />
+                {product.sellerName}
+                {/* <ShieldCheck size={12} className="text-(--success)" /> */}
+              </div>
+              <div className="inline-flex items-center gap-1.5 text-xs text-(--text) font-bold transition-colors">
+                <Star size={12} className="fill-amber-400 text-amber-400" />
+                <span>{(product.sellerRating.positive / (product.sellerRating.positive + product.sellerRating.negative)).toFixed(1)}</span>
+              </div>
             </div>
 
             {product.autoExtend && (

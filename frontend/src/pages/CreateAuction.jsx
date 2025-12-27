@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ArrowLeft, Upload, X } from "lucide-react";
 import { useNav } from "../hooks/useNavigate";
-import ImageUploadModal from '../components/ImageUploadModal'
+import ImageUploadModal from '../components/ImageUploadModal';
 import RichTextEditor from "../components/RichTextEditor";
 
 export default function CreateAuction() {
@@ -10,8 +10,17 @@ export default function CreateAuction() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  
+  const [formData, setFormData] = useState({ 
+    name: "", 
+    description: "", 
+    price: "", 
+    startingBid: "", 
+    category: "", 
+    imageUrl: "", 
+    auctionEndTime: "" 
+  });
 
-  const [formData, setFormData] = useState({ name: "", description: "", price: "", startingBid: "", category: "", imageUrl: "", auctionEndTime: "" });
   const categories = ["Electronics", "Furniture", "Collectibles", "Art", "Fashion", "Sports", "Books", "Jewelry", "Home & Garden", "Toys"];
 
   const handleChange = (e) => {
@@ -19,22 +28,19 @@ export default function CreateAuction() {
     setError(null);
   };
 
+  const handleDescriptionChange = (value) => {
+    setFormData(prev => ({ ...prev, description: value }));
+  };
+
   const handleImageUpload = (file) => {
-    // Create a local preview URL
     const objectUrl = URL.createObjectURL(file);
-    setFormData(prev => ({ 
-        ...prev, 
-        imageUrl: objectUrl, 
-        // In a real app, you would also store the 'file' object here to send to backend
-        imageFile: file 
-    }));
+    setFormData(prev => ({ ...prev, imageUrl: objectUrl, imageFile: file }));
     setIsUploadModalOpen(false);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    // Note: In a real implementation, you'd handle the file upload here (e.g., FormData)
     setTimeout(() => {
         setLoading(false);
         setSuccess(true);
@@ -49,69 +55,61 @@ export default function CreateAuction() {
   };
 
   return (
-    <div className="min-h-screen py-12">
+    <div className="min-h-screen py-12" style={{ backgroundColor: "var(--bg)" }}>
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
+        
+        <div className="flex items-center gap-4 mb-8 text-(--text)">
           <button onClick={() => nav.back()} className="p-2 rounded-lg hover:bg-(--bg-hover) transition">
-            <ArrowLeft size={24} style={{ color: "var(--text)" }} />
+            <ArrowLeft size={24} />
           </button>
-          <h1 className="text-4xl font-bold" style={{ color: "var(--text)" }}>Create New Auction</h1>
+          <h1 className="text-4xl font-bold">Create New Auction</h1>
         </div>
 
-        {/* Form Card */}
-        <div className="rounded-xl shadow-xl p-8 border" style={{ backgroundColor: "var(--card-bg)", borderColor: "var(--border)" }}>
-          {/* Messages */}
+        <div className="rounded-xl shadow-xl p-8 bg-(--card-bg) border border-(--border)">
+           
           {success && <div className="mb-6 bg-green-100 text-green-700 px-4 py-3 rounded-lg border border-green-200">✓ Auction created successfully! Redirecting...</div>}
-          {error && <div className="mb-6 bg-red-100 text-red-700 px-4 py-3 rounded-lg border border-red-200">✕ {error}</div>}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Inputs */}
+            
             <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: "var(--text)" }}>Product Name *</label>
+              <label className="block text-sm text-(--text) font-medium mb-2">Product Name *</label>
               <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Enter product name"
                 className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-(--accent) outline-none transition"
                 style={inputStyle} disabled={loading}
               />
             </div>
 
-            {/* <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: "var(--text)" }}>Description</label>
-              <textarea name="description" value={formData.description} onChange={handleChange} placeholder="Describe your product..." rows="5"
-                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-(--accent) outline-none transition resize-none"
-                style={inputStyle} disabled={loading}
-              />
-            </div> */}
-
+            {/* 2. USE THE NEW COMPONENT HERE */}
             <div>
-              <label className="block text-sm font-medium mb-2 text-(--text)">Description</label>
+              <label className="block text-sm text-(--text) font-medium mb-2">Description</label>
               <RichTextEditor 
                 value={formData.description} 
                 onChange={handleDescriptionChange} 
               />
             </div>
 
+            {/* ... (Keep the rest of the form: Categories, Prices, Image, Time, Buttons) ... */}
             <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: "var(--text)" }}>Category *</label>
+              <label className="block text-sm text-(--text) font-medium mb-2">Category *</label>
               <select name="category" value={formData.category} onChange={handleChange}
                 className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-(--accent) outline-none transition"
                 style={inputStyle} disabled={loading}
               >
-                <option value="" disabled>-- Select a category --</option>
+                <option value="">Select a category</option>
                 {categories.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
               </select>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: "var(--text)" }}>Reserve Price *</label>
+                <label className="block text-sm text-(--text) font-medium mb-2">Reserve Price *</label>
                 <input type="number" name="price" value={formData.price} onChange={handleChange} placeholder="0.00" step="0.01" min="0"
                   className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-(--accent) outline-none transition"
                   style={inputStyle} disabled={loading}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: "var(--text)" }}>Starting Bid *</label>
+                <label className="block text-sm text-(--text) font-medium mb-2">Starting Bid *</label>
                 <input type="number" name="startingBid" value={formData.startingBid} onChange={handleChange} placeholder="0.00" step="0.01" min="0"
                   className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-(--accent) outline-none transition"
                   style={inputStyle} disabled={loading}
@@ -119,15 +117,12 @@ export default function CreateAuction() {
               </div>
             </div>
 
+            {/* Upload Image Section (Kept as is) */}
             <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: "var(--text)" }}>Product Image *</label>
-              
+              <label className="block text-sm text-(--text) font-medium mb-2">Product Image *</label>
               {formData.imageUrl ? (
-                  // Preview State
-                  <div className="relative w-full h-64 rounded-xl overflow-hidden border group" style={{ borderColor: "var(--border)" }}>
+                  <div className="relative w-full h-64 rounded-xl overflow-hidden border border-(--border) group">
                       <img src={formData.imageUrl} alt="Preview" className="w-full h-full object-cover" />
-                      
-                      {/* Remove Button */}
                       <button 
                           type="button"
                           onClick={() => setFormData(prev => ({ ...prev, imageUrl: "" }))}
@@ -137,41 +132,43 @@ export default function CreateAuction() {
                       </button>
                   </div>
               ) : (
-                  // Upload Button State
                   <button 
                       type="button"
                       onClick={() => setIsUploadModalOpen(true)}
-                      className="w-full h-40 border-2 border-dashed border-(--border-subtle) rounded-xl flex flex-col items-center justify-center gap-3 transition group"
-                      style={inputStyle}
+                      className="w-full h-40 border-2 border-dashed border-(--border-subtle) rounded-xl flex flex-col items-center justify-center gap-3 transition hover:bg-(--bg-subtle) group"
                   >
-                      <div className="p-3 rounded-full shadow-sm group-hover:scale-110 transition-transform">
-                        <Upload size={24} />
+                      <div 
+                        className="p-3 rounded-full text-(--text-muted) bg-(--bg) shadow-sm group-hover:scale-110 transition-transform">
+                        <Upload size={24} 
+                      />
                       </div>
                       <div className="text-center">
-                        <span className="font-bold block">Click to upload</span>
-                        <span className="text-xs">SVG, PNG, JPG or GIF (max. 10MB)</span>
+                        <span className="font-bold block text-(--text)">Click to upload</span>
+                        <span className="text-xs text-(--text-muted)">SVG, PNG, JPG or GIF (max. 10MB)</span>
                       </div>
                   </button>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2 text-(--text)">Auction End Time *</label>
+              <label className="block text-sm text-(--text) font-medium mb-2">Auction End Time *</label>
               <input type="datetime-local" name="auctionEndTime" value={formData.auctionEndTime} onChange={handleChange}
                 className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-(--accent) outline-none transition"
                 style={inputStyle} disabled={loading}
               />
             </div>
 
-            <div className="flex gap-4 pt-6 border-t" style={{ borderColor: "var(--border)" }}>
+            <div className="flex gap-4 pt-6 border-t border-(--border)">
               <button type="submit" disabled={loading}
-                className="flex-1 font-bold py-3 px-6 rounded-lg transition hover:brightness-110 shadow-lg bg-(--accent) text-(--text)"
+                className="flex-1 bg-(--accent) text-[#1A1205] font-bold py-3 px-6 rounded-lg transition hover:brightness-110 shadow-lg"
               >
                 {loading ? "Creating..." : "Create Auction"}
               </button>
-              <button type="button" onClick={() => nav.back()} disabled={loading}
-                className="flex-1 border rounded-lg font-semibold py-3 px-6 transition hover:bg-(--bg-hover)"
-                style={{ borderColor: "var(--border)", color: "var(--text)" }}
+              <button 
+                type="button" 
+                onClick={() => nav.back()} 
+                disabled={loading}
+                className="flex-1 border border-(--border) rounded-lg text-(--text) font-semibold py-3 px-6 transition hover:bg-(--bg-hover)"
               >
                 Cancel
               </button>
@@ -179,24 +176,24 @@ export default function CreateAuction() {
           </form>
         </div>
 
-        <div className="mt-8 p-6 rounded-lg border" style={{ backgroundColor: "var(--bg-subtle)", borderColor: "var(--border-subtle)" }}>
-          <h3 className="text-lg font-semibold mb-4" style={{ color: "var(--text)" }}>📝 Tips for Success</h3>
-          <ul className="space-y-2 text-sm" style={{ color: "var(--text-muted)" }}>
+        {/* ... (Keep Tips) ... */}
+        <div className="mt-8 p-6 rounded-lg bg-(--bg-subtle) border border-(--border-subtle)">
+          <h3 className="text-lg text-(--text) font-semibold mb-4">📝 Tips for Success</h3>
+          <ul className="space-y-2 text-sm text-(--text-muted)">
             <li>✓ Use a clear, descriptive title</li>
             <li>✓ Include detailed information</li>
             <li>✓ Set a competitive starting bid</li>
+            <li>✓ Upload high-quality images</li>
           </ul>
         </div>
       </div>
 
-      {/* MODAL COMPONENT */}
       <ImageUploadModal 
         isOpen={isUploadModalOpen} 
         onClose={() => setIsUploadModalOpen(false)} 
         onUpload={handleImageUpload}
         title="Upload Product Image"
       />
-
     </div>
   );
 }

@@ -14,8 +14,8 @@ export default function ProductDetail() {
   const nav = useNav();
   const [product, setProduct] = useState(null);
   const [isWatchlisted, setIsWatchlisted] = useState(false);
-  const [bidAmount, setBidAmount] = useState('');
-  const [timeLeft, setTimeLeft] = useState({ timeLeft: '', urgencyLevel: 'normal' });
+  // const [bidAmount, setBidAmount] = useState('');
+  // const [timeLeft, setTimeLeft] = useState({ timeLeft: '', urgencyLevel: 'normal' });
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
 

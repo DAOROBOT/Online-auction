@@ -46,6 +46,7 @@ export default function BidHistory({ productId }) {
                 id: bid.id,
                 bidderId: bid.bidderId,
                 bidderUsername: bid.bidderName || bid.bidderUsername || "Anonymous",
+                bidderRating: bid.bidderRating,
                 amount: bid.amount,
                 bidTime: bid.timestamp || bid.bidTime,
                 isCurrentUser: user ? (bid.bidderId === user.id || bid.bidderName === user.username) : false
@@ -162,9 +163,7 @@ export default function BidHistory({ productId }) {
               <div className="w-10 h-10 rounded-full border-2 border-[#1A1205]/20 flex items-center justify-center font-black bg-[#1A1205] text-(--accent)">
                 {leadingBid.isCurrentUser ? 'Y' : leadingBid.bidderUsername[0]}
               </div>
-              <span className="font-black text-base">
-                {maskBidderName(leadingBid.bidderUsername, leadingBid.isCurrentUser)}
-              </span>
+              <div className='font-black text-base'>{maskBidderName(leadingBid.bidderUsername, leadingBid.isCurrentUser)}</div>
             </div>
 
             {/* Amount */}
@@ -205,10 +204,10 @@ export default function BidHistory({ productId }) {
                                             color: bid.isCurrentUser ? '#1A1205' : 'var(--text-muted)',
                                             borderColor: 'var(--border)'
                                          }}>
-                                        {showMasked ? (bid.isCurrentUser ? 'Y' : bid.bidderUsername[0]) : bid.bidderUsername[0]}
+                                        {bid.isCurrentUser ? 'Y' : bid.bidderUsername[0]}
                                     </div>
                                     <span className="font-bold text-sm" style={{ color: 'var(--text)' }}>
-                                        {showMasked ? maskBidderName(bid.bidderUsername, bid.isCurrentUser) : bid.bidderUsername}
+                                        {maskBidderName(bid.bidderUsername, bid.isCurrentUser)}
                                     </span>
                                 </div>
 

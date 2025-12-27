@@ -17,14 +17,14 @@ export default function NotFound() {
       >
         {/* The Huge 404 Text */}
         <div
-          className="text-[40vw] font-black text-[var(--text)] opacity-[0.03] rotate-[-10deg] leading-none whitespace-nowrap"
+          className="text-[40vw] font-black text-(--text) opacity-[0.03] rotate-[-10deg] leading-none whitespace-nowrap"
         >
           404
         </div>
       </div>
 
       {/* --- FOREGROUND CONTENT (The Buttons & Text) --- */}
-      <div className="text-center max-w-lg w-full relative z-10 backdrop-blur-sm p-8 rounded-2xl border border-transparent hover:border-[var(--border)] transition-all">
+      <div className="text-center max-w-lg w-full relative z-10 backdrop-blur-sm p-8 rounded-2xl border border-transparent hover:border-(--border) transition-all">
         
         {/* Heading */}
         <div className="flex flex-row items-center justify-center gap-4 mb-6">
@@ -32,7 +32,7 @@ export default function NotFound() {
                 size={50}
                 style={{ color: 'var(--danger)' }}
             />
-            <h1 className="w-fit text-5xl font-extrabold text-[var(--text)]">
+            <h1 className="w-fit text-5xl font-extrabold text-(--text)">
                 Page Not Found
             </h1>
         </div>
@@ -46,14 +46,8 @@ export default function NotFound() {
         </p>
 
         {/* Error Details */}
-        <div
-          className="p-3 rounded-lg mb-8 inline-block w-full border"
-          style={{ 
-            backgroundColor: 'var(--bg-soft)', 
-            borderColor: 'var(--border)' 
-          }}
-        >
-          <p className="text-sm font-mono break-all" style={{ color: 'var(--text-muted)' }}>
+        <div className="p-3 rounded-lg mb-8 inline-block w-full bg-(--bg-soft) border border-(--border)">
+          <p className="text-sm text-(--text-muted) font-mono break-all">
              URL: <span style={{ color: 'var(--accent)' }}>{window.location.pathname}</span>
           </p>
         </div>

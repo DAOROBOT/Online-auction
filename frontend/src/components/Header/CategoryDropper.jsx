@@ -67,11 +67,11 @@ export default function CategoryDropper() {
       <button 
         onClick={toggleOpen}
         className={`flex items-center gap-2 py-2 px-3 rounded-lg font-medium text-sm tracking-wide transition-all duration-200 
-        ${isOpen ? 'bg-[var(--header-hover)] text-[var(--text)]' : 'text-[var(--header-text)] hover:bg-[var(--header-hover)] hover:text-[var(--text)]'}`}
+        ${isOpen ? 'bg-(--header-hover) text-(--text)' : 'text-(--header-text) hover:bg-(--header-hover) hover:text-(--text)'}`}
       >
         <LayoutGrid 
           size={18} 
-          className={`transition-colors ${isOpen ? 'text-[var(--accent)] opacity-100' : 'opacity-70 group-hover:opacity-100'}`} 
+          className={`transition-colors ${isOpen ? 'text-(--accent) opacity-100' : 'opacity-70 group-hover:opacity-100'}`} 
         />
         <span>Categories</span>
         <ChevronDown 
@@ -107,8 +107,8 @@ export default function CategoryDropper() {
                   <Link 
                     to={`/search?category=${cat.name}`}
                     onClick={() => setIsOpen(false)} // Close menu on navigation
-                    className={`flex-grow flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200
-                    ${isSubOpen ? 'bg-[var(--accent-soft)] text-[var(--accent-strong)]' : 'text-[var(--text)] hover:bg-[var(--accent-soft)] hover:text-[var(--accent-strong)]'}`}
+                    className={`grow flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200
+                    ${isSubOpen ? 'bg-(--accent-soft) text-(--accent-strong)' : 'text-(--text) hover:bg-(--accent-soft) hover:text-(--accent-strong)'}`}
                   >
                       {cat.name}
                   </Link>
@@ -117,8 +117,8 @@ export default function CategoryDropper() {
                   {cat.subcategories?.length > 0 && (
                     <button
                         onClick={(e) => toggleSub(e, cat.id)}
-                        className={`p-2 ml-1 rounded-md transition-all hover:bg-[var(--bg-hover)]
-                        ${isSubOpen ? 'text-[var(--accent)] opacity-100' : 'opacity-40 hover:opacity-100'}`}
+                        className={`p-2 ml-1 rounded-md transition-all hover:bg-(--bg-hover)
+                        ${isSubOpen ? 'text-(--accent) opacity-100' : 'opacity-40 hover:opacity-100'}`}
                     >
                         <ChevronRight size={14} className={`transition-transform ${isSubOpen ? 'rotate-90' : ''}`} />
                     </button>
@@ -135,9 +135,9 @@ export default function CategoryDropper() {
                     className={`absolute left-[calc(100%-0.5rem)] top-0 w-64 pl-4 pt-1 z-50 transition-all duration-200
                     ${isSubOpen ? 'opacity-100 visible translate-x-0' : 'opacity-0 invisible -translate-x-2 pointer-events-none'}`}
                 >
-                  <div className="shadow-xl rounded-xl border p-2 overflow-hidden bg-[var(--card-bg)] border-[var(--border)]">
+                  <div className="shadow-xl rounded-xl border p-2 overflow-hidden bg-(--card-bg) border-(--border)">
                     
-                    <div className="px-3 py-2 text-xs font-bold uppercase tracking-wider mb-1 text-[var(--text-subtle)]">
+                    <div className="px-3 py-2 text-xs font-bold uppercase tracking-wider mb-1 text-(--text-subtle)">
                       {cat.name} Collection
                     </div>
                     
@@ -147,9 +147,9 @@ export default function CategoryDropper() {
                         to={`/search?category=${cat.name}&subcategory=${sub.name}`}
                         onClick={() => setIsOpen(false)}
                         className="block px-4 py-2.5 rounded-lg text-sm transition-all duration-100
-                        text-[var(--text-muted)]
-                        hover:bg-[var(--bg-hover)] 
-                        hover:text-[var(--accent)] 
+                        text-(--text-muted)
+                        hover:bg-(--bg-hover) 
+                        hover:text-(--accent) 
                         hover:pl-5" 
                       >
                         {sub.name}
