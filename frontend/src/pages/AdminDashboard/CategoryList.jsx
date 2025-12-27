@@ -39,21 +39,15 @@ export default function CategoryList() {
       </div>
 
       {/* Search Bar */}
-      <div className="rounded-xl p-4 mb-6" style={{ backgroundColor: 'var(--bg-soft)', borderWidth: '1px', borderColor: 'var(--border)' }}>
+      <div className="rounded-xl mb-6 focus:ring-2" style={{ backgroundColor: 'var(--bg-soft)', borderWidth: '1px', borderColor: 'var(--border)' }}>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} size={20} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-(--text-muted)" size={20} />
           <input
             type="text"
             placeholder="Search categories..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2"
-            style={{ 
-              backgroundColor: 'var(--bg-soft)', 
-              borderWidth: '1px',
-              borderColor: 'var(--border)',
-              color: 'var(--text)'
-            }}
+            className="w-full pl-10 pr-4 py-3"
           />
         </div>
       </div>

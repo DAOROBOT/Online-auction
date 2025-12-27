@@ -70,23 +70,16 @@ export default function SearchPage() {
     };
 
     return (
-        <div className="bg-[var(--bg)] px-4 sm:px-6 lg:px-8 py-8 max-w-7xl mx-auto w-full min-h-screen">
+        <div className="bg-(--bg) px-4 sm:px-6 lg:px-8 py-8 max-w-7xl mx-auto w-full min-h-screen">
             {/* Breadcrumbs */}
             <div className="mb-8">
                 <ul className="flex items-center gap-2 text-sm">
-                    <li className="flex items-center gap-2 transition-colors cursor-pointer hover:underline" style={{ color: 'var(--text-muted)' }}>
+                    <li className="flex items-center gap-2 transition-colors cursor-pointer text-(--text-muted) hover:underline">
                         <House size={16} />
                         <span>Home</span>
                     </li>
                     <li style={{ color: 'var(--border-strong)' }}>/</li>
-                    {/* <li className="transition-colors cursor-pointer hover:underline" style={{ color: 'var(--text-muted)' }}>
-                        {category.charAt(0).toUpperCase() + category.slice(1)}
-                    </li>
-                    <li style={{ color: 'var(--border-strong)' }}>/</li>
-                    <li className="font-semibold" style={{ color: 'var(--accent)' }}>
-                        {subcategory.charAt(0).toUpperCase() + subcategory.slice(1)}
-                    </li> */}
-                    <li className="font-semibold" style={{ color: 'var(--accent)' }}>
+                    <li className="font-semibold text-(--accent)">
                         Search Results
                     </li>
                 </ul>

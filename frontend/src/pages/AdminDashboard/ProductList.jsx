@@ -93,7 +93,7 @@ export default function ProductList() {
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="profile-input w-full pl-10 pr-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[var(--accent)] appearance-none"
+              className="profile-input w-full pl-10 pr-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-(--accent) appearance-none"
             >
               <option value="all">All Categories</option>
               <option value="Electronics">Electronics</option>
@@ -109,7 +109,7 @@ export default function ProductList() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="profile-input w-full pl-10 pr-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[var(--accent)] appearance-none"
+              className="profile-input w-full pl-10 pr-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-(--accent) appearance-none"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
@@ -138,7 +138,7 @@ export default function ProductList() {
             </thead>
             <tbody className="profile-divider divide-y">
               {filteredProducts.map((product) => (
-                <tr key={product.id} className="hover:bg-[var(--bg-hover)] transition-colors">
+                <tr key={product.id} className="hover:bg-(--bg-hover) transition-colors">
                   <td className="profile-text-muted px-6 py-4 text-sm">#{product.id}</td>
                   <td className="px-6 py-4">
                     <span className="profile-name font-medium">{product.title}</span>
@@ -158,14 +158,14 @@ export default function ProductList() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-end gap-2">
-                      <button className="p-2 rounded-lg hover:bg-[var(--info-soft)] transition-colors">
-                        <Eye size={18} className="text-[var(--info)]" />
+                      <button className="p-2 rounded-lg hover:bg-(--info-soft) transition-colors">
+                        <Eye size={18} className="text-(--info)" />
                       </button>
                       <button
                         onClick={() => handleRemove(product.id, product.title)}
-                        className="p-2 rounded-lg hover:bg-[var(--danger-soft)] transition-colors"
+                        className="p-2 rounded-lg hover:bg-(--danger-soft) transition-colors"
                       >
-                        <Trash2 size={18} className="text-[var(--danger)]" />
+                        <Trash2 size={18} className="text-(--danger)" />
                       </button>
                     </div>
                   </td>
@@ -187,7 +187,7 @@ export default function ProductList() {
         <span>Showing {filteredProducts.length} of {products.length} products</span>
         <div className="flex items-center gap-4 text-xs">
           <span className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-[var(--success)]"></div>
+            <div className="w-3 h-3 rounded-full bg-(--success)"></div>
             Active: {products.filter(p => p.status === 'active').length}
           </span>
           <span className="flex items-center gap-2">

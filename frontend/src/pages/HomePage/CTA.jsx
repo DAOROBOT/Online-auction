@@ -52,7 +52,7 @@ export default function CTA() {
                 
                 <button 
                     onClick={ctaContent.secondaryBtn.action}
-                    className="px-10 py-4 font-bold rounded-full border-2 hover:bg-[var(--bg-hover)] transition-colors"
+                    className="px-10 py-4 font-bold rounded-full border-2 hover:bg-(--bg-hover) transition-colors"
                     style={{ color: "var(--text)", borderColor: "var(--border)" }}
                 >
                     {ctaContent.secondaryBtn.text}

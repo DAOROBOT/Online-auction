@@ -79,7 +79,7 @@ export default function UserList({ setActiveTab }) {
           <button onClick={() => setActiveTab('upgrades')} className="profile-btn-secondary px-4 py-2 rounded-lg font-medium flex items-center gap-2 border hover:shadow-md transition-all">
             <UserPlus size={18}  />
             Upgrade Requests
-            <span className="bg-[var(--danger)] text-white px-2 py-0.5 rounded-full text-xs font-bold">3</span>
+            <span className="bg-(--danger) text-white px-2 py-0.5 rounded-full text-xs font-bold">3</span>
           </button>
         </div>
       </div>
@@ -95,7 +95,7 @@ export default function UserList({ setActiveTab }) {
               placeholder="Search by name or email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="profile-input w-full pl-10 pr-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+              className="profile-input w-full pl-10 pr-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-(--accent)"
             />
           </div>
 
@@ -105,7 +105,7 @@ export default function UserList({ setActiveTab }) {
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="profile-input w-full pl-10 pr-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[var(--accent)] appearance-none"
+              className="profile-input w-full pl-10 pr-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-(--accent) appearance-none"
             >
               <option value="all">All Roles</option>
               <option value="bidder">Bidder</option>
@@ -120,7 +120,7 @@ export default function UserList({ setActiveTab }) {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="profile-input w-full pl-10 pr-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[var(--accent)] appearance-none"
+              className="profile-input w-full pl-10 pr-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-(--accent) appearance-none"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
@@ -147,7 +147,7 @@ export default function UserList({ setActiveTab }) {
             </thead>
             <tbody className="profile-divider divide-y">
               {filteredUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-[var(--bg-hover)] transition-colors">
+                <tr key={user.id} className="hover:bg-(--bg-hover) transition-colors">
                   <td className="profile-text-muted px-6 py-4 text-sm">#{user.id}</td>
                   <td className="px-6 py-4">
                     <div>
@@ -178,24 +178,24 @@ export default function UserList({ setActiveTab }) {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-end gap-2">
-                      <button className="p-2 rounded-lg hover:bg-[var(--info-soft)] transition-colors">
-                        <Eye size={18} className="text-[var(--info)]" />
+                      <button className="p-2 rounded-lg hover:bg-(--info-soft) transition-colors">
+                        <Eye size={18} className="text-(--info)" />
                       </button>
-                      <button className="p-2 rounded-lg hover:bg-[var(--accent-soft)] transition-colors">
+                      <button className="p-2 rounded-lg hover:bg-(--accent-soft) transition-colors">
                         <Edit2 size={18} className="profile-icon-accent" />
                       </button>
                       <button
                         onClick={() => handleStatusToggle(user.id)}
                         className={`p-2 rounded-lg transition-colors ${
                           user.status === 'active'
-                            ? 'hover:bg-[var(--danger-soft)]'
-                            : 'hover:bg-[var(--success-soft)]'
+                            ? 'hover:bg-(--danger-soft)'
+                            : 'hover:bg-(--success-soft)'
                         }`}
                       >
                         {user.status === 'active' ? (
-                          <Ban size={18} className="text-[var(--danger)]" />
+                          <Ban size={18} className="text-(--danger)" />
                         ) : (
-                          <CheckCircle size={18} className="text-[var(--success)]" />
+                          <CheckCircle size={18} className="text-(--success)" />
                         )}
                       </button>
                     </div>
@@ -218,11 +218,11 @@ export default function UserList({ setActiveTab }) {
         <span>Showing {filteredUsers.length} of {users.length} users</span>
         <div className="flex items-center gap-4 text-xs">
           <span className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-[var(--info)]"></div>
+            <div className="w-3 h-3 rounded-full bg-(--info)"></div>
             Bidders: {users.filter(u => u.role === 'bidder').length}
           </span>
           <span className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-[var(--accent)]"></div>
+            <div className="w-3 h-3 rounded-full bg-(--accent)"></div>
             Sellers: {users.filter(u => u.role === 'seller').length}
           </span>
         </div>

@@ -15,7 +15,7 @@ import NotFound from './pages/NotFound';
 
 function App() {
   return (
-    <div className='min-h-screen transition-colors duration-100 bg-[var(--bg)] color-[var(--text)]'>
+    <div className='min-h-screen transition-colors duration-100'>
       <Routes>
         {/* Auth Routes */}
         <Route element={<AuthLayout />}>

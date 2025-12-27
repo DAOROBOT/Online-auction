@@ -106,7 +106,7 @@ export default function TopBidders() {
                             onClick={() => goToProfile(champion.id)}
                             className="home-champion-card rounded-2xl p-8 flex flex-col items-center order-1 md:order-2 transform md:-translate-y-6 relative z-10 hover:-translate-y-8 transition-transform duration-300 cursor-pointer"
                         >
-                            <div className="absolute -top-6 bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold px-6 py-2 rounded-full shadow-lg text-base gap-2 flex items-center">
+                            <div className="absolute -top-6 bg-linear-to-r from-yellow-400 to-orange-500 text-white font-bold px-6 py-2 rounded-full shadow-lg text-base gap-2 flex items-center">
                                 <Trophy className="w-4 h-4" /> #1 Champion
                             </div>
                             <div className="w-28 h-28 rounded-full border-4 mb-4 overflow-hidden shadow-xl" style={{ borderColor: "var(--accent)" }}>
@@ -146,16 +146,16 @@ export default function TopBidders() {
                             <div 
                                 key={bidder.id} 
                                 onClick={() => goToProfile(bidder.id)}
-                                className="flex items-center justify-between p-4 border-b last:border-0 hover:bg-[var(--bg-hover)] transition-colors cursor-pointer group"
+                                className="flex items-center justify-between p-4 border-b last:border-0 hover:bg-(--bg-hover) transition-colors cursor-pointer group"
                                 style={{ borderColor: "var(--border-subtle)" }}
                             >
                                 <div className="flex items-center gap-4">
                                     <span className="font-bold w-8 text-center" style={{ color: "var(--text-subtle)" }}>#{bidder.rank}</span>
-                                    <div className="w-10 h-10 rounded-full overflow-hidden border group-hover:border-[var(--accent)] transition-colors" style={{ borderColor: "var(--border)" }}>
+                                    <div className="w-10 h-10 rounded-full overflow-hidden border group-hover:border-(--accent) transition-colors" style={{ borderColor: "var(--border)" }}>
                                         <img src={bidder.avatar} alt={bidder.name} className="w-full h-full object-cover" />
                                     </div>
                                     <div>
-                                        <h4 className="font-bold group-hover:text-[var(--accent)] transition-colors" style={{ color: "var(--text)" }}>{bidder.name}</h4>
+                                        <h4 className="font-bold group-hover:text-(--accent) transition-colors" style={{ color: "var(--text)" }}>{bidder.name}</h4>
                                         <div className="flex items-center gap-1 text-xs" style={{ color: "var(--accent)" }}>
                                             <Star className="w-3 h-3 fill-current" />
                                             {bidder.rating}% Rating

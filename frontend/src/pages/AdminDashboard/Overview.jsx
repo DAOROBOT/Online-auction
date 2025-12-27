@@ -71,21 +71,20 @@ export default function OverviewView() {
             <th className="px-6 py-4">Time</th>
           </tr>
         </thead>
-        <tbody className="divide-y" style={{ borderColor: 'var(--admin-card-border)' }}>
+        <tbody className="divide-y border-(--admin-card-border)">
           {[1, 2, 3, 4, 5].map((i) => (
-            <tr key={i} className="transition-colors hover:bg-[var(--bg-hover)]">
-              <td className="px-6 py-4 font-medium" style={{ color: 'var(--admin-text-main)' }}>Rolex Submariner #829{i}</td>
-              <td className="px-6 py-4 flex items-center gap-2" style={{ color: 'var(--admin-text-muted)' }}>
+            <tr key={i} className="transition-colors hover:bg-(--bg-hover)">
+              <td className="px-6 py-4 font-medium text-(--admin-text-main)">Rolex Submariner #829{i}</td>
+              <td className="px-6 py-4 flex items-center gap-2 text-(--admin-text-muted)">
                 <div className="w-6 h-6 rounded-full bg-slate-200" /> user_82{i}
               </td>
-              <td className="px-6 py-4 font-bold" style={{ color: 'var(--success)' }}>$12,{i}00</td>
+              <td className="px-6 py-4 font-bold text-(--success)">$12,{i}00</td>
               <td className="px-6 py-4">
-                  <span className="px-2 py-1 rounded-full text-xs font-bold" 
-                    style={{ backgroundColor: 'var(--success-soft)', color: 'var(--success)' }}>
+                  <span className="px-2 py-1 rounded-full text-xs text-(--success) font-bold bg-(--success-soft)">
                     Winning
                   </span>
               </td>
-              <td className="px-6 py-4" style={{ color: 'var(--admin-text-muted)' }}>2 min ago</td>
+              <td className="px-6 py-4 text-(--admin-text-muted)">2 min ago</td>
             </tr>
           ))}
         </tbody>

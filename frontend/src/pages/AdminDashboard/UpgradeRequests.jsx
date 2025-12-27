@@ -115,7 +115,7 @@ export default function UpgradeRequests() {
             className={`px-4 py-2 rounded-lg font-medium transition-all capitalize relative ${
               filterStatus === status
                 ? 'profile-name'
-                : 'profile-text-muted hover:bg-[var(--bg-hover)]'
+                : 'profile-text-muted hover:bg-(--bg-hover)'
             }`}
           >
             {status}
@@ -160,7 +160,7 @@ export default function UpgradeRequests() {
               <div className="flex gap-6">
                 <div className="text-center">
                   <div className="flex items-center gap-1 justify-center mb-1">
-                    <Trophy size={16} className="text-[var(--accent)]" />
+                    <Trophy size={16} className="text-(--accent)" />
                     <span className="profile-name text-2xl font-bold">{request.stats.auctionsWon}</span>
                   </div>
                   <div className="profile-text-muted text-xs">Auctions Won</div>
@@ -189,32 +189,32 @@ export default function UpgradeRequests() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleApprove(request.id)}
-                    className="px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-all bg-[var(--success-soft)] text-[var(--success)] hover:shadow-md"
+                    className="px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-all bg-(--success-soft) text-(--success) hover:shadow-md"
                   >
                     <CheckCircle size={18} />
                     Approve
                   </button>
                   <button
                     onClick={() => handleReject(request.id)}
-                    className="px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-all bg-[var(--danger-soft)] text-[var(--danger)] hover:shadow-md"
+                    className="px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-all bg-(--danger-soft) text-(--danger) hover:shadow-md"
                   >
                     <XCircle size={18} />
                     Reject
                   </button>
-                  <button className="p-2 rounded-lg hover:bg-[var(--bg-hover)] transition-colors">
+                  <button className="p-2 rounded-lg hover:bg-(--bg-hover) transition-colors">
                     <Eye size={18} className="profile-text-muted" />
                   </button>
                 </div>
               )}
 
               {request.status === 'approved' && (
-                <div className="px-4 py-2 rounded-lg bg-[var(--success-soft)] text-[var(--success)] font-medium">
+                <div className="px-4 py-2 rounded-lg bg-(--success-soft) text-(--success) font-medium">
                   ✓ Approved
                 </div>
               )}
 
               {request.status === 'rejected' && (
-                <div className="px-4 py-2 rounded-lg bg-[var(--danger-soft)] text-[var(--danger)] font-medium">
+                <div className="px-4 py-2 rounded-lg bg-(--danger-soft) text-(--danger) font-medium">
                   ✗ Rejected
                 </div>
               )}

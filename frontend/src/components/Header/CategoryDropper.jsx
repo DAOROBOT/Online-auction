@@ -85,13 +85,12 @@ export default function CategoryDropper() {
 
       {/* DROPDOWN PANEL */}
       <div 
-        className={`absolute top-[calc(100%+0.5rem)] left-0 w-64 rounded-xl shadow-2xl border flex flex-col py-2 backdrop-blur-xl z-50 overflow-visible
-        bg-[var(--card-bg)] border-[var(--border)] shadow-[var(--card-shadow)]
-        transition-all duration-200 origin-top-left
+        className={`absolute top-[calc(100%+0.75rem)] left-0 w-64 rounded-xl shadow-2xl border flex flex-col py-2 backdrop-blur-xl z-50 overflow-visible
+        bg-(--card-bg) border-(--border) shadow-(--card-shadow) transition-all duration-200 origin-top-left
         ${isOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible translate-y-2 pointer-events-none'}`}
       >
         {/* Decorative Arrow */}
-        <div className="absolute -top-1.5 left-8 w-3 h-3 rotate-45 border-l border-t bg-[var(--card-bg)] border-[var(--border)]"></div>
+        <div className="absolute -top-1.5 left-8 w-3 h-3 rotate-45 border-l border-t bg-(--card-bg) border-(--border)"></div>
 
         {categories.map((cat) => {
            const isSubOpen = activeSub === cat.id;
