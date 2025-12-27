@@ -12,36 +12,6 @@ const controller = {
         }
     },
 
-    // GET /auctions/search
-    findAuctions: async function(req, res, next) {
-        try {
-            const { q, category, minPrice, maxPrice, sortBy, page } = req.query;
-            
-            const pageNum = parseInt(page) || 1;
-            const limit = 12;
-            const offset = (pageNum - 1) * limit;
-
-            const { data, total } = await auctionService.findAuctions({
-                q,
-                category,
-                minPrice: minPrice ? parseFloat(minPrice) : null,
-                maxPrice: maxPrice ? parseFloat(maxPrice) : null,
-                sortBy,
-                limit,
-                offset
-            });
-
-            res.json({
-                data,
-                total,
-                currentPage: pageNum,
-                totalPages: Math.ceil(total / limit)
-            });
-        } catch (error) {
-            next(error);
-        }
-    },
-
     // GET /auctions/:id
     getAuction: async function(req, res, next) {
         try {
