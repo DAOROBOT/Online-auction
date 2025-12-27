@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useNav } from '../../hooks/useNavigate';
 
 export default function Validation() {
     const nav = useNav();
+    const navigate = useNavigate();
     const location = useLocation();
     
     // Form State
@@ -53,46 +54,48 @@ export default function Validation() {
 
     return (
         <div className="w-full max-w-md">
-            <h2 className="text-3xl font-bold text-white mb-8">Verify Account</h2>
+            {/* Back Button */}
+
+            <h2 className="text-3xl font-bold text-[var(--text)] mb-8">Verify Account</h2>
             
             {successMessage && (
-                <div className="mb-4 p-3 rounded bg-green-500/10 border border-green-500/50 text-green-500 text-sm">
+                <div className="mb-4 p-3 rounded bg-[var(--success-soft)] border border-[var(--success)] text-[var(--success)] text-sm">
                     {successMessage}
                 </div>
             )}
 
             {error && (
-                <div className="mb-4 p-3 rounded bg-red-500/10 border border-red-500/50 text-red-500 text-sm">
+                <div className="mb-4 p-3 rounded bg-[var(--danger-soft)] border border-[var(--danger)] text-[var(--danger)] text-sm">
                     {error}
                 </div>
             )}
 
-            <form className="space-y-6" onSubmit={handleSubmit}>
+            <form className="space-y-5" onSubmit={handleSubmit}>
                 <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-300">Email</label>
+                    <label className="block text-sm font-medium text-[var(--text-muted)]">Email</label>
                     <input 
                         type="email" 
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         disabled
-                        className="w-full px-4 py-3 rounded-lg bg-[#120A1F] border border-white/10 text-gray-500 placeholder:text-gray-500 focus:outline-none focus:border-[#E0B84C] transition-colors opacity-60 cursor-not-allowed"
+                        className="w-full px-4 py-3 rounded-lg border border-[var(--input-border)] bg-[var(--input-bg)] text-[var(--text-muted)] placeholder:text-[var(--text-subtle)] focus:outline-none transition-all opacity-60 cursor-not-allowed"
                     />
                 </div>
                 <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-300">Verification Code</label>
+                    <label className="block text-sm font-medium text-[var(--text-muted)]">Verification Code</label>
                     <input 
                         type="text" 
                         required
                         value={code}
                         onChange={(e) => setCode(e.target.value)}
                         placeholder="Enter the code sent to your email" 
-                        className="w-full px-4 py-3 rounded-lg bg-[#120A1F] border border-white/10 text-white placeholder:text-gray-500 focus:outline-none focus:border-[#E0B84C] transition-colors"
+                        className="w-full px-4 py-3 rounded-lg border border-[var(--input-border)] bg-[var(--input-bg)] text-[var(--text)] placeholder:text-[var(--text-subtle)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent transition-all"
                     />
                 </div>
                 <button 
                     type="submit" 
                     disabled={loading}
-                    className="w-full py-3 rounded-lg bg-[#E0B84C] text-[#120A1F] font-semibold hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full py-3 rounded-full bg-[var(--accent)] text-white font-semibold hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {loading ? 'Verifying...' : 'Verify Account'}
                 </button>

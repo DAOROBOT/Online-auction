@@ -45,8 +45,8 @@ route.get('/google/callback',
 );
 
 // ==================== Facebook OAuth ====================
-route.get('/facebook', passport.authenticate('facebook', { 
-    scope: ['email'] 
+route.get('/facebook', passport.authenticate('facebook', {
+    scope: ['email']
 }));
 
 route.get('/facebook/callback',

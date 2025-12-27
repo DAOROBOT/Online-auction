@@ -49,23 +49,22 @@ passport.use(new FacebookStrategy({
     profileFields: ['id', 'emails', 'name', 'displayName', 'photos']
 }, async (accessToken, refreshToken, profile, done) => {
     try {
-        const email = profile.emails?.[0]?.value;
+        const email = profile.emails?.[0]?.value || `${profile.id}@facebook.placeholder`;
+        const username = profile.displayName?.replace(/\s+/g, '_').toLowerCase() || `fb_user`;
         
-        if (!email) {
-            return done(new Error('Facebook account does not have an email'), null);
+        // Try to find user by facebookId first, then by email
+        let user = await userService.getByFacebookId(profile.id);
+        
+        if (!user && profile.emails?.[0]?.value) {
+            user = await userService.getByEmail(profile.emails[0].value);
         }
-        
-        const username = profile.displayName.replace(/\s+/g, '_').toLowerCase();
-        
-        // Check if user exists
-        let user = await userService.getByEmail(email);
         
         if (!user) {
             // Create new user with Facebook info
             user = await userService.create({
                 username: `${username}_${Date.now()}`,
                 email: email,
-                fullName: profile.displayName,
+                fullName: profile.displayName || 'Facebook User',
                 avatarUrl: profile.photos?.[0]?.value || null,
                 encryptedPassword: await authService.hashPassword(Math.random().toString(36)),
                 facebookId: profile.id,
