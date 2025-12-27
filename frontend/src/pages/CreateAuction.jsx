@@ -121,32 +121,33 @@ export default function CreateAuction() {
             <div>
               <label className="block text-sm text-(--text) font-medium mb-2">Product Image *</label>
               {formData.imageUrl ? (
-                  <div className="relative w-full h-64 rounded-xl overflow-hidden border border-(--border) group">
-                      <img src={formData.imageUrl} alt="Preview" className="w-full h-full object-cover" />
-                      <button 
-                          type="button"
-                          onClick={() => setFormData(prev => ({ ...prev, imageUrl: "" }))}
-                          className="absolute top-2 right-2 p-2 bg-black/50 text-white rounded-full hover:bg-red-600 transition backdrop-blur-sm"
-                      >
-                          <X size={20} />
-                      </button>
-                  </div>
+                <div className="relative w-full h-64 rounded-xl overflow-hidden border border-(--border) group">
+                    <img src={formData.imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                    <button 
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, imageUrl: "" }))}
+                        className="absolute top-2 right-2 p-2 bg-black/50 text-white rounded-full hover:bg-red-600 transition backdrop-blur-sm"
+                    >
+                        <X size={20} />
+                    </button>
+                </div>
               ) : (
-                  <button 
-                      type="button"
-                      onClick={() => setIsUploadModalOpen(true)}
-                      className="w-full h-40 border-2 border-dashed border-(--border-subtle) rounded-xl flex flex-col items-center justify-center gap-3 transition hover:bg-(--bg-subtle) group"
-                  >
-                      <div 
-                        className="p-3 rounded-full text-(--text-muted) bg-(--bg) shadow-sm group-hover:scale-110 transition-transform">
-                        <Upload size={24} 
-                      />
-                      </div>
-                      <div className="text-center">
-                        <span className="font-bold block text-(--text)">Click to upload</span>
-                        <span className="text-xs text-(--text-muted)">SVG, PNG, JPG or GIF (max. 10MB)</span>
-                      </div>
-                  </button>
+                <button 
+                    type="button"
+                    onClick={() => setIsUploadModalOpen(true)}
+                    className="w-full h-40 border-2 border-dashed border-(--border-subtle) rounded-xl flex flex-col items-center justify-center gap-3 transition group"
+                    style={inputStyle}
+                >
+                    <div 
+                      className="p-3 rounded-full text-(--text-muted) bg-(--bg) shadow-sm group-hover:scale-110 transition-transform">
+                      <Upload size={24} 
+                    />
+                    </div>
+                    <div className="text-center">
+                      <span className="font-bold block text-(--text)">Click to upload</span>
+                      <span className="text-xs text-(--text-muted)">SVG, PNG, JPG or GIF (max. 10MB)</span>
+                    </div>
+                </button>
               )}
             </div>
 

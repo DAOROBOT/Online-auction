@@ -173,7 +173,7 @@ export default function ProfileSidebar({ userData, isOwnProfile }) {
                         <div className="flex items-center justify-center gap-2 mt-2">
                             <span className="text-sm font-medium text-(--accent)">@{userData.username}</span>
                             <span className="h-1 w-1 rounded-full bg-(--text-muted) opacity-30"></span>
-                            <span className="text-xs font-bold uppercase tracking-wider text-(--text-muted) border border-(--border) px-2 py-0.5 rounded-md bg-[var(--bg-soft)]">
+                            <span className="text-xs font-bold uppercase tracking-wider text-(--text-muted) border border-(--border) px-2 py-0.5 rounded-md bg-(--bg-soft)">
                                 {userData.role || "Member"}
                             </span>
                         </div>
