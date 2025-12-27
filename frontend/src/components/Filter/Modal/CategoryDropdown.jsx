@@ -1,7 +1,21 @@
 import { Layers, Check } from "lucide-react";
 import FilterButton from "../FilterButton";
+import { useEffect, useState } from "react";
 
-export default function CategoryDropdown({ selectedCategory, setSelectedCategory, activeDropdown, categories, toggleDropdown, setActiveDropdown}) {
+export default function CategoryDropdown({ selectedCategory, setSelectedCategory, activeDropdown, toggleDropdown, setActiveDropdown}) {
+    const [categories, setCategories] = useState([]);
+    useEffect(() => {
+        fetch('http://localhost:3000/categories')
+            .then(response => response.json())
+            .then(data => {
+                console.log("Fetched categories:", data);
+                setCategories(data);
+            })
+            .catch(error => {
+                console.error("Error fetching categories:", error);
+            });
+    }, []);
+    
     return (
         <div className="relative">
             <FilterButton 

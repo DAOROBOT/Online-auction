@@ -5,8 +5,10 @@ import FilterBar from "../../components/Filter/FilterBar.jsx";
 import ProductGrid from "../../components/ProductGrid.jsx";
 import Pagination from "../../components/Pagination.jsx";
 import './SearchPage.css'
+import { useNav } from "../../hooks/useNavigate.js";
 
 export default function SearchPage() {
+    const nav = useNav();
     const [searchParams, setSearchParams] = useSearchParams();
 
     const query = searchParams.get("q") || "";
@@ -26,7 +28,7 @@ export default function SearchPage() {
             
             try {
                 // Construct URL with standard browser API
-                const apiUrl = new URL("http://localhost:3000/auctions/search");
+                const apiUrl = new URL("http://localhost:3000/search");
                 
                 // Append all existing params from the URL (q, category, page, etc.)
                 searchParams.forEach((value, key) => {
@@ -44,7 +46,7 @@ export default function SearchPage() {
                 const responseData = await response.json();
                 
                 setProducts(responseData.data || []);
-                setTotalPages(responseData.totalPages || 1);
+                setTotalPages(responseData.metadata.totalPages || 1);
             } catch (err) {
                 console.error("Error fetching auctions:", err);
                 setError(err.message);
@@ -68,13 +70,14 @@ export default function SearchPage() {
             return prev;
         });
     };
+    console.log({ products });
 
     return (
         <div className="bg-[var(--bg)] px-4 sm:px-6 lg:px-8 py-8 max-w-7xl mx-auto w-full min-h-screen">
             {/* Breadcrumbs */}
             <div className="mb-8">
                 <ul className="flex items-center gap-2 text-sm">
-                    <li className="flex items-center gap-2 transition-colors cursor-pointer hover:underline" style={{ color: 'var(--text-muted)' }}>
+                    <li onClick={() => nav.home()} className="flex items-center gap-2 transition-colors cursor-pointer hover:underline" style={{ color: 'var(--text-muted)' }}>
                         <House size={16} />
                         <span>Home</span>
                     </li>
@@ -96,21 +99,24 @@ export default function SearchPage() {
                 </h1>
             </div>
 
-            <FilterBar />
+            <FilterBar setSearchParams={setSearchParams} />
 
             <section className="transition-colors duration-100">
-                {loading && (<div className="min-h-screen flex items-center justify-center">Loading auctions...</div>)}
-                {error && (<div className="min-h-screen flex items-center justify-center text-red-500">Error: {error}</div>)}
-                <ProductGrid 
-                    items={products} 
-                    cardVariant="default"
-                    columns="grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
-                />
-                <Pagination 
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={handlePageChange}
-                />
+                {loading ? (<div className="min-h-screen flex items-center justify-center">Loading auctions...</div>) :
+                error ? (<div className="min-h-screen flex items-center justify-center text-red-500">Error: {error}</div>) :
+                (<>
+                    <ProductGrid 
+                        items={products} 
+                        cardVariant="default"
+                        columns="grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+                    />
+                    <Pagination 
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={handlePageChange}
+                    />
+                </>
+                )}
             </section>
         </div>
     );
