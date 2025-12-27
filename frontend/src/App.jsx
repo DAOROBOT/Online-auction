@@ -6,8 +6,10 @@ import AdminLayout from './layouts/AdminLayout';
 import HomePage from './pages/HomePage';
 import ProductDetail from './pages/ProductDetail';
 import SearchPage from './pages/SearchPage';
-import Login from './pages/Login';
-import Register from './pages/Register';
+import Login from './pages/Auth/Login';
+import Register from './pages/Auth/Register';
+import Validation from './pages/Auth/Validation';
+import AuthCallback from './pages/Auth/AuthCallback';
 import Profile from './pages/Profile';
 import CreateAuction from './pages/CreateAuction';
 import AdminDashboard from './pages/AdminDashboard';
@@ -21,7 +23,11 @@ function App() {
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/validate" element={<Validation />} />
         </Route>
+
+        {/* OAuth Callback Route */}
+        <Route path="/auth/callback" element={<AuthCallback />} />
 
         <Route element={<AdminLayout />}>
           <Route element={<ProtectedRoute requiredRole="admin" />}>
@@ -47,9 +53,9 @@ function App() {
           </Route>
 
           {/* --- LEVEL 3: ADMIN ONLY (Needs 'admin' role) --- */}
-          {/* <Route element={<ProtectedRoute requiredRole="admin" />}>
+          <Route element={<ProtectedRoute requiredRole="admin" />}>
             <Route path="/admin" element={<AdminDashboard />} />
-          </Route> */}
+          </Route>
 
           {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />

@@ -1,0 +1,101 @@
+import passport from 'passport';
+import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
+import { Strategy as FacebookStrategy } from 'passport-facebook';
+import userService from '../services/user.js';
+import authService from '../services/auth.js';
+
+// Google Strategy
+passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3000/auth/google/callback',
+    scope: ['profile', 'email']
+}, async (accessToken, refreshToken, profile, done) => {
+    try {
+        const email = profile.emails[0].value;
+        const username = profile.displayName.replace(/\s+/g, '_').toLowerCase();
+        
+        // Check if user exists
+        let user = await userService.getByEmail(email);
+        
+        if (!user) {
+            // Create new user with Google info
+            user = await userService.create({
+                username: `${username}_${Date.now()}`,
+                email: email,
+                fullName: profile.displayName,
+                avatarUrl: profile.photos?.[0]?.value || null,
+                encryptedPassword: await authService.hashPassword(Math.random().toString(36)),
+                googleId: profile.id,
+                isVerified: true,
+                createdAt: new Date(),
+            });
+        } else if (!user.googleId) {
+            // Link Google account to existing user
+            await userService.update(user.id, { googleId: profile.id });
+        }
+        
+        return done(null, user);
+    } catch (error) {
+        return done(error, null);
+    }
+}));
+
+// Facebook Strategy
+passport.use(new FacebookStrategy({
+    clientID: process.env.FACEBOOK_APP_ID,
+    clientSecret: process.env.FACEBOOK_APP_SECRET,
+    callbackURL: process.env.FACEBOOK_CALLBACK_URL || 'http://localhost:3000/auth/facebook/callback',
+    profileFields: ['id', 'emails', 'name', 'displayName', 'photos']
+}, async (accessToken, refreshToken, profile, done) => {
+    try {
+        const email = profile.emails?.[0]?.value;
+        
+        if (!email) {
+            return done(new Error('Facebook account does not have an email'), null);
+        }
+        
+        const username = profile.displayName.replace(/\s+/g, '_').toLowerCase();
+        
+        // Check if user exists
+        let user = await userService.getByEmail(email);
+        
+        if (!user) {
+            // Create new user with Facebook info
+            user = await userService.create({
+                username: `${username}_${Date.now()}`,
+                email: email,
+                fullName: profile.displayName,
+                avatarUrl: profile.photos?.[0]?.value || null,
+                encryptedPassword: await authService.hashPassword(Math.random().toString(36)),
+                facebookId: profile.id,
+                isVerified: true,
+                createdAt: new Date(),
+            });
+        } else if (!user.facebookId) {
+            // Link Facebook account to existing user
+            await userService.update(user.id, { facebookId: profile.id });
+        }
+        
+        return done(null, user);
+    } catch (error) {
+        return done(error, null);
+    }
+}));
+
+// Serialize user for session
+passport.serializeUser((user, done) => {
+    done(null, user.id);
+});
+
+// Deserialize user from session
+passport.deserializeUser(async (id, done) => {
+    try {
+        const user = await userService.getById(id);
+        done(null, user);
+    } catch (error) {
+        done(error, null);
+    }
+});
+
+export default passport;

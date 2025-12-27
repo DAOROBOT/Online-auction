@@ -19,6 +19,7 @@ export function useNav() {
     register: () => n("/register", { 
         state: { from: window.location.pathname } 
     }),
+    validate: (options) => n("/validate", options),
     
     // Logout: Use REPLACE to clear history so "Back" button doesn't work
     logout: () => n("/login", { replace: true }),
