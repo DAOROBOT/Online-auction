@@ -87,14 +87,14 @@ export default function BiddingAuctionCard({ product, onClick }) {
                 </div>
 
                 {/* Divider */}
-                <div className="w-px h-8 bg-[var(--border)]"></div>
+                <div className="w-px h-8 bg-(--border)"></div>
 
                 {/* Right: Your Bid */}
                 <div className="flex flex-col items-end gap-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] opacity-70">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-(--text-muted) opacity-70">
                         {isWinning ? 'Your Bid' : 'Highest Bid'}
                     </span>
-                    <div className={`flex items-center gap-1 text-base font-black ${isWinning ? 'text-green-600' : 'text-[var(--text)]'}`}>
+                    <div className={`flex items-center gap-1 text-base font-black ${isWinning ? 'text-green-600' : 'text-(--text)'}`}>
                         ${product.yourBid?.toLocaleString()}
                         {isWinning && <TrendingUp size={14} />}
                     </div>

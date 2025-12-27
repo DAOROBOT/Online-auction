@@ -1,8 +1,9 @@
-import AdminDashboard from "../pages/AdminDashboard";
+import { Outlet } from "react-router-dom";
+
 const AdminLayout = () => {
   return (
     <div className="app-container">
-        <AdminDashboard />
+        <Outlet />
     </div>
   );
 };

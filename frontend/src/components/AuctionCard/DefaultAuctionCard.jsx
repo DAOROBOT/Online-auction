@@ -39,7 +39,7 @@ export default function DefaultAuctionCard({ product }) {
   return (
     <div 
       className={`group relative w-full max-w-sm rounded-2xl border transition-all duration-300 overflow-hidden flex flex-col hover:-translate-y-1 hover:shadow-2xl
-        ${isNew ? 'ring-2 ring-offset-2 ring-[var(--auction-accent)]' : 'shadow-sm'}
+        ${isNew ? 'ring-2 ring-offset-2 ring-(--auction-accent)' : 'shadow-sm'}
       `}
       style={{ 
         backgroundColor: 'var(--auction-bg)', 
@@ -116,22 +116,22 @@ export default function DefaultAuctionCard({ product }) {
                 <span className="min-w-30 text-[10px] uppercase font-bold tracking-wider mb-1 flex items-center gap-1" style={{ color: 'var(--auction-text-subtle)' }}>
                     <Gavel size={12} /> Highest Bid
                 </span>
-                <span className="text-xl font-black" style={{ color: 'var(--auction-text)' }}>
+                <span className="text-xl text-(--auction-text) font-black">
                     {formatCurrency(product.currentPrice)}
                 </span>
             </div>
 
             {/* Hover View: The Bidder */}
-            <div className="absolute inset-0 flex flex-col justify-center items-center transition-all duration-200 transform translate-y-full opacity-0 group-hover/bid:translate-y-0 group-hover/bid:opacity-100" style={{ backgroundColor: 'var(--auction-bid-bg)' }}>
+            <div className="absolute inset-0 flex flex-col justify-center items-center transition-all duration-200 transform translate-y-full opacity-0 group-hover/bid:translate-y-0 group-hover/bid:opacity-100 text-(--auction-bid-text) bg-(--auction-bid-bg)">
                  {product.highestBidder ? (
                     <div className="flex flex-col items-center gap-1">
-                        <span className="text-xs font-bold" style={{ color: 'var(--auction-bid-text)' }}>
+                        <span className="text-xs font-bold">
                             {product.highestBidder.name}
                         </span>
-                        <span className="text-[10px] opacity-75" style={{ color: 'var(--auction-bid-text)' }}>Top Bidder</span>
+                        <span className="text-[12px] text-(--auction-bid-text) font-bold opacity-75">Top Bidder</span>
                     </div>
                  ) : (
-                    <span className="text-xs font-medium" style={{ color: 'var(--auction-text-subtle)' }}>No Bids Yet</span>
+                    <span className="text-xs font-medium">No Bids Yet</span>
                  )}
             </div>
           </div>
@@ -143,11 +143,11 @@ export default function DefaultAuctionCard({ product }) {
                borderColor: 'var(--auction-border)' 
             }}
           >
-             <div className="h-full flex flex-col justify-center">
-                <span className="min-w-30 text-[10px] uppercase font-bold tracking-wider mb-1 flex items-center gap-1" style={{ color: 'var(--auction-success)' }}>
+             <div className="h-full flex flex-col justify-center text-(--auction-bid-text)">
+                <span className="min-w-30 text-[10px] uppercase font-bold tracking-wider mb-1 flex items-center gap-1">
                     <Zap size={12} className="fill-current" /> Buy Now
                 </span>
-                <span className="text-lg font-bold" style={{ color: 'var(--auction-success)' }}>
+                <span className="text-lg font-bold">
                     {product.buyNowPrice ? formatCurrency(product.buyNowPrice) : 'N/A'}
                 </span>
              </div>
@@ -163,10 +163,11 @@ export default function DefaultAuctionCard({ product }) {
           <button 
             className="flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-full transition-all duration-200 shadow-md hover:shadow-lg group/btn hover:scale-105" 
             style={{ 
-              backgroundColor: isNew ? 'var(--auction-accent)' : 'var(--auction-text)', 
+              backgroundColor: isNew ? 'var(--auction-accent)' : 'var(--auction-bid-text)', 
               color: isNew ? 'var(--auction-accent-fg)' : 'var(--auction-bg)' 
             }}
-            onClick={() => nav.auction(product.id)}>
+            onClick={() => nav.auction(product.id)}
+          >
             Bid Now
             <ArrowRight size={16} className="transition-transform group-hover/btn:translate-x-1" />
           </button>

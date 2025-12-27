@@ -23,7 +23,7 @@
   
   /* Specific to DefaultCard layout */
   --auction-price-bg: #f8fafc;      /* Slate-50 */
-  --auction-bid-bg: #fffbeb;        /* Amber-50 */
+  --auction-bid-bg: #dcb000;        /* Amber-50 */
   --auction-bid-text: #92400e;      /* Amber-800 */
 }
 
@@ -51,6 +51,6 @@
 
   /* Specific to DefaultCard layout */
   --auction-price-bg: #020617;      /* Slate-950 */
-  --auction-bid-bg: #451a03;        /* Amber-950 */
-  --auction-bid-text: #fcd34d;      /* Amber-300 */
+  --auction-bid-bg: #92400e;        /* Amber-950 */
+  --auction-bid-text: #dcb000;      /* Amber-300 */
 }
