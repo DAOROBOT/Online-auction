@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Clock, Gavel, Star, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import AuctionCard from '../../components/AuctionCard';
 import { products } from '../../data/index.js';
 
@@ -26,7 +27,7 @@ export default function ProductTabs() {
   const displayProducts = getFilteredProducts();
 
   return (
-    <section className="container mx-auto px-4">
+    <section className="container mx-auto px-10">
       {/* Tab Navigation */}
       <div className="flex flex-wrap justify-center gap-4 mb-10">
         {tabs.map((tab) => {
@@ -65,11 +66,14 @@ export default function ProductTabs() {
       </div>
 
       <div className="mt-12 text-center">
-        <button className="inline-flex items-center gap-2 font-bold uppercase tracking-widest text-xs border-b-2 border-transparent hover:border-current pb-1 transition-all"
+        <Link 
+          to={`/search?category=${activeTabData.label}`}
+          onClick={() => setIsOpen(false)}
+          className={`inline-flex items-center gap-2 font-bold uppercase tracking-widest text-md border-b-2 border-transparent hover:border-current pb-1 transition-all`}
           style={{ color: activeTabData.color }}
         >
           View All {activeTabData.label} <ArrowRight className="w-4 h-4" />
-        </button>
+        </Link>
       </div>
     </section>
   );

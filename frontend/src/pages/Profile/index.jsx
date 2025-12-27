@@ -8,8 +8,8 @@ import FilterBar from "../../components/Filter/FilterBar";
 import Pagination from "../../components/Pagination";
 import { mockUserData } from "../../data/users.js";
 
-export default function Profile() {
-  const { user } = useAuth();
+export default function Profile({ me = false }) {
+  console.log(me);
   const [userData] = useState(mockUserData);
   const [activeTab, setActiveTab] = useState('active-bids');
   const [searchParams, setSearchParams] = useSearchParams();
@@ -77,7 +77,7 @@ export default function Profile() {
       <div className="flex flex-col lg:flex-row gap-8">
         
         <div className="lg:w-[350px] shrink-0">
-          <ProfileSidebar userData={userData} isOwnProfile={true} />
+          <ProfileSidebar userData={userData} isOwnProfile={me} />
         </div>
 
         <div className="flex-1 mt-4 lg:mt-0">
@@ -95,13 +95,6 @@ export default function Profile() {
                           `}
                       >
                           {tab.label}
-                          {/* Counter Pill */}
-                          {/* <span className={`
-                              px-2 py-0.5 rounded-full text-[10px] transition-colors
-                              ${isActive ? 'bg-[var(--text)] text-[var(--bg)]' : 'bg-[var(--bg-soft)] text-[var(--text-muted)] group-hover:bg-[var(--border)]'}
-                          `}>
-                              {tab.count}
-                          </span> */}
 
                           {/* Active Line Indicator */}
                           {isActive && (

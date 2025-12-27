@@ -32,8 +32,7 @@ export default function TopBidders() {
 
     // Helper to navigate to profile
     const goToProfile = (id) => {
-        // Assuming your route is defined as path="/profile/:id"
-        nav.go(`/profile/${id}`);
+        nav.profile(`/profile/${id}`);
     };
 
     if (loading) {
@@ -86,7 +85,7 @@ export default function TopBidders() {
                     {/* Rank 2 (Silver) */}
                     {silver && (
                         <div 
-                            onClick={() => goToProfile(silver.id)}
+                            onClick={() => nav.profile(silver.id)}
                             className="home-rank-card rounded-2xl shadow-lg p-6 flex flex-col items-center order-2 md:order-1 relative mt-8 md:mt-0 cursor-pointer hover:opacity-90"
                         >
                             <div className="absolute -top-4 bg-gray-200 text-gray-700 font-bold px-4 py-1 rounded-full shadow-sm text-sm border-2 border-white">
@@ -103,7 +102,7 @@ export default function TopBidders() {
                     {/* Rank 1 (Gold / Champion) */}
                     {champion && (
                         <div 
-                            onClick={() => goToProfile(champion.id)}
+                            onClick={() => nav.profile(champion.id)}
                             className="home-champion-card rounded-2xl p-8 flex flex-col items-center order-1 md:order-2 transform md:-translate-y-6 relative z-10 hover:-translate-y-8 transition-transform duration-300 cursor-pointer"
                         >
                             <div className="absolute -top-6 bg-linear-to-r from-yellow-400 to-orange-500 text-white font-bold px-6 py-2 rounded-full shadow-lg text-base gap-2 flex items-center">
@@ -124,7 +123,7 @@ export default function TopBidders() {
                     {/* Rank 3 (Bronze) */}
                     {bronze && (
                         <div 
-                            onClick={() => goToProfile(bronze.id)}
+                            onClick={() => nav.profile(bronze.id)}
                             className="home-rank-card rounded-2xl shadow-lg p-6 flex flex-col items-center order-3 md:order-3 relative mt-8 md:mt-0 cursor-pointer hover:opacity-90"
                         >
                             <div className="absolute -top-4 bg-orange-200 text-orange-800 font-bold px-4 py-1 rounded-full shadow-sm text-sm">
@@ -145,7 +144,7 @@ export default function TopBidders() {
                         {runnerUps.map((bidder) => (
                             <div 
                                 key={bidder.id} 
-                                onClick={() => goToProfile(bidder.id)}
+                                onClick={() => nav.profile(bidder.id)}
                                 className="flex items-center justify-between p-4 border-b last:border-0 hover:bg-(--bg-hover) transition-colors cursor-pointer group"
                                 style={{ borderColor: "var(--border-subtle)" }}
                             >

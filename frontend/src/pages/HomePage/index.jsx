@@ -9,9 +9,6 @@ import './HomePage.css'
 export default function HomePage() {
     const nav = useNav();
 
-    // Base wrapper for all main sections
-    const sectionWrapperClass = "max-w-7xl mx-auto rounded-3xl overflow-hidden mb-12 relative z-10 transition-all duration-300";
-
     return (
         <div className="min-h-screen pb-12 relative text-stone-100 transition-colors duration-500">
             
@@ -32,7 +29,7 @@ export default function HomePage() {
             </div>
 
             {/* 2. LIVE STATS CARD */}
-            <div className={`${sectionWrapperClass} home-glass-card`}>
+            <div className="max-w-7xl mx-auto rounded-3xl overflow-hidden mb-12 relative z-10 transition-all duration-300 home-glass-card">
                 <div className="container mx-auto px-4 py-8">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x" style={{ borderColor: 'var(--home-stats-divider)' }}>
                         <div className="space-y-1">
@@ -56,12 +53,12 @@ export default function HomePage() {
             </div>
 
             {/* 3. PRODUCT TABS */}
-            <div className={`${sectionWrapperClass} py-8`}>
+            <div className="max-w-8xl mx-auto rounded-3xl overflow-hidden mb-12 relative z-10 transition-all duration-300 py-8">
                 <ProductTabs />
             </div>
 
             {/* 4. HOW IT WORKS */}
-            <div className={`${sectionWrapperClass} home-process-card py-16`}>
+            <div className="max-w-7xl mx-auto rounded-3xl overflow-hidden mb-12 relative z-10 transition-all duration-300 home-process-card py-16">
                 <div className="container mx-auto px-4">
                     <div className="text-center max-w-2xl mx-auto mb-16">
                         <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: "var(--text)" }}>Start Bidding in Minutes</h2>
