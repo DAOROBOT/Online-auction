@@ -45,12 +45,6 @@ const productService = {
         }, 300);
       });
     }
-
-    // TODO: Replace with real API call
-    // const API_URL = import.meta.env.VITE_API_URL;
-    // const response = await fetch(`${API_URL}/products/${id}`);
-    // if (!response.ok) throw new Error('Failed to fetch product');
-    // return await response.json();
   },
 
   /**
@@ -61,96 +55,112 @@ const productService = {
    */
   getTopBidders: async (productId, limit = 3) => {
     if (USE_MOCK_DATA) {
-      console.log("⚠️ Using MOCK Data for Top Bidders");
       return new Promise((resolve) => {
         setTimeout(() => {
           // Handle both "101" and "p101" format
           const productBidsList = bids.filter(b => {
-            // Match both formats: "p101" or "101"
             return b.productId === productId || 
                    b.productId === `p${productId}` ||
                    b.productId === productId.replace(/^p/, '');
           });
           
-          // Find the product to get current price
           const foundProduct = products.find(p => p.id === productId || p.id === `p${productId}`);
-          
           let sortedBids = [...productBidsList].sort((a, b) => b.amount - a.amount);
           
-          // If we don't have enough bids, generate mock ones to always show 3
+          // Mock data generation if empty (existing logic)
           if (sortedBids.length < limit) {
-            const needed = limit - sortedBids.length;
-            // Use product's current price as base, or a default if product not found
-            const basePrice = foundProduct ? foundProduct.currentPrice : 1000;
-            const highestBid = sortedBids.length > 0 ? sortedBids[0].amount : basePrice;
-            
-            for (let i = 0; i < needed; i++) {
-              const mockBid = {
-                id: `mock-bid-${Date.now()}-${i}`,
-                productId: foundProduct ? foundProduct.id : productId,
-                bidderId: `u${Math.floor(Math.random() * 1000)}`,
-                bidderName: `bidder${Math.floor(Math.random() * 1000)}`,
-                amount: Math.max(100, highestBid - (i + 1) * 50 - Math.floor(Math.random() * 100)),
-                timestamp: new Date(Date.now() - (i + 1) * 60000),
-                status: 'active'
-              };
-              sortedBids.push(mockBid);
-            }
-            
-            // Re-sort after adding mock bids
-            sortedBids = sortedBids.sort((a, b) => b.amount - a.amount);
+             const basePrice = foundProduct ? foundProduct.currentPrice : 1000;
+             const highestBid = sortedBids.length > 0 ? sortedBids[0].amount : basePrice;
+             for (let i = 0; i < limit - sortedBids.length; i++) {
+                sortedBids.push({
+                    id: `mock-bid-${Date.now()}-${i}`,
+                    productId: productId,
+                    bidderId: `u${Math.floor(Math.random() * 1000)}`,
+                    bidderName: `bidder${Math.floor(Math.random() * 1000)}`,
+                    amount: Math.max(100, highestBid - (i + 1) * 50),
+                    timestamp: new Date(Date.now() - (i + 1) * 60000).toISOString(),
+                    status: 'active'
+                });
+             }
+             sortedBids.sort((a, b) => b.amount - a.amount);
           }
           
-          // Always return exactly 3 bidders
           const topBidders = sortedBids.slice(0, limit).map((bid, idx) => ({
             ...bid,
             rank: idx + 1,
             avatar: `https://i.pravatar.cc/150?u=${bid.bidderId || bid.bidderName}`
           }));
-          
           resolve(topBidders);
         }, 200);
       });
     }
+  },
 
-    // TODO: Replace with real API call
-    // const API_URL = import.meta.env.VITE_API_URL;
-    // const response = await fetch(`${API_URL}/products/${productId}/bidders?limit=${limit}`);
-    // if (!response.ok) throw new Error('Failed to fetch top bidders');
+  // NEW METHOD ADDED
+  /**
+   * Get full bid history for a product
+   * @param {string} productId - Product ID
+   * @returns {Promise<Array>} Array of all bids
+   */
+  getBidHistory: async (productId) => {
+    if (USE_MOCK_DATA) {
+        console.log("⚠️ Using MOCK Data for Bid History");
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                // 1. Filter bids for this product
+                let productBids = bids.filter(b => 
+                    b.productId === productId || 
+                    b.productId === `p${productId}` ||
+                    b.productId === productId.replace(/^p/, '')
+                );
+
+                // 2. If no bids exist in mock data, generate a realistic history
+                if (productBids.length === 0) {
+                    const count = 15; // Generate 15 fake bids
+                    let currentAmount = 5000; // Base price
+                    const now = Date.now();
+                    
+                    for(let i = 0; i < count; i++) {
+                        currentAmount += Math.floor(Math.random() * 200) + 50;
+                        productBids.push({
+                            id: `gen-bid-${i}`,
+                            productId,
+                            bidderId: `user-${Math.floor(Math.random() * 5) + 1}`, // Random user 1-5
+                            bidderName: i % 3 === 0 ? 'JohnCollector' : (i % 2 === 0 ? 'LuxuryBuyer88' : 'VintageHunter'),
+                            amount: currentAmount,
+                            timestamp: new Date(now - (i * 1000 * 60 * 15)).toISOString(), // Every 15 mins
+                            status: 'active'
+                        });
+                    }
+                }
+
+                // 3. Sort by Time Descending (Newest first)
+                productBids.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+                resolve(productBids);
+            }, 500);
+        });
+    }
+    
+    // TODO: Real API
+    // const response = await fetch(`${API_URL}/products/${productId}/bids`);
     // return await response.json();
   },
 
   /**
    * Get comments for a product
-   * @param {string} productId - Product ID
-   * @returns {Promise<Array>} Array of comments
    */
   getComments: async (productId) => {
     if (USE_MOCK_DATA) {
-      console.log("⚠️ Using MOCK Data for Comments");
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          resolve([...MOCK_COMMENTS]);
-        }, 200);
-      });
+      return new Promise((resolve) => setTimeout(() => resolve([...MOCK_COMMENTS]), 200));
     }
-
-    // TODO: Replace with real API call
-    // const API_URL = import.meta.env.VITE_API_URL;
-    // const response = await fetch(`${API_URL}/products/${productId}/comments`);
-    // if (!response.ok) throw new Error('Failed to fetch comments');
-    // return await response.json();
   },
 
   /**
    * Submit a bid for a product
-   * @param {string} productId - Product ID
-   * @param {number} amount - Bid amount
-   * @returns {Promise<Object>} Bid result
    */
   placeBid: async (productId, amount) => {
     if (USE_MOCK_DATA) {
-      console.log("⚠️ Using MOCK Data for Place Bid");
       return new Promise((resolve) => {
         setTimeout(() => {
           resolve({
@@ -166,27 +176,13 @@ const productService = {
         }, 500);
       });
     }
-
-    // TODO: Replace with real API call
-    // const API_URL = import.meta.env.VITE_API_URL;
-    // const response = await fetch(`${API_URL}/products/${productId}/bids`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ amount })
-    // });
-    // if (!response.ok) throw new Error('Failed to place bid');
-    // return await response.json();
   },
 
   /**
    * Add a comment to a product
-   * @param {string} productId - Product ID
-   * @param {string} text - Comment text
-   * @returns {Promise<Object>} Comment object
    */
   addComment: async (productId, text) => {
     if (USE_MOCK_DATA) {
-      console.log("⚠️ Using MOCK Data for Add Comment");
       return new Promise((resolve) => {
         setTimeout(() => {
           const newComment = {
@@ -200,27 +196,13 @@ const productService = {
         }, 300);
       });
     }
-
-    // TODO: Replace with real API call
-    // const API_URL = import.meta.env.VITE_API_URL;
-    // const response = await fetch(`${API_URL}/products/${productId}/comments`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ text })
-    // });
-    // if (!response.ok) throw new Error('Failed to add comment');
-    // return await response.json();
   },
 
   /**
    * Toggle watchlist status for a product
-   * @param {string} productId - Product ID
-   * @param {boolean} isWatchlisted - Current watchlist status
-   * @returns {Promise<Object>} Watchlist result
    */
   toggleWatchlist: async (productId, isWatchlisted) => {
     if (USE_MOCK_DATA) {
-      console.log("⚠️ Using MOCK Data for Toggle Watchlist");
       return new Promise((resolve) => {
         setTimeout(() => {
           resolve({
@@ -231,15 +213,6 @@ const productService = {
         }, 200);
       });
     }
-
-    // TODO: Replace with real API call
-    // const API_URL = import.meta.env.VITE_API_URL;
-    // const method = isWatchlisted ? 'DELETE' : 'POST';
-    // const response = await fetch(`${API_URL}/products/${productId}/watchlist`, {
-    //   method,
-    // });
-    // if (!response.ok) throw new Error('Failed to toggle watchlist');
-    // return await response.json();
   },
 };
 

@@ -1,9 +1,4 @@
 /**
- * Time Formatting Utilities for Auction Cards
- * Plugin for formatting time values in various formats
- */
-
-/**
  * Format currency amount using Vietnamese Dong format
  * @param {number} amount - The amount to format
  * @returns {string} Formatted currency string
@@ -85,3 +80,18 @@ export const formatTimeLeft = (endTime) => {
 
   return { timeLeft, urgencyLevel };
 };
+
+export function formatTimeAgo(timestamp) {
+  const now = new Date();
+  const time = new Date(timestamp);
+  const diff = now - time;
+  
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  
+  if (days > 0) return `${days}d ago`;
+  if (hours > 0) return `${hours}h ago`;
+  if (minutes > 0) return `${minutes}m ago`;
+  return 'Just now';
+}
