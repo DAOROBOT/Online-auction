@@ -28,6 +28,14 @@ const service = {
         // return result.length > 0 ? result[0] : null;
         return result;
     },
+    getByGoogleId: async function(googleId){
+        const result = await db.select().from(users).where(eq(users.googleId, googleId));
+        return result.length > 0 ? result[0] : null;
+    },
+    getByFacebookId: async function(facebookId){
+        const result = await db.select().from(users).where(eq(users.facebookId, facebookId));
+        return result.length > 0 ? result[0] : null;
+    },
     create: async function(userData){
         const result = await db.insert(users).values(userData).returning();
         return result[0];
