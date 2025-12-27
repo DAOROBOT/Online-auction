@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ArrowLeft, Upload, X } from "lucide-react";
 import { useNav } from "../hooks/useNavigate";
 import ImageUploadModal from '../components/ImageUploadModal'
+import RichTextEditor from "../components/RichTextEditor";
 
 export default function CreateAuction() {
   const nav = useNav();
@@ -48,11 +49,11 @@ export default function CreateAuction() {
   };
 
   return (
-    <div className="min-h-screen py-12 bg-[var(--bg)]">
+    <div className="min-h-screen py-12">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
-          <button onClick={() => nav.back()} className="p-2 rounded-lg hover:bg-[var(--bg-hover)] transition">
+          <button onClick={() => nav.back()} className="p-2 rounded-lg hover:bg-(--bg-hover) transition">
             <ArrowLeft size={24} style={{ color: "var(--text)" }} />
           </button>
           <h1 className="text-4xl font-bold" style={{ color: "var(--text)" }}>Create New Auction</h1>
@@ -69,23 +70,31 @@ export default function CreateAuction() {
             <div>
               <label className="block text-sm font-medium mb-2" style={{ color: "var(--text)" }}>Product Name *</label>
               <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Enter product name"
-                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[var(--accent)] outline-none transition"
+                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-(--accent) outline-none transition"
                 style={inputStyle} disabled={loading}
               />
             </div>
 
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium mb-2" style={{ color: "var(--text)" }}>Description</label>
               <textarea name="description" value={formData.description} onChange={handleChange} placeholder="Describe your product..." rows="5"
-                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[var(--accent)] outline-none transition resize-none"
+                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-(--accent) outline-none transition resize-none"
                 style={inputStyle} disabled={loading}
+              />
+            </div> */}
+
+            <div>
+              <label className="block text-sm font-medium mb-2 text-(--text)">Description</label>
+              <RichTextEditor 
+                value={formData.description} 
+                onChange={handleDescriptionChange} 
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium mb-2" style={{ color: "var(--text)" }}>Category *</label>
               <select name="category" value={formData.category} onChange={handleChange}
-                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[var(--accent)] outline-none transition"
+                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-(--accent) outline-none transition"
                 style={inputStyle} disabled={loading}
               >
                 <option value="" disabled>-- Select a category --</option>
@@ -97,14 +106,14 @@ export default function CreateAuction() {
               <div>
                 <label className="block text-sm font-medium mb-2" style={{ color: "var(--text)" }}>Reserve Price *</label>
                 <input type="number" name="price" value={formData.price} onChange={handleChange} placeholder="0.00" step="0.01" min="0"
-                  className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[var(--accent)] outline-none transition"
+                  className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-(--accent) outline-none transition"
                   style={inputStyle} disabled={loading}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2" style={{ color: "var(--text)" }}>Starting Bid *</label>
                 <input type="number" name="startingBid" value={formData.startingBid} onChange={handleChange} placeholder="0.00" step="0.01" min="0"
-                  className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[var(--accent)] outline-none transition"
+                  className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-(--accent) outline-none transition"
                   style={inputStyle} disabled={loading}
                 />
               </div>
@@ -132,37 +141,36 @@ export default function CreateAuction() {
                   <button 
                       type="button"
                       onClick={() => setIsUploadModalOpen(true)}
-                      className="w-full h-40 border-2 border-dashed border-[var(--border-subtle)] rounded-xl flex flex-col items-center justify-center gap-3 transition hover:bg-[var(--bg-subtle)] group"
+                      className="w-full h-40 border-2 border-dashed border-(--border-subtle) rounded-xl flex flex-col items-center justify-center gap-3 transition group"
                       style={inputStyle}
                   >
-                      <div className="p-3 rounded-full bg-[var(--bg)] shadow-sm group-hover:scale-110 transition-transform">
-                        <Upload size={24} style={{ color: "var(--text-muted)" }} />
+                      <div className="p-3 rounded-full shadow-sm group-hover:scale-110 transition-transform">
+                        <Upload size={24} />
                       </div>
                       <div className="text-center">
-                        <span className="font-bold block" style={{ color: "var(--text)" }}>Click to upload</span>
-                        <span className="text-xs" style={{ color: "var(--text-muted)" }}>SVG, PNG, JPG or GIF (max. 10MB)</span>
+                        <span className="font-bold block">Click to upload</span>
+                        <span className="text-xs">SVG, PNG, JPG or GIF (max. 10MB)</span>
                       </div>
                   </button>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: "var(--text)" }}>Auction End Time *</label>
+              <label className="block text-sm font-medium mb-2 text-(--text)">Auction End Time *</label>
               <input type="datetime-local" name="auctionEndTime" value={formData.auctionEndTime} onChange={handleChange}
-                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[var(--accent)] outline-none transition"
+                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-(--accent) outline-none transition"
                 style={inputStyle} disabled={loading}
               />
             </div>
 
             <div className="flex gap-4 pt-6 border-t" style={{ borderColor: "var(--border)" }}>
               <button type="submit" disabled={loading}
-                className="flex-1 font-bold py-3 px-6 rounded-lg transition hover:brightness-110 shadow-lg"
-                style={{ backgroundColor: "var(--accent)", color: "#1A1205" }}
+                className="flex-1 font-bold py-3 px-6 rounded-lg transition hover:brightness-110 shadow-lg bg-(--accent) text-(--text)"
               >
                 {loading ? "Creating..." : "Create Auction"}
               </button>
               <button type="button" onClick={() => nav.back()} disabled={loading}
-                className="flex-1 border rounded-lg font-semibold py-3 px-6 transition hover:bg-[var(--bg-hover)]"
+                className="flex-1 border rounded-lg font-semibold py-3 px-6 transition hover:bg-(--bg-hover)"
                 style={{ borderColor: "var(--border)", color: "var(--text)" }}
               >
                 Cancel
