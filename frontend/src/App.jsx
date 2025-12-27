@@ -28,23 +28,17 @@ function App() {
 
         {/* OAuth Callback Route */}
         <Route path="/auth/callback" element={<AuthCallback />} />
-
-        <Route element={<AdminLayout />}>
-          <Route element={<ProtectedRoute requiredRole="admin" />}>
-            <Route path="/admin" element={<AdminDashboard />} />
-          </Route>
-        </Route>
         
         <Route element={<MainLayout />}>
           {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/auction/:id" element={<ProductDetail />} />
+          <Route path="/profile/:id" element={<Profile />} />
 
-          {/* --- LEVEL 1: STANDARD USERS (Just need to be logged in) --- */}
+          {/* --- LEVEL 1: STANDARD USERS (Just need to log in) --- */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/me" element={<Profile />} />
-            <Route path="/profile/:id" element={<Profile />} />
+            <Route path="/me" element={<Profile me={true}/>} />
           </Route>
 
           {/* --- LEVEL 2: SELLER ONLY (Needs 'seller' role) --- */}
@@ -52,14 +46,18 @@ function App() {
             <Route path="/create-auction" element={<CreateAuction />} />
           </Route>
 
-          {/* --- LEVEL 3: ADMIN ONLY (Needs 'admin' role) --- */}
-          <Route element={<ProtectedRoute requiredRole="admin" />}>
-            <Route path="/admin" element={<AdminDashboard />} />
-          </Route>
 
           {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />
         </Route>
+
+        {/* --- LEVEL 3: ADMIN ONLY (Needs 'admin' role) --- */}
+        <Route element={<AdminLayout />}>
+          <Route element={<ProtectedRoute requiredRole="admin" />}>
+            <Route path="/admin" element={<AdminDashboard />} />
+          </Route>
+        </Route>
+
       </Routes>
     </div>
   )
