@@ -6,9 +6,6 @@ const route = new Router();
 // GET: All Auctions
 route.get('/', auctionController.listAuctions);
 
-// GET: Find Auctions
-route.get('/search', auctionController.findAuctions);
-
 // Get: Specific Auction
 route.get('/:id', auctionController.getAuction);
 

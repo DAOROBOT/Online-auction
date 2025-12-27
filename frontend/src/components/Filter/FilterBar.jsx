@@ -11,12 +11,45 @@ import { useRef } from "react";
 // import FilterButton from "./FilterButton";
 
 
-export default function FilterBar() {
+export default function FilterBar({ setSearchParams }) {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [priceRange, setPriceRange] = useState({ min: "", max: "" });
   const [orderBy, setOrderBy] = useState("default");
   const barRef = useRef(null);
+
+
+  useEffect(() => {
+    const params = {};
+    
+    if (selectedCategory) {
+      params.category = selectedCategory;
+    }
+    if (priceRange.min) {
+      params.minPrice = priceRange.min;
+    }
+    if (priceRange.max) {
+      params.maxPrice = priceRange.max;
+    }
+    if (orderBy && orderBy !== "default") {
+      params.sortBy = orderBy;
+    }
+    
+    setSearchParams(prev => {
+      // Create a new URLSearchParams object to avoid mutating the existing one
+      const newParams = new URLSearchParams(prev.toString());
+      // Clear existing filter params
+      newParams.delete("category");
+      newParams.delete("minPrice");
+      newParams.delete("maxPrice");
+      newParams.delete("sortBy");
+      // Set new filter params
+      Object.entries(params).forEach(([key, value]) => {
+        newParams.set(key, value);
+      });
+      return newParams;
+    });
+  }, [selectedCategory, priceRange, orderBy, setSearchParams]);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -52,7 +85,6 @@ export default function FilterBar() {
                 selectedCategory={selectedCategory}
                 setSelectedCategory={setSelectedCategory}
                 activeDropdown={activeDropdown}
-                categories={categories}
                 toggleDropdown={toggleDropdown}
                 setActiveDropdown={setActiveDropdown}
             />

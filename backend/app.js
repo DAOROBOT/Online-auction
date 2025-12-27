@@ -3,6 +3,8 @@ import bodyParser from "body-parser";
 import morgan from "morgan";
 import cors from "cors";
 import auctionRoute from "./routes/auction.js";
+import searchRoute from "./routes/search.js";
+import categoryRoute from "./routes/category.js"
 import authRoute from "./routes/auth.js"
 import not_found from "./middleware/not_found.js";
 import error_handler from "./middleware/error_handler.js";
@@ -16,8 +18,10 @@ app.use(morgan('dev'));
 
 app.use(bodyParser.json());
 
-// app.use('/auction'. auctionRoute);
+app.use('/auction', auctionRoute);
 app.use('/auth', authRoute);
+app.use('/search', searchRoute);
+app.use('/categories', categoryRoute);
 
 app.get('/', (req, res) => {
     res.json({
