@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useParams } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -6,11 +6,45 @@ import ProfileSidebar from "./ProfileSidebar";
 import ProductGrid from "../../components/ProductGrid"; 
 import FilterBar from "../../components/Filter/FilterBar";
 import Pagination from "../../components/Pagination";
-import { mockUserData } from "../../data/users.js";
 
 export default function Profile({ me = false }) {
-  console.log(me);
-  const [userData] = useState(mockUserData);
+  const { user: authUser, loading: authLoading } = useAuth();
+  const { id } = useParams();
+
+  const [profileData, setProfileData] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        if (me) {
+          // Viewing personal profile
+          if (!authLoading) {
+            if (authUser) {
+              setProfileData(authUser);
+            } else {
+               setError("You must be logged in to view this page.");
+            }
+            setLoading(false);
+          }
+        } else {
+          // Viewing public profile by ID
+          const response = await fetch(`http://localhost:3000/users/${id}`);
+          if (!response.ok) throw new Error("User not found");
+          const data = await response.json();
+          setProfileData(data);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error("Failed to load profile:", err);
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [me, authUser, authLoading, id]);
+
   const [activeTab, setActiveTab] = useState('active-bids');
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -24,7 +58,7 @@ export default function Profile({ me = false }) {
       id: 'active-bids', 
       label: 'Active Bids', 
       count: userData.activeBids?.length || 0,
-      variant: 'bidding' // Passed to ProductGrid
+      variant: 'bidding'
     },
     { 
       id: 'won-auctions', 
