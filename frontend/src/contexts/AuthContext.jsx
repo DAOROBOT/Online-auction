@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 
-// Create the context
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -12,7 +11,7 @@ export const AuthProvider = ({ children }) => {
       try {
         const token = localStorage.getItem('authToken');
         if (token) {
-          const response = await fetch('http://localhost:3000/auth/', {
+          const response = await fetch('http://localhost:3000/auth/me', {
             headers: {
               'Authorization': `Bearer ${token}`
             }

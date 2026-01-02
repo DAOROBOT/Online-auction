@@ -11,6 +11,7 @@ export default function AuthCallback() {
         const error = searchParams.get('error');
 
         if (error) {
+            console.error("OAuth Error:", error);
             nav.login();
             return;
         }

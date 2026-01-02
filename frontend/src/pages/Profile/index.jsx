@@ -1,9 +1,5 @@
-<<<<<<< HEAD
-import { useState, useParams } from "react";
-=======
 import { useState, useEffect } from "react";
->>>>>>> 291ec7d235ff62d79f64ea64a5f66f4f9be3abbe
-import { useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 
 import ProfileSidebar from "./ProfileSidebar";
@@ -11,44 +7,65 @@ import ProductGrid from "../../components/ProductGrid";
 import FilterBar from "../../components/Filter/FilterBar";
 import Pagination from "../../components/Pagination";
 
-export default function Profile({ me = false }) {
-  const { user, logout } = useAuth();
+export default function Profile() {
+  const { user: authUser, logout, loading: authLoading } = useAuth();
+  const { username } = useParams();
+
   const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('active-bids');
+
+  const isOwnProfile = (authUser && authUser.username === username);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('authToken');
         if (!token) {
-          setLoading(false);
           return;
         }
 
-        const response = await fetch('http://localhost:3000/users/me', {
-          headers: { 'Authorization': `Bearer ${token}` },
-        });
-        console.log('Fetching user data response:', response);
-        
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Fetched user data:', data);
-          setUserData(data);
-        } else if (response.status === 401) {
-          // Token expired or invalid - logout the user
-          const errorData = await response.json();
-          console.warn('Auth error:', errorData.message);
-          logout();
+        let response;
+
+        if (isOwnProfile) {
+          // --- Viewing Own Profile ---
+          if (!token) {
+            return;
+          }
+
+          response = await fetch('http://localhost:3000/user/me', {
+            headers: { 'Authorization': `Bearer ${token}` },
+          });
+
+        } else if (username) {
+          // --- Viewing Public Profile by Username ---
+          const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+          
+          response = await fetch(`http://localhost:3000/user/profile/${username}`, {
+            headers: headers
+          });
+        }
+
+        if (response) {
+          if (response.ok) {
+            const data = await response.json();
+            setUserData(data);
+          } else if (response.status === 401 && isOwnProfile) {
+             // Only logout if failing on own profile fetch
+            const errorData = await response.json();
+            console.warn('Auth error:', errorData.message);
+            logout();
+          } else {
+             console.error("Failed to fetch profile");
+             setUserData(null);
+          }
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
-      } finally {
-        setLoading(false);
       }
     };
     fetchData();
-  }, [logout]);
+  }, []);
+
   const [searchParams, setSearchParams] = useSearchParams();
 
   const query = searchParams.get("q") || "";
@@ -56,7 +73,7 @@ export default function Profile({ me = false }) {
   const currentPage = parseInt(searchParams.get("page") || "1");
 
   // Loading state
-  if (loading) {
+  if (authLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 pb-20 flex items-center justify-center min-h-[400px]">
         <div className="text-(--text-muted)">Loading profile...</div>
@@ -68,7 +85,9 @@ export default function Profile({ me = false }) {
   if (!userData) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 pb-20 flex items-center justify-center min-h-[400px]">
-        <div className="text-(--text-muted)">Please log in to view your profile.</div>
+        <div className="text-(--text-muted)">
+          {isOwnProfile ? "Please log in to view your profile." : "User not found."}
+        </div>
       </div>
     );
   }
@@ -132,7 +151,7 @@ export default function Profile({ me = false }) {
       <div className="flex flex-col lg:flex-row gap-8">
         
         <div className="lg:w-[350px] shrink-0">
-          <ProfileSidebar userData={userData} isOwnProfile={me} />
+          <ProfileSidebar userData={userData} isOwnProfile={isOwnProfile} />
         </div>
 
         <div className="flex-1 mt-4 lg:mt-0">
