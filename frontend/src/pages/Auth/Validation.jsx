@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useNav } from '../../hooks/useNavigate';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+
 export default function Validation() {
     const nav = useNav();
     const navigate = useNavigate();
@@ -21,7 +24,7 @@ export default function Validation() {
         setLoading(true);
 
         try {
-            const response = await fetch('http://localhost:3000/auth/validate', {
+            const response = await fetch(`${API_URL}/auth/validate`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

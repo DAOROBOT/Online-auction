@@ -15,6 +15,9 @@ import verifyToken from "./middleware/auth.js";
 import not_found from "./middleware/not_found.js";
 import error_handler from "./middleware/error_handler.js";
 
+
+// import productRoute from "./routes/product.routes.js";
+
 const app = express();
 
 // --- Dependencies ---
@@ -54,5 +57,10 @@ app.use('/upload', uploadRoute);
 // --- Middleware ---
 app.use(not_found);
 app.use(error_handler);
+
+
+
+// app.use('/api/products', productRoutes);
+
 
 export default app;

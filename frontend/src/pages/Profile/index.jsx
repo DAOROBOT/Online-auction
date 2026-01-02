@@ -7,10 +7,12 @@ import ProductGrid from "../../components/ProductGrid";
 import FilterBar from "../../components/Filter/FilterBar";
 import Pagination from "../../components/Pagination";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+
 export default function Profile() {
   const { user: authUser, logout, loading: authLoading } = useAuth();
   const { username } = useParams();
-
   const [userData, setUserData] = useState(null);
   const [activeTab, setActiveTab] = useState('active-bids');
 
@@ -32,7 +34,7 @@ export default function Profile() {
             return;
           }
 
-          response = await fetch('http://localhost:3000/user/me', {
+          response = await fetch(`${API_URL}/user/me`, {
             headers: { 'Authorization': `Bearer ${token}` },
           });
 
@@ -40,7 +42,7 @@ export default function Profile() {
           // --- Viewing Public Profile by Username ---
           const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
           
-          response = await fetch(`http://localhost:3000/user/profile/${username}`, {
+          response = await fetch(`${API_URL}/user/profile/${username}`, {
             headers: headers
           });
         }

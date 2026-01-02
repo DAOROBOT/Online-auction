@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, text, decimal, timestamp, boolean, integer, pgEnum, date } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, text, decimal, timestamp, boolean, integer, pgEnum, date, primaryKey } from "drizzle-orm/pg-core";
 
 // --- ENUMS ---
 export const userRoleEnum = pgEnum('user_role', ['unauthorized', 'buyer', 'seller', 'admin']);
@@ -101,6 +101,15 @@ export const sellerRequests = pgTable('seller_requests', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
   sellerExpiryDate: timestamp('seller_expiry_date', { withTimezone: true }), // When the seller role expires (7 days after approval)
 });
+
+// --- 8. USER FAVORITES TABLE ---
+export const userFavorites = pgTable('user_favorites', {
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  auctionId: integer('auction_id').notNull().references(() => auctions.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.userId, table.auctionId] }),
+}));
 
 
 // --- ADVANCED: RELATIONS (For easier querying) ---

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { useNav } from '../../hooks/useNavigate';
 import { useAuth } from '../../contexts/AuthContext';
-// import ReCAPTCHA from 'react-google-recaptcha';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -11,7 +11,7 @@ export default function Register() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    // const [recaptchaToken, setRecaptchaToken] = useState(null);
+    const [recaptchaToken, setRecaptchaToken] = useState(null);
     const [formData, setFormData] = useState({
         username: '',
         email: '',
@@ -30,9 +30,9 @@ export default function Register() {
         if (formData.password.length < 6) {
             return setError("Password must be at least 6 characters");
         }
-        // if (!recaptchaToken) {
-        //     return setError("Please verify you are human using reCAPTCHA");
-        // }
+        if (!recaptchaToken) {
+            return setError("Please verify you are human using reCAPTCHA");
+        }
 
         setError('');
         setLoading(true);
@@ -47,7 +47,7 @@ export default function Register() {
                     username: formData.username,
                     email: formData.email,
                     password: formData.password,
-                    // recaptchaToken: recaptchaToken
+                    recaptchaToken: recaptchaToken
                 }),
             });
 
@@ -185,6 +185,17 @@ export default function Register() {
                             className="w-full px-4 py-3 rounded-lg border border-[var(--input-border)] bg-[var(--input-bg)] text-[var(--text)] placeholder:text-[var(--text-subtle)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent transition-all"
                         />
                     </div>
+                </div>
+
+                {/* reCAPTCHA */}
+                <div className="flex justify-center">
+                    <ReCAPTCHA
+                        sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'}
+                        onChange={(token) => {setRecaptchaToken(token); console.log("reCAPTCHA token:", token);}}
+                        onExpired={() => setRecaptchaToken(null)}
+                        theme="light"
+                    />
+                    
                 </div>
 
                 {/* Register Button */}

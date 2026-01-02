@@ -13,6 +13,8 @@ import ThemeToggle from '../ThemeToggle.jsx';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import './Header.css'
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 
 export default function Header() {
   const inputRef = useRef(null);
@@ -28,7 +30,7 @@ export default function Header() {
     // Fetch categories from backend
     const fetchCategories = async () => {
       try {
-        const response = await fetch('http://localhost:3000/categories');
+        const response = await fetch(`${API_URL}/categories`);
         if (response.ok) {
           const data = await response.json();
           setCategories(data);

@@ -7,6 +7,9 @@ import Pagination from "../../components/Pagination.jsx";
 import './SearchPage.css'
 import { useNav } from "../../hooks/useNavigate.js";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+
 export default function SearchPage() {
     const nav = useNav();
     const [searchParams, setSearchParams] = useSearchParams();
@@ -28,7 +31,7 @@ export default function SearchPage() {
             
             try {
                 // Construct URL with standard browser API
-                const apiUrl = new URL("http://localhost:3000/search");
+                const apiUrl = new URL(`${API_URL}/search`);
                 
                 // Append all existing params from the URL (q, category, page, etc.)
                 searchParams.forEach((value, key) => {
