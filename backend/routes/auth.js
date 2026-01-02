@@ -14,6 +14,18 @@ route.post('/login', authController.getUser);
 // POST: validate email
 route.post('/validate', authController.validateEmail);
 
+// POST: resend verification code
+route.post('/resend-verification', authController.resendVerification);
+
+// POST: forgot password (send OTP)
+route.post('/forgot-password', authController.forgotPassword);
+
+// POST: verify reset OTP
+route.post('/verify-reset-otp', authController.verifyResetOtp);
+
+// POST: reset password
+route.post('/reset-password', authController.resetPassword);
+
 // GET: get current user
 route.get('/me', authController.getCurrentUser);
 

@@ -28,9 +28,12 @@ export default function Login() {
             // Attempt login and get the user object back
             const user = await login(identifier, password);
             
-            // Context-aware Redirect
-            if (user.role === 'admin') {
-                nav('/admin');
+            // Context-aware Redirect based on role
+            if (user.role === 'unauthorized') {
+                // User hasn't verified their account yet
+                nav.go('/verify-account');
+            } else if (user.role === 'admin') {
+                nav.admin();
             } else {
                 const from = location.state?.from?.pathname || '/';
                 nav.go(from);

@@ -57,8 +57,8 @@ export default function Register() {
                 throw new Error(data.message || 'Registration failed');
             }
 
-            // Registration successful - redirect to validation
-            nav.validate({state: { email: formData.email }});
+            // Registration successful - redirect to login with success message
+            nav.go('/login', { state: { message: 'Registration successful! Please login and verify your account.' } });
         } catch (err) {
             console.error(err);
             setError(err.message || 'Registration failed. Please try again.');
