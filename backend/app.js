@@ -13,6 +13,9 @@ import userRoute from "./routes/user.js"
 import not_found from "./middleware/not_found.js";
 import error_handler from "./middleware/error_handler.js";
 
+
+import productRoute from "./routes/product.routes.js";
+
 const app = express();
 
 // --- Dependencies ---
@@ -47,6 +50,8 @@ app.use('/categories', categoryRoute);
 app.use('/seller', sellerRequestRoute);
 app.use('/users', userRoute);
 
+// --- Product route ---
+// app.use('/products', productRoute);
 app.get('/', (req, res) => {
     res.json({
         message: 'Hello World',
@@ -58,9 +63,8 @@ app.use(not_found);
 app.use(error_handler);
 
 
-// ---Product route---
-const productRoutes = require('./routes/product.routes');
-app.use('/api/products', productRoutes);
+
+// app.use('/api/products', productRoutes);
 
 
 export default app;
