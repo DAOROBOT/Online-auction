@@ -1,77 +1,105 @@
-import { useState } from "react";
-import { CheckCircle, XCircle, Eye, Star, Trophy, Clock } from "lucide-react";
+import { useState, useEffect } from "react";
+import { CheckCircle, XCircle, Eye, Star, Trophy, Clock, RefreshCw } from "lucide-react";
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export default function UpgradeRequests() {
-  const [requests, setRequests] = useState([
-    {
-      id: 1,
-      user: {
-        name: "Alice Cooper",
-        email: "alice@example.com",
-        avatar: "https://i.pravatar.cc/150?img=1",
-        joinDate: "2024-01-15"
-      },
-      requestDate: "2025-12-10T10:30:00",
-      stats: {
-        auctionsWon: 45,
-        rating: 98,
-        totalSpent: 5420
-      },
-      status: "pending"
-    },
-    {
-      id: 2,
-      user: {
-        name: "Bob Williams",
-        email: "bob@example.com",
-        avatar: "https://i.pravatar.cc/150?img=2",
-        joinDate: "2024-03-20"
-      },
-      requestDate: "2025-12-11T14:20:00",
-      stats: {
-        auctionsWon: 32,
-        rating: 95,
-        totalSpent: 3200
-      },
-      status: "pending"
-    },
-    {
-      id: 3,
-      user: {
-        name: "Carol Martinez",
-        email: "carol@example.com",
-        avatar: "https://i.pravatar.cc/150?img=3",
-        joinDate: "2024-02-10"
-      },
-      requestDate: "2025-12-09T09:15:00",
-      stats: {
-        auctionsWon: 28,
-        rating: 92,
-        totalSpent: 2800
-      },
-      status: "approved"
-    },
-  ]);
-
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [filterStatus, setFilterStatus] = useState("pending");
+  const [actionLoading, setActionLoading] = useState(null);
+
+  // Fetch requests from backend
+  const fetchRequests = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_URL}/seller/requests`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch requests');
+      }
+
+      const data = await response.json();
+      setRequests(data.requests || []);
+    } catch (err) {
+      setError(err.message || 'Failed to load requests');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRequests();
+  }, []);
 
   const filteredRequests = requests.filter(req => 
     filterStatus === "all" || req.status === filterStatus
   );
 
-  const handleApprove = (id) => {
-    if (confirm("Approve this upgrade request? The user will become a seller.")) {
+  const handleApprove = async (id) => {
+    if (!confirm("Approve this upgrade request? The user will become a seller.")) return;
+    
+    setActionLoading(id);
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_URL}/seller/requests/${id}/approve`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to approve request');
+      }
+
+      // Update local state
       setRequests(requests.map(req =>
         req.id === id ? { ...req, status: "approved" } : req
       ));
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setActionLoading(null);
     }
   };
 
-  const handleReject = (id) => {
-    if (confirm("Reject this upgrade request?")) {
+  const handleReject = async (id) => {
+    if (!confirm("Reject this upgrade request?")) return;
+    
+    setActionLoading(id);
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_URL}/seller/requests/${id}/reject`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to reject request');
+      }
+
+      // Update local state
       setRequests(requests.map(req =>
         req.id === id ? { ...req, status: "rejected" } : req
       ));
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -98,13 +126,28 @@ export default function UpgradeRequests() {
           <h1 className="profile-name text-3xl font-bold">Seller Upgrade Requests</h1>
           <p className="profile-text-muted mt-1">Review and approve bidder upgrade requests</p>
         </div>
-        <div className="profile-card px-4 py-2 rounded-lg">
-          <div className="text-sm profile-text-muted">Pending Requests</div>
-          <div className="text-2xl font-bold profile-name">
-            {requests.filter(r => r.status === 'pending').length}
+        <div className="flex items-center gap-4">
+          <button
+            onClick={fetchRequests}
+            disabled={loading}
+            className="p-2 rounded-lg hover:bg-[var(--bg-hover)] transition-colors"
+          >
+            <RefreshCw size={20} className={`profile-text-muted ${loading ? 'animate-spin' : ''}`} />
+          </button>
+          <div className="profile-card px-4 py-2 rounded-lg">
+            <div className="text-sm profile-text-muted">Pending Requests</div>
+            <div className="text-2xl font-bold profile-name">
+              {requests.filter(r => r.status === 'pending').length}
+            </div>
           </div>
         </div>
       </div>
+
+      {error && (
+        <div className="mb-6 p-4 rounded-lg bg-[var(--danger-soft)] border border-[var(--danger)] text-[var(--danger)]">
+          {error}
+        </div>
+      )}
 
       {/* Filter Tabs */}
       <div className="profile-tabs-border flex gap-2 mb-6 border-b pb-2">
@@ -127,101 +170,113 @@ export default function UpgradeRequests() {
       </div>
 
       {/* Requests Grid */}
-      <div className="grid grid-cols-1 gap-4">
-        {filteredRequests.map((request) => (
-          <div key={request.id} className="profile-card rounded-xl p-6 hover:shadow-lg transition-all">
-            <div className="flex items-start justify-between gap-4">
-              {/* User Info */}
-              <div className="flex items-start gap-4 flex-1">
-                <img
-                  src={request.user.avatar}
-                  alt={request.user.name}
-                  className="w-16 h-16 rounded-full object-cover"
-                />
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="profile-name text-lg font-bold">{request.user.name}</h3>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusBadge(request.status)}`}>
-                      {request.status}
-                    </span>
+      {loading ? (
+        <div className="text-center py-12">
+          <div className="w-12 h-12 border-4 border-[var(--accent)] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="profile-text-muted">Loading requests...</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4">
+          {filteredRequests.map((request) => {
+            const user = request.user || {};
+            const ratingPercent = user.ratingCount > 0 
+              ? Math.round((user.positiveRatingCount / user.ratingCount) * 100) 
+              : 0;
+            
+            return (
+              <div key={request.id} className="profile-card rounded-xl p-6 hover:shadow-lg transition-all">
+                <div className="flex items-start justify-between gap-4">
+                  {/* User Info */}
+                  <div className="flex items-start gap-4 flex-1">
+                    <img
+                      src={user.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName || user.username || 'User')}&background=random`}
+                      alt={user.fullName || user.username}
+                      className="w-16 h-16 rounded-full object-cover"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="profile-name text-lg font-bold">{user.fullName || user.username || 'Unknown User'}</h3>
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusBadge(request.status)}`}>
+                          {request.status}
+                        </span>
+                      </div>
+                      <p className="profile-text-muted text-sm mb-1">{user.email}</p>
+                      <div className="flex items-center gap-4 text-sm profile-text-muted">
+                        <span className="flex items-center gap-1">
+                          <Clock size={14} />
+                          Requested: {new Date(request.createdAt).toLocaleDateString()}
+                        </span>
+                        <span>Member since: {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</span>
+                      </div>
+                      {request.reason && (
+                        <div className="mt-3 p-3 bg-[var(--bg)] rounded-lg border border-[var(--border)]">
+                          <p className="text-xs font-medium text-[var(--text-muted)] mb-1">Reason:</p>
+                          <p className="text-sm text-[var(--text)]">{request.reason}</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <p className="profile-text-muted text-sm mb-1">{request.user.email}</p>
-                  <div className="flex items-center gap-4 text-sm profile-text-muted">
-                    <span className="flex items-center gap-1">
-                      <Clock size={14} />
-                      Requested: {new Date(request.requestDate).toLocaleDateString()}
-                    </span>
-                    <span>Member since: {new Date(request.user.joinDate).toLocaleDateString()}</span>
+
+                  {/* Stats */}
+                  <div className="flex gap-6">
+                    <div className="text-center">
+                      <div className="flex items-center gap-1 justify-center mb-1">
+                        <Star size={16} className={getRatingColor(ratingPercent)} />
+                        <span className={`text-2xl font-bold ${getRatingColor(ratingPercent)}`}>
+                          {ratingPercent}%
+                        </span>
+                      </div>
+                      <div className="profile-text-muted text-xs">Rating ({user.ratingCount || 0} reviews)</div>
+                    </div>
                   </div>
+
+                  {/* Actions */}
+                  {request.status === 'pending' && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleApprove(request.id)}
+                        disabled={actionLoading === request.id}
+                        className="px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-all bg-[var(--success-soft)] text-[var(--success)] hover:shadow-md disabled:opacity-50"
+                      >
+                        {actionLoading === request.id ? (
+                          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <CheckCircle size={18} />
+                        )}
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => handleReject(request.id)}
+                        disabled={actionLoading === request.id}
+                        className="px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-all bg-[var(--danger-soft)] text-[var(--danger)] hover:shadow-md disabled:opacity-50"
+                      >
+                        {actionLoading === request.id ? (
+                          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <XCircle size={18} />
+                        )}
+                        Reject
+                      </button>
+                    </div>
+                  )}
+
+                  {request.status === 'approved' && (
+                    <div className="px-4 py-2 rounded-lg bg-[var(--success-soft)] text-[var(--success)] font-medium">
+                      ✓ Approved
+                    </div>
+                  )}
+
+                  {request.status === 'rejected' && (
+                    <div className="px-4 py-2 rounded-lg bg-[var(--danger-soft)] text-[var(--danger)] font-medium">
+                      ✗ Rejected
+                    </div>
+                  )}
                 </div>
               </div>
-
-              {/* Stats */}
-              <div className="flex gap-6">
-                <div className="text-center">
-                  <div className="flex items-center gap-1 justify-center mb-1">
-                    <Trophy size={16} className="text-(--accent)" />
-                    <span className="profile-name text-2xl font-bold">{request.stats.auctionsWon}</span>
-                  </div>
-                  <div className="profile-text-muted text-xs">Auctions Won</div>
-                </div>
-                
-                <div className="text-center">
-                  <div className="flex items-center gap-1 justify-center mb-1">
-                    <Star size={16} className={getRatingColor(request.stats.rating)} />
-                    <span className={`text-2xl font-bold ${getRatingColor(request.stats.rating)}`}>
-                      {request.stats.rating}%
-                    </span>
-                  </div>
-                  <div className="profile-text-muted text-xs">Rating</div>
-                </div>
-
-                <div className="text-center">
-                  <div className="profile-name text-2xl font-bold mb-1">
-                    ${request.stats.totalSpent.toLocaleString()}
-                  </div>
-                  <div className="profile-text-muted text-xs">Total Spent</div>
-                </div>
-              </div>
-
-              {/* Actions */}
-              {request.status === 'pending' && (
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleApprove(request.id)}
-                    className="px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-all bg-(--success-soft) text-(--success) hover:shadow-md"
-                  >
-                    <CheckCircle size={18} />
-                    Approve
-                  </button>
-                  <button
-                    onClick={() => handleReject(request.id)}
-                    className="px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-all bg-(--danger-soft) text-(--danger) hover:shadow-md"
-                  >
-                    <XCircle size={18} />
-                    Reject
-                  </button>
-                  <button className="p-2 rounded-lg hover:bg-(--bg-hover) transition-colors">
-                    <Eye size={18} className="profile-text-muted" />
-                  </button>
-                </div>
-              )}
-
-              {request.status === 'approved' && (
-                <div className="px-4 py-2 rounded-lg bg-(--success-soft) text-(--success) font-medium">
-                  ✓ Approved
-                </div>
-              )}
-
-              {request.status === 'rejected' && (
-                <div className="px-4 py-2 rounded-lg bg-(--danger-soft) text-(--danger) font-medium">
-                  ✗ Rejected
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       {filteredRequests.length === 0 && (
         <div className="profile-card rounded-xl p-12 text-center">
