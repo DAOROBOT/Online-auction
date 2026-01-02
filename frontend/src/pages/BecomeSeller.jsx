@@ -15,6 +15,7 @@ export default function BecomeSeller() {
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
     const [existingRequest, setExistingRequest] = useState(null);
+    const [statusInfo, setStatusInfo] = useState(null);
     const [checkingRequest, setCheckingRequest] = useState(true);
 
     // Check if user already has a request
@@ -36,6 +37,7 @@ export default function BecomeSeller() {
                 if (response.ok) {
                     const data = await response.json();
                     setExistingRequest(data.request);
+                    setStatusInfo(data.statusInfo);
                 }
             } catch (err) {
                 console.error('Error checking request:', err);
@@ -84,7 +86,7 @@ export default function BecomeSeller() {
         }
     };
 
-    const getStatusInfo = (status) => {
+    const getStatusDisplay = (status, statusInfo) => {
         switch (status) {
             case 'pending':
                 return {
@@ -95,6 +97,30 @@ export default function BecomeSeller() {
                     bgColor: 'var(--warning-soft)',
                 };
             case 'approved':
+                // Check if seller status is still active
+                if (statusInfo?.isActive) {
+                    return {
+                        icon: <CheckCircle className="w-12 h-12 text-[var(--success)]" />,
+                        title: 'You are a Seller! 🎉',
+                        description: `Your seller status is active for ${statusInfo.daysRemaining} more day${statusInfo.daysRemaining > 1 ? 's' : ''}.`,
+                        color: 'var(--success)',
+                        bgColor: 'var(--success-soft)',
+                        expiryDate: statusInfo.expiryDate,
+                        daysRemaining: statusInfo.daysRemaining,
+                        isActive: true,
+                    };
+                }
+                // Seller status expired - can reapply
+                if (statusInfo?.expired) {
+                    return {
+                        icon: <Clock className="w-12 h-12 text-[var(--warning)]" />,
+                        title: 'Seller Status Expired',
+                        description: 'Your seller period has ended. You can submit a new request to become a seller again.',
+                        color: 'var(--warning)',
+                        bgColor: 'var(--warning-soft)',
+                        canReapply: true,
+                    };
+                }
                 return {
                     icon: <CheckCircle className="w-12 h-12 text-[var(--success)]" />,
                     title: 'Congratulations! 🎉',
@@ -103,12 +129,24 @@ export default function BecomeSeller() {
                     bgColor: 'var(--success-soft)',
                 };
             case 'rejected':
+                if (statusInfo && !statusInfo.canReapply) {
+                    return {
+                        icon: <XCircle className="w-12 h-12 text-[var(--danger)]" />,
+                        title: 'Request Rejected',
+                        description: 'Unfortunately, your request was not approved at this time.',
+                        color: 'var(--danger)',
+                        bgColor: 'var(--danger-soft)',
+                        canReapplyDate: statusInfo.canReapplyDate,
+                        daysRemaining: statusInfo.daysRemaining,
+                    };
+                }
                 return {
                     icon: <XCircle className="w-12 h-12 text-[var(--danger)]" />,
                     title: 'Request Rejected',
-                    description: 'Unfortunately, your request was not approved at this time.',
+                    description: 'Unfortunately, your request was not approved. You can now submit a new request.',
                     color: 'var(--danger)',
                     bgColor: 'var(--danger-soft)',
+                    canReapply: true,
                 };
             default:
                 return null;
@@ -153,55 +191,87 @@ export default function BecomeSeller() {
 
     // If user has an existing request
     if (existingRequest) {
-        const statusInfo = getStatusInfo(existingRequest.status);
+        const displayInfo = getStatusDisplay(existingRequest.status, statusInfo);
         
-        return (
-            <div className="max-w-2xl mx-auto px-4 py-16">
-                <div className="bg-[var(--bg-soft)] rounded-2xl p-8 border border-[var(--border)]">
-                    <div className="text-center">
-                        <div 
-                            className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6"
-                            style={{ backgroundColor: statusInfo.bgColor }}
-                        >
-                            {statusInfo.icon}
-                        </div>
-                        <h1 className="text-3xl font-bold text-[var(--text)] mb-4">{statusInfo.title}</h1>
-                        <p className="text-[var(--text-muted)] mb-6">{statusInfo.description}</p>
-                        
-                        {existingRequest.adminNote && (
-                            <div className="bg-[var(--bg)] rounded-lg p-4 mb-6 text-left border border-[var(--border)]">
-                                <p className="text-sm font-medium text-[var(--text-muted)] mb-1">Admin Note:</p>
-                                <p className="text-[var(--text)]">{existingRequest.adminNote}</p>
-                            </div>
-                        )}
-
-                        <div className="text-sm text-[var(--text-muted)]">
-                            Submitted on: {new Date(existingRequest.createdAt).toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                            })}
-                        </div>
-
-                        {existingRequest.status === 'approved' && (
-                            <Link
-                                to="/create-auction"
-                                className="inline-flex items-center gap-2 px-6 py-3 mt-6 rounded-full bg-[var(--accent)] text-white font-semibold hover:opacity-90 transition-all"
+        // If rejected and can reapply OR approved but expired, show the form instead
+        if ((existingRequest.status === 'rejected' && displayInfo?.canReapply) ||
+            (existingRequest.status === 'approved' && displayInfo?.canReapply)) {
+            // Don't return early - show the form below
+        } else {
+            return (
+                <div className="max-w-2xl mx-auto px-4 py-16">
+                    <div className="bg-[var(--bg-soft)] rounded-2xl p-8 border border-[var(--border)]">
+                        <div className="text-center">
+                            <div 
+                                className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6"
+                                style={{ backgroundColor: displayInfo.bgColor }}
                             >
-                                <Store size={20} />
-                                Start Selling Now
-                            </Link>
-                        )}
+                                {displayInfo.icon}
+                            </div>
+                            <h1 className="text-3xl font-bold text-[var(--text)] mb-4">{displayInfo.title}</h1>
+                            <p className="text-[var(--text-muted)] mb-6">{displayInfo.description}</p>
+                            
+                            {/* Show expiry countdown for active sellers */}
+                            {existingRequest.status === 'approved' && displayInfo.isActive && displayInfo.expiryDate && (
+                                <div className="bg-[var(--success-soft)] rounded-lg p-4 mb-6 border border-[var(--success)]">
+                                    <p className="text-sm font-medium text-[var(--success)]">
+                                        ⏳ Seller status expires on: {new Date(displayInfo.expiryDate).toLocaleDateString('en-US', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric',
+                                        })}
+                                    </p>
+                                    <p className="text-xs text-[var(--text-muted)] mt-1">
+                                        {displayInfo.daysRemaining} day{displayInfo.daysRemaining > 1 ? 's' : ''} remaining
+                                    </p>
+                                </div>
+                            )}
 
-                        {existingRequest.status === 'rejected' && (
-                            <p className="text-sm text-[var(--text-muted)] mt-4">
-                                You may submit a new request after improving your profile and activity.
-                            </p>
-                        )}
+                            {/* Show reapply date for rejected requests */}
+                            {existingRequest.status === 'rejected' && displayInfo.canReapplyDate && (
+                                <div className="bg-[var(--warning-soft)] rounded-lg p-4 mb-6 border border-[var(--warning)]">
+                                    <p className="text-sm font-medium text-[var(--warning)]">
+                                        ⏳ You can submit a new request in {displayInfo.daysRemaining} day{displayInfo.daysRemaining > 1 ? 's' : ''}
+                                    </p>
+                                    <p className="text-xs text-[var(--text-muted)] mt-1">
+                                        Available on: {new Date(displayInfo.canReapplyDate).toLocaleDateString('en-US', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric',
+                                        })}
+                                    </p>
+                                </div>
+                            )}
+                            
+                            {existingRequest.adminNote && (
+                                <div className="bg-[var(--bg)] rounded-lg p-4 mb-6 text-left border border-[var(--border)]">
+                                    <p className="text-sm font-medium text-[var(--text-muted)] mb-1">Admin Note:</p>
+                                    <p className="text-[var(--text)]">{existingRequest.adminNote}</p>
+                                </div>
+                            )}
+
+                            <div className="text-sm text-[var(--text-muted)]">
+                                Submitted on: {new Date(existingRequest.createdAt).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                })}
+                            </div>
+
+                            {existingRequest.status === 'approved' && !displayInfo.effectiveDate && (
+                                <Link
+                                    to="/create-auction"
+                                    className="inline-flex items-center gap-2 px-6 py-3 mt-6 rounded-full bg-[var(--accent)] text-white font-semibold hover:opacity-90 transition-all"
+                                >
+                                    <Store size={20} />
+                                    Start Selling Now
+                                </Link>
+                            )}
+                        </div>
                     </div>
                 </div>
-            </div>
-        );
+            );
+        }
     }
 
     return (
