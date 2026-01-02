@@ -2,6 +2,8 @@ import sellerRequestService from "../services/sellerRequest.js";
 import userService from "../services/user.js";
 import authService from "../services/auth.js";
 
+import { sendSellerRequestRejected, sendSellerRequestAccepted } from "../utils/email.js";
+
 const controller = {
     // Submit a seller upgrade request (for buyers)
     submitRequest: async function(req, res) {
@@ -193,6 +195,15 @@ const controller = {
                 return res.status(400).json({ message: 'This request has already been processed' });
             }
 
+            // Send acceptance email
+            const user = await userService.getById(request.userId);
+            console.log('User for acceptance email:', user);
+            if (user && user.email) {
+                await sendSellerRequestAccepted({ email: user.email, username: user.username });
+            } else {
+                console.warn('Could not send acceptance email - user or email not found:', { userId: request.userId, user });
+            }
+
             // Update request status - this will set sellerExpiryDate to 7 days from now
             // and immediately change user role to seller
             const updatedRequest = await sellerRequestService.updateStatus(
@@ -242,9 +253,17 @@ const controller = {
             if (request.status !== 'pending') {
                 return res.status(400).json({ message: 'This request has already been processed' });
             }
+            // Send rejection email
+            const user = await userService.getById(request.userId);
+            console.log('User for rejection email:', user);
+            if (user && user.email) {
+                await sendSellerRequestRejected({ email: user.email, username: user.username });
+            } else {
+                console.warn('Could not send rejection email - user or email not found:', { userId: request.userId, user });
+            }
 
-            // Update request status
-            await sellerRequestService.updateStatus(parseInt(id), 'rejected', adminNote);
+            // Delete request
+            await sellerRequestService.delete(parseInt(id));
 
             res.status(200).json({ 
                 message: 'Request rejected.',

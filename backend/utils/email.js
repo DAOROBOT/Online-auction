@@ -555,6 +555,48 @@ export const sendAnswerToAllParticipants = async (recipients, auction, seller, q
   return results;
 };
 
+/**
+ *  10. REJECTED REQUEST TO SELLER - SEND TO BUYER
+ *  Notifies the buyer that their request to become a seller was rejected
+ */
+export const sendSellerRequestRejected = async (buyer) => {
+  const htmlContent = `
+    <h2 style="color: #d9534f; margin-bottom: 20px;">❌ Seller Request Rejected</h2>
+    <p style="color: #555;">Hello <strong>${buyer.username}</strong>,</p>
+    <p style="color: #555; line-height: 1.6;">We regret to inform you that your request to become a seller on our platform has been rejected after careful consideration.</p>
+    
+    <p style="color: #555; line-height: 1.6;">If you have any questions or would like feedback on your application, please feel free to contact our support team.</p>
+    
+    ${ctaButton('Contact Support', `${FRONTEND_URL}/support`, '#d9534f')}
+    
+    <p style="color: #555; line-height: 1.6;">Thank you for your understanding, and we hope to see you continue as a valued buyer on our platform.</p>
+  `;
+
+  return sendEmailViaAPI(buyer.email, '❌ Seller Request Rejected - Online Auction', htmlContent);
+};
+
+
+/** 
+ * 11. ACCEPTED REQUEST TO SELLER - SEND TO BUYER
+ * 
+*/
+
+export const sendSellerRequestAccepted = async (buyer) => {
+  const htmlContent = `
+    <h2 style="color: #28a745; margin-bottom: 20px;">✅ Seller Request Accepted</h2>
+    <p style="color: #555;">Hello <strong>${buyer.username}</strong>,</p>
+    <p style="color: #555; line-height: 1.6;">Congratulations! Your request to become a seller on our platform has been approved.</p>
+    
+    <p style="color: #555; line-height: 1.6;">You can now start creating auctions and selling your items to our community of buyers.</p>
+    
+    ${ctaButton('Start Selling', `${FRONTEND_URL}/create-auction`, '#28a745')}
+    
+    <p style="color: #555; line-height: 1.6;">If you have any questions or need assistance, please feel free to contact our support team.</p>
+  `;
+
+  return sendEmailViaAPI(buyer.email, '✅ Seller Request Accepted - Online Auction', htmlContent);
+};
+
 // ============================================
 // UTILITY EXPORTS
 // ============================================
@@ -587,6 +629,10 @@ export default {
   sendQuestionToSeller,
   sendAnswerNotification,
   sendAnswerToAllParticipants,
+
+  // Seller request emails
+  sendSellerRequestRejected,
+  sendSellerRequestAccepted,
   
   // Utility
   sendEmail,
