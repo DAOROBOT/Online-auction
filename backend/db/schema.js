@@ -2,6 +2,7 @@ import { pgTable, serial, varchar, text, decimal, timestamp, boolean, integer, p
 
 // --- ENUMS ---
 export const userRoleEnum = pgEnum('user_role', ['unauthorized', 'buyer', 'seller', 'admin']);
+export const userStatusEnum = pgEnum('user_status', ['active', 'banned']);
 export const auctionStatusEnum = pgEnum('auction_status', ['active', 'sold', 'ended', 'cancelled']);
 
 // --- 1. USERS TABLE ---
@@ -12,10 +13,10 @@ export const users = pgTable('users', {
   encryptedPassword: varchar('encrypted_password', { length: 255 }).notNull(),
   fullName: text('full_name'),
   role: userRoleEnum('role').default('unauthorized'),
+  status: userStatusEnum('status').default('active'),
   avatarUrl: text('avatar_url'),
   birthday: date('birthday'),
   bio: text('bio'),
-  birthday: date('birthday'), // or date mode
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   ratingCount: integer('rating_count').default(0),
   positiveRatingCount: integer('positive_rating_count').default(0),
@@ -98,6 +99,7 @@ export const sellerRequests = pgTable('seller_requests', {
   adminNote: text('admin_note'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+  sellerExpiryDate: timestamp('seller_expiry_date', { withTimezone: true }), // When the seller role expires (7 days after approval)
 });
 
 
