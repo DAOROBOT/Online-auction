@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -6,17 +6,68 @@ import ProfileSidebar from "./ProfileSidebar";
 import ProductGrid from "../../components/ProductGrid"; 
 import FilterBar from "../../components/Filter/FilterBar";
 import Pagination from "../../components/Pagination";
-import { mockUserData } from "../../data/users.js";
 
 export default function Profile({ me = false }) {
-  console.log(me);
-  const [userData] = useState(mockUserData);
+  const { user, logout } = useAuth();
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('active-bids');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+          setLoading(false);
+          return;
+        }
+
+        const response = await fetch('http://localhost:3000/users/me', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        console.log('Fetching user data response:', response);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Fetched user data:', data);
+          setUserData(data);
+        } else if (response.status === 401) {
+          // Token expired or invalid - logout the user
+          const errorData = await response.json();
+          console.warn('Auth error:', errorData.message);
+          logout();
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [logout]);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const query = searchParams.get("q") || "";
-    const category = searchParams.get("category") || "All Categories";
-    const currentPage = parseInt(searchParams.get("page") || "1");
+  const category = searchParams.get("category") || "All Categories";
+  const currentPage = parseInt(searchParams.get("page") || "1");
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 pb-20 flex items-center justify-center min-h-[400px]">
+        <div className="text-(--text-muted)">Loading profile...</div>
+      </div>
+    );
+  }
+
+  // No user data
+  if (!userData) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 pb-20 flex items-center justify-center min-h-[400px]">
+        <div className="text-(--text-muted)">Please log in to view your profile.</div>
+      </div>
+    );
+  }
 
   // --- TAB CONFIGURATION ---
   const tabs = [
