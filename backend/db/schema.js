@@ -87,6 +87,19 @@ export const reviews = pgTable('reviews', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
+// --- 7. SELLER REQUESTS TABLE ---
+export const sellerRequestStatusEnum = pgEnum('seller_request_status', ['pending', 'approved', 'rejected']);
+
+export const sellerRequests = pgTable('seller_requests', {
+  id: serial('request_id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  reason: text('reason'),
+  status: sellerRequestStatusEnum('status').default('pending'),
+  adminNote: text('admin_note'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
 
 // --- ADVANCED: RELATIONS (For easier querying) ---
 
