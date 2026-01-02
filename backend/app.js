@@ -10,16 +10,15 @@ import categoryRoute from "./routes/category.js"
 import authRoute from "./routes/auth.js"
 import sellerRequestRoute from "./routes/sellerRequest.js"
 import userRoute from "./routes/user.js"
+import uploadRoute from "./routes/upload.js";
+import verifyToken from "./middleware/auth.js";
 import not_found from "./middleware/not_found.js";
 import error_handler from "./middleware/error_handler.js";
 
 const app = express();
 
 // --- Dependencies ---
-app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-    credentials: true
-}));
+app.use(cors());
 
 app.use(morgan('dev'));
 
@@ -38,20 +37,19 @@ app.use(session({
 
 // Initialize Passport
 app.use(passport.initialize());
-app.use(passport.session());
+// app.use(passport.session());
 
+// Authentication middleware globally
+app.use(verifyToken);
+
+// --- Routes ---
 app.use('/auction', auctionRoute);
 app.use('/auth', authRoute);
 app.use('/search', searchRoute);
 app.use('/categories', categoryRoute);
 app.use('/seller', sellerRequestRoute);
-app.use('/users', userRoute);
-
-app.get('/', (req, res) => {
-    res.json({
-        message: 'Hello World',
-    });
-});
+app.use('/user', userRoute);
+app.use('/upload', uploadRoute);
 
 // --- Middleware ---
 app.use(not_found);

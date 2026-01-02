@@ -315,6 +315,54 @@ const controller = {
             
             res.status(500).json({ message: 'An error occurred. Please try again.' });
         }
+    },
+
+    getUserProfile: async function (req, res) {
+        try {
+            const { username } = req.params;
+
+            if (!username) {
+                return res.status(400).json({ message: 'Username is required' });
+            }
+
+            // Fetch user by username
+            const user = await userService.getByUsername(username);
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            // Get user auction data
+            const auctions = await userService.getUserAuctions(user.id, user.role);
+            console.log('User auctions data:', auctions);
+
+            res.status(200).json({
+                id: user.id,
+                username: user.username,
+                name: user.fullName,
+                email: user.email,
+                role: user.role,
+                avatar: user.avatarUrl,
+                bio: user.bio,
+                birthDate: user.birthday,
+                createdAt: user.createdAt,
+                rating: {
+                    positive: user.positiveRatingCount || 0,
+                    negative: (user.ratingCount || 0) - (user.positiveRatingCount || 0),
+                    percentage: user.ratingCount > 0 
+                        ? Math.round((user.positiveRatingCount / user.ratingCount) * 100) 
+                        : 100,
+                },
+                // Auction data matching frontend expectations
+                activeListings: auctions.activeListings,
+                soldItems: auctions.soldItems,
+                wonAuctions: auctions.wonAuctions,
+                activeBids: auctions.activeBids,
+                favoriteProducts: auctions.favoriteProducts,
+            });
+        } catch (error) {
+            console.error('Get user profile error:', error);
+            res.status(500).json({ message: 'An error occurred. Please try again.' });
+        }
     }
 };
 

@@ -83,18 +83,18 @@ passport.use(new FacebookStrategy({
 }));
 
 // Serialize user for session
-passport.serializeUser((user, done) => {
-    done(null, user.id);
-});
+// passport.serializeUser((user, done) => {
+//     done(null, user.id);
+// });
 
 // Deserialize user from session
-passport.deserializeUser(async (id, done) => {
-    try {
-        const user = await userService.getById(id);
-        done(null, user);
-    } catch (error) {
-        done(error, null);
-    }
-});
+// passport.deserializeUser(async (id, done) => {
+//     try {
+//         const user = await userService.getById(id);
+//         done(null, user);
+//     } catch (error) {
+//         done(error, null);
+//     }
+// });
 
 export default passport;

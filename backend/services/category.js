@@ -8,7 +8,6 @@ const service = {
             id: categories.id,
             name: categories.name,
         }).from(categories).where(isNull(categories.parentId));
-        console.log('Main Categories:', mainCategories);
         const categoriesWithSub = [];
         for (const mainCat of mainCategories) {
             const subCategories = await db.select({
@@ -20,7 +19,6 @@ const service = {
                 subcategories: subCategories
             });
         }
-        console.log('Categories with Subcategories:', categoriesWithSub);
         return categoriesWithSub;
     },
 

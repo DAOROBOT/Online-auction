@@ -5,6 +5,9 @@ import authService from "../services/auth.js";
 
 const route = new Router();
 
+// GET: get current user
+route.get('/me', authController.verifyUser);
+
 // POST: register
 route.post('/register', authController.createUser);
 
@@ -25,9 +28,6 @@ route.post('/verify-reset-otp', authController.verifyResetOtp);
 
 // POST: reset password
 route.post('/reset-password', authController.resetPassword);
-
-// GET: get current user
-route.get('/', authController.verifyUser);
 
 // ==================== Google OAuth ====================
 route.get('/google', authController.authenticateGoogle);

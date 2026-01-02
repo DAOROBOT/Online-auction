@@ -12,6 +12,8 @@ route.get('/stats', userController.getUserStatsSummary);
 // GET: get current user profile (must be before /:id)
 route.get('/me', userController.getCurrentUserProfile);
 
+route.get('/profile/:username', userController.getUserProfile);
+
 // GET: Get user by ID (admin only)
 route.get('/:id', userController.getUserById);
 

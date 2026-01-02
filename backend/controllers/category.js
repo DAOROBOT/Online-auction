@@ -7,7 +7,6 @@ const controller = {
     listCategories: async function(req, res, next) {
         try {
             const categories = await categoryService.findAll();
-            console.log(categories);
             res.json(categories);
         } catch (error) {
             next(error);
