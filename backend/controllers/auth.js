@@ -1,9 +1,11 @@
 import userService from "../services/user.js";
 import authService from "../services/auth.js";
+import sellerRequestService from "../services/sellerRequest.js";
 import { sendWelcomeEmail, sendEmailVerification, sendPasswordResetOTP } from "../utils/email.js";
 import crypto from 'crypto';
 import { create } from "domain";
 import { is } from "drizzle-orm";
+import passport from "passport";
 const controller = {
     listUser: function(req, res, next){
         userService.findAll().then((users) => {
@@ -17,31 +19,49 @@ const controller = {
         
         // Try to find user by username or email
         let found = await userService.getByUsername(identifier);
+        console.log('User found by username:', found);
         if (!found) {
             found = await userService.getByEmail(identifier);
         }
-        
+        console.log('User found:', found);
         if (!found){
             return res.status(401).json({
                 message: "Account does not exist"
             })
+        }
+        console.log('Checking if account is verified');
+        // Check if user is banned
+        console.log('User status:', found.status);
+        if (found.status === 'banned') {
+            return res.status(403).json({
+                message: "Your account has been banned. Please contact support for assistance."
+            });
         }
         
         console.log('Validating password');
         const result = await authService.validatePassword(password, found.encryptedPassword);
         if(!result){
             return res.status(401).json({
-                message: 'Invalid credentials',
+                message: 'Wrong password',
             });
         }
-        
+
+        // Check seller status - if seller role has expired, revert to buyer
+        if (found.role === 'seller') {
+            const statusCheck = await sellerRequestService.checkAndUpdateSellerStatus(found.id);
+            if (statusCheck.status === 'expired' && statusCheck.reverted) {
+                found.role = 'buyer';
+                console.log(`User ${found.id} seller status expired, reverted to buyer`);
+            }
+        }
+        console.log('Generating token for user:', found.id);
         const token = await authService.generateToken({
             userId: found.id,
             username: found.username,
             email: found.email,
             role: found.role,
         }) 
-        
+        console.log('User authenticated successfully:', found);
         res.status(200).json({
             token,
             user: {
@@ -51,6 +71,7 @@ const controller = {
                 fullName: found.fullName,
                 role: found.role,
                 avatarUrl: found.avatarUrl,
+                status: found.status,
             }
         })
     },
@@ -259,14 +280,40 @@ const controller = {
             }
         });
     },
-    getCurrentUser: async function(req, res){
+    verifyUser: async function(req, res){
         const authorization = req.header('Authorization');
         // Authorization: Bearer ey...
         const token = authorization.replace('Bearer ', '').trim();
         // Validate Token
         try {
-            const result = await authService.validateToken(token);
-            res.status(200).json(result);
+            const tokenData = await authService.validateToken(token);
+            
+            // Fetch fresh user data from database
+            const user = await userService.getById(tokenData.userId);
+            if (!user) {
+                return res.status(404).json({
+                    message: 'User not found',
+                });
+            }
+
+            // Check seller status - if seller role has expired, revert to buyer
+            if (user.role === 'seller') {
+                const statusCheck = await sellerRequestService.checkAndUpdateSellerStatus(user.id);
+                if (statusCheck.status === 'expired' && statusCheck.reverted) {
+                    user.role = 'buyer';
+                    console.log(`User ${user.id} seller status expired, reverted to buyer`);
+                }
+            }
+            console.log('User verified successfully:', user.id);
+
+            res.status(200).json({
+                userId: user.id,
+                username: user.username,
+                email: user.email,
+                fullName: user.fullName,
+                role: user.role,
+                avatarUrl: user.avatarUrl,
+            });
         } catch (error) {
             return res.status(401).json({
                 message: 'Invalid Token',
@@ -400,6 +447,96 @@ const controller = {
                 message: "An error occurred. Please try again."
             });
         }
+    },
+    authenticateGoogle: function(req, res, next){
+        passport.authenticate('google', {
+            scope: ['profile', 'email'] 
+        })(req, res, next);
+    },
+    callbackGoogle: function(req, res, next){
+        passport.authenticate('google', { failureRedirect: '/login?error=google_failed' }, async (err, user, info) => {
+            if (err || !user) {
+                return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=google_failed`);
+            }
+            try {
+                console.log('Google OAuth user:', user);
+                
+                // Check if user is banned
+                if (user.status === 'banned') {
+                    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=account_banned`);
+                }
+
+                if(!user.role || user.role === 'unauthorized'){
+                    user.role = 'buyer';
+                    await userService.update(user.id, { role: 'buyer' });
+                }
+
+
+                if(user.role === 'seller'){
+                    // Check and activate seller status if effective date has passed
+                    const activationResult = await sellerRequestService.checkAndUpdateSellerStatus(user.id);
+                    if (!activationResult.activated) {
+                        user.role = 'buyer';
+                        console.log(`User ${user.id} has been deactivated as seller`);
+                    }
+                }
+
+
+
+                // Generate JWT token for the authenticated user
+                const token = await authService.generateToken({
+                    userId: user.id,
+                    username: user.username,
+                    email: user.email,
+                    role: user.role,
+                    status: user.status,
+                });
+                
+                // Redirect to frontend with token
+                const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+                res.redirect(`${frontendUrl}/auth/callback?token=${token}`);
+            } catch (error) {
+                console.error('Google callback error:', error);
+                res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=auth_failed`);
+            }
+        })(req, res, next);
+    },
+    authenticateFacebook: function(req, res, next){
+        passport.authenticate('facebook', {
+            scope: ['email'] 
+        })(req, res, next);
+    },
+    callbackFacebook: function(req, res, next){
+        passport.authenticate('facebook', { failureRedirect: '/login?error=facebook_failed' }, async (err, user, info) => {
+            if (err || !user) {
+                return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=facebook_failed`);
+            }
+            try {
+                // Check if user is banned
+                if (user.status === 'banned') {
+                    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=account_banned`);
+                }
+
+                if(!user.role || user.role === 'unauthorized'){
+                    user.role = 'buyer';
+                    await userService.update(user.id, { role: 'buyer' });
+                }
+                // Generate JWT token for the authenticated user
+                const token = await authService.generateToken({
+                    userId: user.id,
+                    username: user.username,
+                    email: user.email,
+                    role: user.role,
+                });
+                
+                // Redirect to frontend with token
+                const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+                res.redirect(`${frontendUrl}/auth/callback?token=${token}`);
+            } catch (error) {
+                console.error('Facebook callback error:', error);
+                res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=auth_failed`);
+            }
+        })(req, res, next);
     }
 }
 

@@ -12,8 +12,7 @@ export const AuthProvider = ({ children }) => {
       try {
         const token = localStorage.getItem('authToken');
         if (token) {
-          // Verify token and get user data
-          const response = await fetch('http://localhost:3000/auth/me', {
+          const response = await fetch('http://localhost:3000/auth/', {
             headers: {
               'Authorization': `Bearer ${token}`
             }
@@ -53,6 +52,7 @@ export const AuthProvider = ({ children }) => {
 
     const data = await response.json();
     localStorage.setItem('authToken', data.token);
+    localStorage.setItem('userRole', data.user.role);
     setUser(data.user);
     return data.user;
   };

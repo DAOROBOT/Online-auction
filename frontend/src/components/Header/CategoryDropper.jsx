@@ -1,9 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDown, ChevronRight, LayoutGrid } from 'lucide-react';
-import { categories } from '../../data/constants';
 
-export default function CategoryDropper() {
+export default function CategoryDropper({ categories }) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeSub, setActiveSub] = useState(null); // Track active sub-category by ID
   const containerRef = useRef(null);

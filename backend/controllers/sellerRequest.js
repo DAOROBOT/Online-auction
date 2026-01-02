@@ -43,6 +43,26 @@ const controller = {
                 return res.status(400).json({ message: 'You already have a pending request' });
             }
 
+            // Check if user has an active seller status (not expired yet)
+            const sellerStatus = await sellerRequestService.getActiveSellerStatus(userData.userId);
+            if (sellerStatus && sellerStatus.isActive) {
+                return res.status(400).json({ 
+                    message: `You are currently a seller. Your seller status expires on ${sellerStatus.expiryDate.toLocaleDateString()}`,
+                    expiryDate: sellerStatus.expiryDate,
+                    daysRemaining: sellerStatus.daysRemaining
+                });
+            }
+
+            // Check if user can reapply after rejection (7 days cooldown)
+            const reapplyStatus = await sellerRequestService.canReapplyAfterRejection(userData.userId);
+            if (!reapplyStatus.canReapply) {
+                return res.status(400).json({ 
+                    message: `You can reapply after ${reapplyStatus.canReapplyDate.toLocaleDateString()} (${reapplyStatus.daysRemaining} days remaining)`,
+                    canReapplyDate: reapplyStatus.canReapplyDate,
+                    daysRemaining: reapplyStatus.daysRemaining
+                });
+            }
+
             const { reason } = req.body;
 
             // Create the request
@@ -77,9 +97,43 @@ const controller = {
                 return res.status(401).json({ message: 'Invalid token' });
             }
 
+            // Check and update seller status (revert to buyer if expired)
+            const sellerStatusCheck = await sellerRequestService.checkAndUpdateSellerStatus(userData.userId);
+            
             const request = await sellerRequestService.getByUserId(userData.userId);
 
-            res.status(200).json({ request });
+            // Add additional status info
+            let statusInfo = null;
+            if (request) {
+                if (request.status === 'approved' && request.sellerExpiryDate) {
+                    const expiryDate = new Date(request.sellerExpiryDate);
+                    const now = new Date();
+                    if (now < expiryDate) {
+                        // Active seller
+                        statusInfo = {
+                            isActive: true,
+                            expiryDate: expiryDate,
+                            daysRemaining: Math.ceil((expiryDate - now) / (24 * 60 * 60 * 1000))
+                        };
+                    } else {
+                        // Expired - can reapply
+                        statusInfo = { 
+                            isActive: false, 
+                            expired: true,
+                            canReapply: true 
+                        };
+                    }
+                } else if (request.status === 'rejected') {
+                    const reapplyStatus = await sellerRequestService.canReapplyAfterRejection(userData.userId);
+                    statusInfo = reapplyStatus;
+                }
+            }
+
+            res.status(200).json({ 
+                request,
+                statusInfo,
+                sellerStatusCheck
+            });
         } catch (error) {
             console.error('Get my request error:', error);
             res.status(500).json({ message: 'An error occurred. Please try again.' });
@@ -130,6 +184,7 @@ const controller = {
             const { adminNote } = req.body;
 
             const request = await sellerRequestService.getById(parseInt(id));
+            
             if (!request) {
                 return res.status(404).json({ message: 'Request not found' });
             }
@@ -138,17 +193,21 @@ const controller = {
                 return res.status(400).json({ message: 'This request has already been processed' });
             }
 
-            // Update request status
-            await sellerRequestService.updateStatus(parseInt(id), 'approved', adminNote);
-
-            // Update user role to seller
-            await userService.update(request.userId, { role: 'seller' });
+            // Update request status - this will set sellerExpiryDate to 7 days from now
+            // and immediately change user role to seller
+            const updatedRequest = await sellerRequestService.updateStatus(
+                parseInt(id), 
+                'approved', 
+                adminNote,
+                request.userId  // Pass userId to update role immediately
+            );
 
             res.status(200).json({ 
-                message: 'Request approved successfully. User is now a seller.',
+                message: 'Request approved successfully. User is now a seller for 7 days.',
                 request: {
                     id: parseInt(id),
-                    status: 'approved'
+                    status: 'approved',
+                    sellerExpiryDate: updatedRequest.sellerExpiryDate
                 }
             });
         } catch (error) {

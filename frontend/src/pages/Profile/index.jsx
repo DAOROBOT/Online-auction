@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { useState, useParams } from "react";
+=======
+import { useState, useEffect } from "react";
+>>>>>>> 291ec7d235ff62d79f64ea64a5f66f4f9be3abbe
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -8,49 +12,66 @@ import FilterBar from "../../components/Filter/FilterBar";
 import Pagination from "../../components/Pagination";
 
 export default function Profile({ me = false }) {
-  const { user: authUser, loading: authLoading } = useAuth();
-  const { id } = useParams();
-
-  const [profileData, setProfileData] = useState(null);
-  const [error, setError] = useState(null);
+  const { user, logout } = useAuth();
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('active-bids');
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchData = async () => {
       try {
-        if (me) {
-          // Viewing personal profile
-          if (!authLoading) {
-            if (authUser) {
-              setProfileData(authUser);
-            } else {
-               setError("You must be logged in to view this page.");
-            }
-            setLoading(false);
-          }
-        } else {
-          // Viewing public profile by ID
-          const response = await fetch(`http://localhost:3000/users/${id}`);
-          if (!response.ok) throw new Error("User not found");
-          const data = await response.json();
-          setProfileData(data);
+        const token = localStorage.getItem('authToken');
+        if (!token) {
           setLoading(false);
+          return;
         }
-      } catch (err) {
-        console.error("Failed to load profile:", err);
-        setError(err.message);
+
+        const response = await fetch('http://localhost:3000/users/me', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        console.log('Fetching user data response:', response);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Fetched user data:', data);
+          setUserData(data);
+        } else if (response.status === 401) {
+          // Token expired or invalid - logout the user
+          const errorData = await response.json();
+          console.warn('Auth error:', errorData.message);
+          logout();
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      } finally {
         setLoading(false);
       }
     };
-
-    fetchProfile();
-  }, [me, authUser, authLoading, id]);
-
-  const [activeTab, setActiveTab] = useState('active-bids');
+    fetchData();
+  }, [logout]);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const query = searchParams.get("q") || "";
-    const category = searchParams.get("category") || "All Categories";
-    const currentPage = parseInt(searchParams.get("page") || "1");
+  const category = searchParams.get("category") || "All Categories";
+  const currentPage = parseInt(searchParams.get("page") || "1");
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 pb-20 flex items-center justify-center min-h-[400px]">
+        <div className="text-(--text-muted)">Loading profile...</div>
+      </div>
+    );
+  }
+
+  // No user data
+  if (!userData) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 pb-20 flex items-center justify-center min-h-[400px]">
+        <div className="text-(--text-muted)">Please log in to view your profile.</div>
+      </div>
+    );
+  }
 
   // --- TAB CONFIGURATION ---
   const tabs = [

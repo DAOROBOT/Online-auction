@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  LayoutDashboard, Users, Settings, FolderTree, ShoppingBag, UserPlus, LogOut, Menu
+  LayoutDashboard, Users, Settings, FolderTree, ShoppingBag, UserPlus, LogOut, Home
 } from 'lucide-react';
 import { useNav } from '../../hooks/useNavigate.js';
 import OverviewView from './Overview.jsx';
@@ -42,6 +42,8 @@ export default function AdminDashboard() {
           {!isSidebarOpen && <span className="font-bold text-xl" style={{ color: 'var(--admin-sidebar-active-text)' }}>B</span>}
         </div>
 
+
+
         {/* Navigation */}
         <nav className="flex-1 py-6 px-3 space-y-1">
           {navItems.map((item) => (
@@ -79,9 +81,28 @@ export default function AdminDashboard() {
             </button>
           ))}
         </nav>
+        {/* To Homepage */}
+        <div className="px-3 pt-3 border-t" style={{ borderColor: 'var(--admin-sidebar-border)' }}>
+            <button 
+                onClick={() => nav.home()} 
+                className="w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors"
+                style={{ color: 'var(--admin-sidebar-text)' }}
+                onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'var(--accent-soft)';
+                    e.currentTarget.style.color = 'var(--accent)';
+                }}
+                onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.color = 'var(--admin-sidebar-text)';
+                }}
+            >
+                <Home size={20} />
+                <span className={`font-medium ${!isSidebarOpen && 'hidden'}`}>Homepage</span>
+            </button>
+        </div>
 
         {/* Logout */}
-        <div className="p-3 border-t" style={{ borderColor: 'var(--admin-sidebar-border)' }}>
+        <div className="px-3 pb-3" style={{ borderColor: 'var(--admin-sidebar-border)' }}>
             <button 
                 onClick={() => nav.login()} 
                 className="w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors"

@@ -2,7 +2,6 @@ import { Trophy, Users, Gavel } from "lucide-react";
 import { useNav } from '../../hooks/useNavigate';
 import Hero from "./Hero";
 import ProductTabs from "./ProductTabs";
-import TopBidders from "./TopBidders";
 import CTA from "./CTA";
 import './HomePage.css'
 
@@ -87,9 +86,6 @@ export default function HomePage() {
                     </div>
                 </div>
             </div>
-
-            {/* 5. TOP BIDDERS / HALL OF FAME (Themed) */}
-            <TopBidders />
 
             {/* 6. CTA SECTION */}
             <CTA />

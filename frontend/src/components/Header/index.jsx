@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useNav } from '../../hooks/useNavigate.js';
 import { 
@@ -13,24 +13,47 @@ import ThemeToggle from '../ThemeToggle.jsx';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import './Header.css'
 
+
 export default function Header() {
+  const inputRef = useRef(null);
+  const mobileSearchRef = useRef(null);
   const nav = useNav();
+  const { user, logout } = useAuth(); // Assuming logout function exists
   const [searchParams] = useSearchParams();
+  const [categories, setCategories] = useState([]);
 
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
+
+  useEffect(() => {
+    // Fetch categories from backend
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/categories');
+        if (response.ok) {
+          const data = await response.json();
+          setCategories(data);
+        } else {
+          console.error('Failed to fetch categories');
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
      setSearchQuery(searchParams.get("q") || "");
   }, [searchParams]);
 
   const handleSearch = () => {
+    inputRef.current.foccus();
     const trimmed = searchQuery.trim();
     if (trimmed) {
       nav.search(trimmed);
     }
   };
-
-  const { user } = useAuth();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -63,7 +86,7 @@ export default function Header() {
               </div>
 
               {/* Desktop Categories */}
-              <CategoryDropper />
+              <CategoryDropper categories={categories} />
             </div>
 
             {/* CENTER: Search Bar */}
@@ -78,7 +101,7 @@ export default function Header() {
               >
                 <input 
                   type="text" 
-                  value={searchQuery} 
+                  value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)} 
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()} 
                   placeholder="Search for items, artists, or brands..." 
@@ -98,7 +121,15 @@ export default function Header() {
 
             {/* RIGHT: Actions */}
             <div className="flex items-center gap-4">
-              <button onClick={() => setIsMobileMenuOpen(true)} className="md:hidden p-2 hover:bg-(--header-hover) rounded-full transition-colors" style={{ color: 'var(--header-text)' }}>
+              <button 
+                onClick={() => {
+                  setIsMobileMenuOpen(true);
+                  // Focus search input after menu opens
+                  setTimeout(() => mobileSearchRef.current?.focus(), 100);
+                }} 
+                className="md:hidden p-2 hover:bg-(--header-hover) rounded-full transition-colors" 
+                style={{ color: 'var(--header-text)' }}
+              >
                 <Search size={24} />
               </button>
 
@@ -123,7 +154,7 @@ export default function Header() {
                   </Link>
 
                   <NotificationDropper />
-                  <ProfileDropper />
+                  <ProfileDropper user={user} logout={logout} />
                 </div>
               ) : (
                 <div className="hidden sm:flex items-center gap-3">
@@ -152,7 +183,7 @@ export default function Header() {
       </header>
 
       {/* --- MOBILE MENU OVERLAY --- */}
-      {isMobileMenuOpen && <MobileMenu user={user} setIsMobileMenuOpen={setIsMobileMenuOpen} />}
+      {isMobileMenuOpen && <MobileMenu categories={categories} searchInputRef={mobileSearchRef} user={user} setIsMobileMenuOpen={setIsMobileMenuOpen} logout={logout} />}
     </>
   );
 }

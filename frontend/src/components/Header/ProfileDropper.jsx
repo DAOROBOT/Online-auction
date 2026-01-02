@@ -1,15 +1,16 @@
 import { useState, useRef, useEffect } from "react";
-import { User, Gavel, Heart, LogOut, LayoutDashboard, PlusCircle, Settings, ChevronRight } from "lucide-react";
+import { User, LogOut, Clock } from "lucide-react";
 import { useNav } from '../../hooks/useNavigate';
-import { useAuth } from "../../contexts/AuthContext";
 import { mockUserData } from "../../data/users.js";
 
-export default function ProfileDropper() {
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+export default function ProfileDropper({user, logout}) {
   const nav = useNav();
-  const { user, logout } = useAuth(); // Assuming logout function exists
   const currentUser = user || mockUserData; // Fallback for UI testing
 
   const [isOpen, setIsOpen] = useState(false);
+  const [sellerStatus, setSellerStatus] = useState(null);
   const dropdownRef = useRef(null);
 
   // Close when clicking outside
@@ -22,6 +23,35 @@ export default function ProfileDropper() {
     if (isOpen) document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
+
+  // Check seller request status (for sellers - show expiry countdown)
+  useEffect(() => {
+    const checkSellerStatus = async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        if (!token || currentUser?.role === 'admin') return;
+
+        // Only check if user is a seller (to show expiry countdown)
+        if (currentUser?.role !== 'seller') return;
+
+        const response = await fetch(`${API_URL}/seller/my-request`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          // Show countdown for active sellers
+          if (data.request?.status === 'approved' && data.statusInfo?.isActive) {
+            setSellerStatus(data.statusInfo);
+          }
+        }
+      } catch (err) {
+        console.error('Error checking seller status:', err);
+      }
+    };
+
+    checkSellerStatus();
+  }, [currentUser?.role]);
 
   const handleAction = (action) => {
     setIsOpen(false);
@@ -41,7 +71,7 @@ export default function ProfileDropper() {
         }`}
       >
         <img 
-          src={currentUser.avatar} 
+          src={currentUser.imgUrl} 
           alt="Profile" 
           className="w-9 h-9 rounded-full object-cover border border-(--border)" 
         />
@@ -71,6 +101,13 @@ export default function ProfileDropper() {
               <p className="text-xs truncate font-medium mt-0.5" style={{ color: 'var(--text-muted)' }}>
                 {currentUser.email}
               </p>
+              {/* Seller Expiry Countdown Badge */}
+              {currentUser.role === 'seller' && sellerStatus?.isActive && (
+                <div className="mt-2 flex items-center gap-1.5 text-xs font-medium text-[var(--warning)] bg-[var(--warning-soft)] px-2 py-1 rounded-md">
+                  <Clock size={12} />
+                  <span>Expires in {sellerStatus.daysRemaining} day{sellerStatus.daysRemaining > 1 ? 's' : ''}</span>
+                </div>
+              )}
           </div>
           
           {/* 2. MENU ITEMS */}

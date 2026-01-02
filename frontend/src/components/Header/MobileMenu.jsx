@@ -2,13 +2,11 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Search, X, ChevronDown, LogOut } from "lucide-react"
 import { useNav } from "../../hooks/useNavigate.js";
-import { categories } from '../../data/constants.js';
 
-export default function MobileMenu({ user, setIsMobileMenuOpen }) {
+export default function MobileMenu({ user, setIsMobileMenuOpen, categories, searchInputRef, logout }) {
     const nav = useNav();
     const [activeMobileCategory, setActiveMobileCategory] = useState(null);
     const [searchQuery, setSearchQuery] = useState(""); // Track mobile search
-
     const handleMobileSearch = () => {
         setIsMobileMenuOpen(false); // Close menu
         nav.search(searchQuery);
@@ -22,6 +20,7 @@ export default function MobileMenu({ user, setIsMobileMenuOpen }) {
                style={{ backgroundColor: 'var(--bg)', borderLeft: '1px solid var(--border)' }}>
             
             {/* Mobile Header */}
+            {user && (
             <div className="flex items-center justify-between px-6 py-2 bg-[var(--bg-soft)] border-b border-[var(--border)]">
                 <button onClick={() => {nav.me(); setIsMobileMenuOpen(false)}} className="p-2 rounded-full hover:bg-[var(--bg-hover)]" style={{ color: 'var(--text-muted)' }}>
                     <img 
@@ -34,6 +33,7 @@ export default function MobileMenu({ user, setIsMobileMenuOpen }) {
                     <X size={24} />
                 </button>
             </div>
+            )}
 
             {/* Mobile Content */}
             <div className="flex-1 overflow-y-auto p-6 space-y-8">
@@ -44,7 +44,9 @@ export default function MobileMenu({ user, setIsMobileMenuOpen }) {
                   type="text" 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search..." 
+                  onKeyDown={(e) => e.key === 'Enter' && handleMobileSearch()}
+                  placeholder="Search..."
+                  ref={searchInputRef}
                   className="w-full rounded-xl py-3 pl-11 pr-4 outline-none border focus:ring-2 transition-all"
                   style={{ 
                       backgroundColor: 'var(--input-bg)', 
@@ -91,7 +93,7 @@ export default function MobileMenu({ user, setIsMobileMenuOpen }) {
             {/* Mobile Footer */}
             <div className="p-6 border-t" style={{ backgroundColor: 'var(--bg-soft)', borderColor: 'var(--border)' }}>
               {user ? (
-                 <button onClick={() => { setIsMobileMenuOpen(false); nav.home(); }} className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold transition-colors shadow-sm"
+                 <button onClick={() => { setIsMobileMenuOpen(false);logout();}} className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold transition-colors shadow-sm"
                  style={{ backgroundColor: 'var(--danger-soft)', color: 'var(--danger)' }}>
                    <LogOut size={18} /> Logout
                  </button>
