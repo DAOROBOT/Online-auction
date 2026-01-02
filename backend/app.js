@@ -14,7 +14,7 @@ import not_found from "./middleware/not_found.js";
 import error_handler from "./middleware/error_handler.js";
 
 
-import productRoute from "./routes/product.routes.js";
+// import productRoute from "./routes/product.routes.js";
 
 const app = express();
 
