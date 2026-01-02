@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useLocation, Link, useSearchParams } from 'react-router-dom';
 import { useNav } from '../../hooks/useNavigate';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -8,6 +8,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 export default function Login() {
     const nav = useNav();
     const location = useLocation();
+    const [searchParams] = useSearchParams();
     const { login } = useAuth();
 
     // Form State
@@ -17,6 +18,20 @@ export default function Login() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState(location.state?.message || '');
+
+    // Check for OAuth error in URL params
+    useEffect(() => {
+        const errorParam = searchParams.get('error');
+        if (errorParam === 'account_banned') {
+            setError('Your account has been banned. Please contact support for assistance.');
+        } else if (errorParam === 'google_failed') {
+            setError('Google login failed. Please try again.');
+        } else if (errorParam === 'facebook_failed') {
+            setError('Facebook login failed. Please try again.');
+        } else if (errorParam === 'auth_failed') {
+            setError('Authentication failed. Please try again.');
+        }
+    }, [searchParams]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -31,7 +46,7 @@ export default function Login() {
             // Context-aware Redirect based on role
             if (user.role === 'unauthorized') {
                 // User hasn't verified their account yet
-                nav.go('/verify-account');
+                nav.home();
             } else if (user.role === 'admin') {
                 nav.admin();
             } else {
