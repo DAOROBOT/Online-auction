@@ -187,6 +187,16 @@ export default function Register() {
                     </div>
                 </div>
 
+                {/* reCAPTCHA */}
+                <div className="flex justify-center">
+                    <ReCAPTCHA
+                        sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'}
+                        onChange={(token) => setRecaptchaToken(token)}
+                        onExpired={() => setRecaptchaToken(null)}
+                        theme="light"
+                    />
+                </div>
+
                 {/* Register Button */}
                 <button 
                     type="submit" 
