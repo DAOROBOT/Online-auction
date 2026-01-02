@@ -88,36 +88,36 @@ const controller = {
         }
 
         // Verify reCAPTCHA token
-        // if (recaptchaToken) {
-        //     try {
-        //         const verificationUrl = 'https://www.google.com/recaptcha/api/siteverify';
-        //         const response = await fetch(verificationUrl, {
-        //             method: 'POST',
-        //             headers: {
-        //                 'Content-Type': 'application/x-www-form-urlencoded',
-        //             },
-        //             body: `secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${recaptchaToken}`
-        //         });
+        if (recaptchaToken) {
+            try {
+                const verificationUrl = 'https://www.google.com/recaptcha/api/siteverify';
+                const response = await fetch(verificationUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${recaptchaToken}`
+                });
 
-        //         const data = await response.json();
-        //         console.log('reCAPTCHA verification:', data);
+                const data = await response.json();
+                console.log('reCAPTCHA verification:', data);
 
-        //         if (!data.success || data.score < 0.5) {
-        //             return res.status(400).json({
-        //                 message: "reCAPTCHA verification failed"
-        //             });
-        //         }
-        //     } catch (error) {
-        //         console.error('reCAPTCHA verification error:', error);
-        //         return res.status(500).json({
-        //             message: "reCAPTCHA verification error"
-        //         });
-        //     }
-        // } else {
-        //     return res.status(400).json({
-        //         message: "reCAPTCHA token is required"
-        //     });
-        // }
+                if (!data.success || data.score < 0.5) {
+                    return res.status(400).json({
+                        message: "reCAPTCHA verification failed"
+                    });
+                }
+            } catch (error) {
+                console.error('reCAPTCHA verification error:', error);
+                return res.status(500).json({
+                    message: "reCAPTCHA verification error"
+                });
+            }
+        } else {
+            return res.status(400).json({
+                message: "reCAPTCHA token is required"
+            });
+        }
 
         const found = await userService.getByEmail(email);
         const foundUsername = await userService.getByUsername(username);

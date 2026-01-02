@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { useNav } from '../../hooks/useNavigate';
 import { useAuth } from '../../contexts/AuthContext';
-// import ReCAPTCHA from 'react-google-recaptcha';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -11,7 +11,7 @@ export default function Register() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    // const [recaptchaToken, setRecaptchaToken] = useState(null);
+    const [recaptchaToken, setRecaptchaToken] = useState(null);
     const [formData, setFormData] = useState({
         username: '',
         email: '',
@@ -30,9 +30,9 @@ export default function Register() {
         if (formData.password.length < 6) {
             return setError("Password must be at least 6 characters");
         }
-        // if (!recaptchaToken) {
-        //     return setError("Please verify you are human using reCAPTCHA");
-        // }
+        if (!recaptchaToken) {
+            return setError("Please verify you are human using reCAPTCHA");
+        }
 
         setError('');
         setLoading(true);
@@ -47,7 +47,7 @@ export default function Register() {
                     username: formData.username,
                     email: formData.email,
                     password: formData.password,
-                    // recaptchaToken: recaptchaToken
+                    recaptchaToken: recaptchaToken
                 }),
             });
 
