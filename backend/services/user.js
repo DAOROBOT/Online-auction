@@ -1,6 +1,6 @@
 import db from "../db/index.js"
 
-import {users, bids, auctions} from "../db/schema.js"
+import {users, bids, auctions, userFavorites} from "../db/schema.js"
 
 import { eq, or, ilike, and, sql, count, desc } from "drizzle-orm";
 
@@ -188,7 +188,13 @@ const service = {
             .groupBy(auctions.id);
 
         // TODO: Add favorites when user_favorites table is created
-        const favoriteProducts = [];
+        const favoriteProducts = await db
+            .select({
+                auction: auctions
+            })
+            .from(userFavorites)
+            .innerJoin(auctions, eq(auctions.id, userFavorites.auctionId))
+            .where(eq(userFavorites.userId, userId));
 
         return {
             activeListings,
