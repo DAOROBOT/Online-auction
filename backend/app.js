@@ -57,4 +57,10 @@ app.get('/', (req, res) => {
 app.use(not_found);
 app.use(error_handler);
 
+
+// ---Product route---
+const productRoutes = require('./routes/product.routes');
+app.use('/api/products', productRoutes);
+
+
 export default app;
