@@ -1,70 +1,202 @@
-import { useState } from "react";
-import { Search, Eye, Edit2, Ban, CheckCircle, UserPlus, Filter } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, Eye, Ban, CheckCircle, UserPlus, Filter, ChevronLeft, ChevronRight, X, User } from "lucide-react";
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export default function UserList({ setActiveTab }) {
-  const [users, setUsers] = useState([
-    { 
-      id: 1, 
-      name: "John Doe", 
-      email: "john@example.com",
-      role: "seller",
-      status: "active",
-      joinDate: "2024-01-15",
-      totalBids: 45,
-      totalSales: 12
-    },
-    { 
-      id: 2, 
-      name: "Jane Smith", 
-      email: "jane@example.com",
-      role: "bidder",
-      status: "active",
-      joinDate: "2024-03-20",
-      totalBids: 23,
-      totalSales: 0
-    },
-    { 
-      id: 3, 
-      name: "Mike Johnson", 
-      email: "mike@example.com",
-      role: "seller",
-      status: "suspended",
-      joinDate: "2023-12-10",
-      totalBids: 67,
-      totalSales: 34
-    },
-  ]);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [stats, setStats] = useState(null);
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const limit = 10;
 
+  // Filters
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === "all" || user.role === roleFilter;
-    const matchesStatus = statusFilter === "all" || user.status === statusFilter;
-    return matchesSearch && matchesRole && matchesStatus;
-  });
+  // Modal state
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [userStats, setUserStats] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
-  const handleStatusToggle = (id) => {
-    setUsers(users.map(user => 
-      user.id === id 
-        ? { ...user, status: user.status === 'active' ? 'suspended' : 'active' }
-        : user
-    ));
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setCurrentPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Fetch users
+  useEffect(() => {
+    fetchUsers();
+  }, [currentPage, debouncedSearch, roleFilter, statusFilter]);
+
+  // Fetch stats
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('authToken');
+      
+      const params = new URLSearchParams({
+        page: currentPage,
+        limit: limit,
+        search: debouncedSearch,
+        role: roleFilter,
+        status: statusFilter
+      });
+
+      const response = await fetch(`${API_URL}/users?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch users');
+      }
+
+      const data = await response.json();
+      setUsers(data.users);
+      setTotalPages(data.pagination.totalPages);
+      setTotalCount(data.pagination.totalCount);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_URL}/users/stats`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setStats(data.stats);
+      }
+    } catch (err) {
+      console.error('Failed to fetch stats:', err);
+    }
+  };
+
+  const fetchUserDetails = async (userId) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_URL}/users/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSelectedUser(data.user);
+        setUserStats(data.stats);
+        setShowUserModal(true);
+      }
+    } catch (err) {
+      console.error('Failed to fetch user details:', err);
+    }
+  };
+
+  const handleBanUser = async (userId) => {
+    if (!confirm('Are you sure you want to ban this user?')) return;
+    
+    try {
+      setActionLoading(true);
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_URL}/users/${userId}/ban`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        await fetchUsers();
+        await fetchStats();
+        setShowUserModal(false);
+      } else {
+        const data = await response.json();
+        alert(data.message || 'Failed to ban user');
+      }
+    } catch (err) {
+      alert('Failed to ban user');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleUnbanUser = async (userId) => {
+    if (!confirm('Are you sure you want to unban this user?')) return;
+    
+    try {
+      setActionLoading(true);
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_URL}/users/${userId}/unban`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        await fetchUsers();
+        await fetchStats();
+        setShowUserModal(false);
+      } else {
+        const data = await response.json();
+        alert(data.message || 'Failed to unban user');
+      }
+    } catch (err) {
+      alert('Failed to unban user');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const getRoleBadge = (role) => {
-    return role === 'seller' 
-      ? 'bg-[var(--accent-soft)] text-[var(--accent)]'
-      : 'bg-[var(--info-soft)] text-[var(--info)]';
+    switch (role) {
+      case 'seller':
+        return 'bg-[var(--accent-soft)] text-[var(--accent)]';
+      case 'buyer':
+        return 'bg-[var(--info-soft)] text-[var(--info)]';
+      case 'admin':
+        return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400';
+      default:
+        return 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
+    }
   };
 
   const getStatusBadge = (status) => {
-    return status === 'active'
+    return status === 'active' || !status
       ? 'bg-[var(--success-soft)] text-[var(--success)]'
       : 'bg-[var(--danger-soft)] text-[var(--danger)]';
+  };
+
+  const handleFilterChange = (type, value) => {
+    if (type === 'role') setRoleFilter(value);
+    if (type === 'status') setStatusFilter(value);
+    setCurrentPage(1);
   };
 
   return (
@@ -73,16 +205,37 @@ export default function UserList({ setActiveTab }) {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="profile-name text-3xl font-bold">User Management</h1>
-          <p className="profile-text-muted mt-1">Manage users, roles, and account upgrades</p>
+          <p className="profile-text-muted mt-1">Manage users, roles, and account status</p>
         </div>
         <div className="flex gap-3">
           <button onClick={() => setActiveTab('upgrades')} className="profile-btn-secondary px-4 py-2 rounded-lg font-medium flex items-center gap-2 border hover:shadow-md transition-all">
-            <UserPlus size={18}  />
+            <UserPlus size={18} />
             Upgrade Requests
-            <span className="bg-(--danger) text-white px-2 py-0.5 rounded-full text-xs font-bold">3</span>
           </button>
         </div>
       </div>
+
+      {/* Stats Cards */}
+      {stats && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="profile-card rounded-xl p-4">
+            <div className="text-2xl font-bold profile-name">{stats.total}</div>
+            <div className="text-sm profile-text-muted">Total Users</div>
+          </div>
+          <div className="profile-card rounded-xl p-4">
+            <div className="text-2xl font-bold text-[var(--info)]">{stats.byRole.buyer}</div>
+            <div className="text-sm profile-text-muted">Buyers</div>
+          </div>
+          <div className="profile-card rounded-xl p-4">
+            <div className="text-2xl font-bold text-[var(--accent)]">{stats.byRole.seller}</div>
+            <div className="text-sm profile-text-muted">Sellers</div>
+          </div>
+          <div className="profile-card rounded-xl p-4">
+            <div className="text-2xl font-bold text-[var(--danger)]">{stats.byStatus.banned}</div>
+            <div className="text-sm profile-text-muted">Banned</div>
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="profile-card rounded-xl p-4 mb-6">
@@ -104,11 +257,12 @@ export default function UserList({ setActiveTab }) {
             <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
             <select
               value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
+              onChange={(e) => handleFilterChange('role', e.target.value)}
               className="profile-input w-full pl-10 pr-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-(--accent) appearance-none"
             >
               <option value="all">All Roles</option>
-              <option value="bidder">Bidder</option>
+              <option value="unauthorized">Unauthorized</option>
+              <option value="buyer">Buyer</option>
               <option value="seller">Seller</option>
               <option value="admin">Admin</option>
             </select>
@@ -119,114 +273,309 @@ export default function UserList({ setActiveTab }) {
             <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => handleFilterChange('status', e.target.value)}
               className="profile-input w-full pl-10 pr-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-(--accent) appearance-none"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
-              <option value="suspended">Suspended</option>
+              <option value="banned">Banned</option>
             </select>
           </div>
         </div>
       </div>
 
+      {/* Error Message */}
+      {error && (
+        <div className="mb-4 p-4 rounded-lg bg-[var(--danger-soft)] text-[var(--danger)]">
+          {error}
+        </div>
+      )}
+
       {/* Users Table */}
       <div className="profile-card rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="profile-subtle-box">
-              <tr>
-                <th className="profile-label px-6 py-4 text-left text-sm font-semibold">ID</th>
-                <th className="profile-label px-6 py-4 text-left text-sm font-semibold">User</th>
-                <th className="profile-label px-6 py-4 text-left text-sm font-semibold">Role</th>
-                <th className="profile-label px-6 py-4 text-left text-sm font-semibold">Status</th>
-                <th className="profile-label px-6 py-4 text-left text-sm font-semibold">Join Date</th>
-                <th className="profile-label px-6 py-4 text-left text-sm font-semibold">Activity</th>
-                <th className="profile-label px-6 py-4 text-right text-sm font-semibold">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="profile-divider divide-y">
-              {filteredUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-(--bg-hover) transition-colors">
-                  <td className="profile-text-muted px-6 py-4 text-sm">#{user.id}</td>
-                  <td className="px-6 py-4">
-                    <div>
-                      <div className="profile-name font-medium">{user.name}</div>
-                      <div className="profile-text-muted text-sm">{user.email}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getRoleBadge(user.role)}`}>
-                      {user.role}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusBadge(user.status)}`}>
-                      {user.status}
-                    </span>
-                  </td>
-                  <td className="profile-text-muted px-6 py-4 text-sm">
-                    {new Date(user.joinDate).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm">
-                      <div className="profile-text-muted">Bids: <span className="profile-name font-medium">{user.totalBids}</span></div>
-                      {user.role === 'seller' && (
-                        <div className="profile-text-muted">Sales: <span className="profile-name font-medium">{user.totalSales}</span></div>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center justify-end gap-2">
-                      <button className="p-2 rounded-lg hover:bg-(--info-soft) transition-colors">
-                        <Eye size={18} className="text-(--info)" />
-                      </button>
-                      <button className="p-2 rounded-lg hover:bg-(--accent-soft) transition-colors">
-                        <Edit2 size={18} className="profile-icon-accent" />
-                      </button>
-                      <button
-                        onClick={() => handleStatusToggle(user.id)}
-                        className={`p-2 rounded-lg transition-colors ${
-                          user.status === 'active'
-                            ? 'hover:bg-(--danger-soft)'
-                            : 'hover:bg-(--success-soft)'
-                        }`}
-                      >
-                        {user.status === 'active' ? (
-                          <Ban size={18} className="text-(--danger)" />
-                        ) : (
-                          <CheckCircle size={18} className="text-(--success)" />
-                        )}
-                      </button>
-                    </div>
-                  </td>
+        {loading ? (
+          <div className="p-12 text-center">
+            <div className="w-8 h-8 border-4 border-[var(--accent)] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="profile-text-muted">Loading users...</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="profile-subtle-box">
+                <tr>
+                  <th className="profile-label px-6 py-4 text-left text-sm font-semibold">ID</th>
+                  <th className="profile-label px-6 py-4 text-left text-sm font-semibold">User</th>
+                  <th className="profile-label px-6 py-4 text-left text-sm font-semibold">Role</th>
+                  <th className="profile-label px-6 py-4 text-left text-sm font-semibold">Status</th>
+                  <th className="profile-label px-6 py-4 text-left text-sm font-semibold">Verified</th>
+                  <th className="profile-label px-6 py-4 text-left text-sm font-semibold">Join Date</th>
+                  <th className="profile-label px-6 py-4 text-right text-sm font-semibold">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="profile-divider divide-y">
+                {users.map((user) => (
+                  <tr key={user.id} className="hover:bg-(--bg-hover) transition-colors">
+                    <td className="profile-text-muted px-6 py-4 text-sm">#{user.id}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        {user.avatarUrl ? (
+                          <img src={user.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-[var(--accent-soft)] flex items-center justify-center">
+                            <User size={20} className="text-[var(--accent)]" />
+                          </div>
+                        )}
+                        <div>
+                          <div className="profile-name font-medium">{user.fullName || user.username}</div>
+                          <div className="profile-text-muted text-sm">{user.email}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getRoleBadge(user.role)}`}>
+                        {user.role}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusBadge(user.status)}`}>
+                        {user.status || 'active'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      {user.isVerified ? (
+                        <CheckCircle size={20} className="text-[var(--success)]" />
+                      ) : (
+                        <X size={20} className="text-gray-400" />
+                      )}
+                    </td>
+                    <td className="profile-text-muted px-6 py-4 text-sm">
+                      {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-end gap-2">
+                        <button 
+                          onClick={() => fetchUserDetails(user.id)}
+                          className="p-2 rounded-lg hover:bg-(--info-soft) transition-colors"
+                          title="View Details"
+                        >
+                          <Eye size={18} className="text-(--info)" />
+                        </button>
+                        {user.role !== 'admin' && (
+                          <button
+                            onClick={() => user.status === 'banned' ? handleUnbanUser(user.id) : handleBanUser(user.id)}
+                            className={`p-2 rounded-lg transition-colors ${
+                              user.status === 'banned'
+                                ? 'hover:bg-(--success-soft)'
+                                : 'hover:bg-(--danger-soft)'
+                            }`}
+                            title={user.status === 'banned' ? 'Unban User' : 'Ban User'}
+                          >
+                            {user.status === 'banned' ? (
+                              <CheckCircle size={18} className="text-(--success)" />
+                            ) : (
+                              <Ban size={18} className="text-(--danger)" />
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-        {filteredUsers.length === 0 && (
+        {!loading && users.length === 0 && (
           <div className="notification-empty-text text-center py-12">
             No users found
           </div>
         )}
       </div>
 
-      {/* Summary */}
-      <div className="mt-4 profile-text-muted text-sm flex items-center justify-between">
-        <span>Showing {filteredUsers.length} of {users.length} users</span>
-        <div className="flex items-center gap-4 text-xs">
-          <span className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-(--info)"></div>
-            Bidders: {users.filter(u => u.role === 'bidder').length}
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-between">
+          <span className="profile-text-muted text-sm">
+            Showing {users.length} of {totalCount} users (Page {currentPage} of {totalPages})
           </span>
-          <span className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-(--accent)"></div>
-            Sellers: {users.filter(u => u.role === 'seller').length}
-          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="p-2 rounded-lg border profile-card hover:bg-(--bg-hover) disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNum;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = currentPage - 2 + i;
+              }
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={`w-10 h-10 rounded-lg border transition-colors ${
+                    currentPage === pageNum
+                      ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                      : 'profile-card hover:bg-(--bg-hover)'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="p-2 rounded-lg border profile-card hover:bg-(--bg-hover) disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* User Details Modal */}
+      {showUserModal && selectedUser && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="profile-card rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold profile-name">User Details</h2>
+                <button 
+                  onClick={() => setShowUserModal(false)}
+                  className="p-2 rounded-lg hover:bg-(--bg-hover) transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* User Info */}
+              <div className="flex items-center gap-4 mb-6">
+                {selectedUser.avatarUrl ? (
+                  <img src={selectedUser.avatarUrl} alt="" className="w-20 h-20 rounded-full object-cover" />
+                ) : (
+                  <div className="w-20 h-20 rounded-full bg-[var(--accent-soft)] flex items-center justify-center">
+                    <User size={32} className="text-[var(--accent)]" />
+                  </div>
+                )}
+                <div>
+                  <h3 className="text-lg font-bold profile-name">{selectedUser.fullName || selectedUser.username}</h3>
+                  <p className="profile-text-muted">{selectedUser.email}</p>
+                  <div className="flex gap-2 mt-2">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getRoleBadge(selectedUser.role)}`}>
+                      {selectedUser.role}
+                    </span>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusBadge(selectedUser.status)}`}>
+                      {selectedUser.status || 'active'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Details */}
+              <div className="space-y-4 mb-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="profile-subtle-box rounded-lg p-3">
+                    <div className="text-sm profile-text-muted">User ID</div>
+                    <div className="font-medium profile-name">#{selectedUser.id}</div>
+                  </div>
+                  <div className="profile-subtle-box rounded-lg p-3">
+                    <div className="text-sm profile-text-muted">Username</div>
+                    <div className="font-medium profile-name">@{selectedUser.username}</div>
+                  </div>
+                  <div className="profile-subtle-box rounded-lg p-3">
+                    <div className="text-sm profile-text-muted">Verified</div>
+                    <div className="font-medium profile-name">{selectedUser.isVerified ? 'Yes' : 'No'}</div>
+                  </div>
+                  <div className="profile-subtle-box rounded-lg p-3">
+                    <div className="text-sm profile-text-muted">Join Date</div>
+                    <div className="font-medium profile-name">
+                      {selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString() : 'N/A'}
+                    </div>
+                  </div>
+                </div>
+
+                {selectedUser.bio && (
+                  <div className="profile-subtle-box rounded-lg p-3">
+                    <div className="text-sm profile-text-muted mb-1">Bio</div>
+                    <div className="profile-name">{selectedUser.bio}</div>
+                  </div>
+                )}
+
+                {userStats && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="profile-subtle-box rounded-lg p-3">
+                      <div className="text-sm profile-text-muted">Total Bids</div>
+                      <div className="text-xl font-bold text-[var(--info)]">{userStats.totalBids}</div>
+                    </div>
+                    <div className="profile-subtle-box rounded-lg p-3">
+                      <div className="text-sm profile-text-muted">Total Auctions</div>
+                      <div className="text-xl font-bold text-[var(--accent)]">{userStats.totalAuctions}</div>
+                    </div>
+                  </div>
+                )}
+
+                {selectedUser.ratingCount > 0 && (
+                  <div className="profile-subtle-box rounded-lg p-3">
+                    <div className="text-sm profile-text-muted mb-1">Rating</div>
+                    <div className="font-medium profile-name">
+                      {selectedUser.positiveRatingCount}/{selectedUser.ratingCount} positive reviews
+                      ({Math.round((selectedUser.positiveRatingCount / selectedUser.ratingCount) * 100)}%)
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Actions */}
+              {selectedUser.role !== 'admin' && (
+                <div className="flex gap-3">
+                  {selectedUser.status === 'banned' ? (
+                    <button
+                      onClick={() => handleUnbanUser(selectedUser.id)}
+                      disabled={actionLoading}
+                      className="flex-1 py-3 rounded-lg bg-[var(--success)] text-white font-medium hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {actionLoading ? (
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        <>
+                          <CheckCircle size={18} />
+                          Unban User
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleBanUser(selectedUser.id)}
+                      disabled={actionLoading}
+                      className="flex-1 py-3 rounded-lg bg-[var(--danger)] text-white font-medium hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {actionLoading ? (
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        <>
+                          <Ban size={18} />
+                          Ban User
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
