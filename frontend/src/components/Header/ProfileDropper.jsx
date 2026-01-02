@@ -5,7 +5,7 @@ import { mockUserData } from "../../data/users.js";
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
-export default function ProfileDropper({user, logout}) {
+export default function ProfileDropper({ user, logout }) {
   const nav = useNav();
   const currentUser = user || mockUserData; // Fallback for UI testing
 
@@ -103,7 +103,7 @@ export default function ProfileDropper({user, logout}) {
               </p>
               {/* Seller Expiry Countdown Badge */}
               {currentUser.role === 'seller' && sellerStatus?.isActive && (
-                <div className="mt-2 flex items-center gap-1.5 text-xs font-medium text-[var(--warning)] bg-[var(--warning-soft)] px-2 py-1 rounded-md">
+                <div className="mt-2 flex items-center gap-1.5 text-xs font-medium text-(--warning) bg-(--warning-soft) px-2 py-1 rounded-md">
                   <Clock size={12} />
                   <span>Expires in {sellerStatus.daysRemaining} day{sellerStatus.daysRemaining > 1 ? 's' : ''}</span>
                 </div>
@@ -115,7 +115,7 @@ export default function ProfileDropper({user, logout}) {
             
             {/* Buyer Group */}
             <button
-              onClick={() => handleAction(() => nav.profile(currentUser.id))}
+              onClick={() => handleAction(() => nav.profile(user.username))}
               className="w-full flex items-center gap-4 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-(--accent-soft) hover:text-(--accent-strong)"
             >
                 <User size={16} className="transition-colors group-hover:text-(--accent)" />

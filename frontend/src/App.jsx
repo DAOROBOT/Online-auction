@@ -37,19 +37,19 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/auction/:id" element={<ProductDetail />} />
-          <Route path="/profile/:id" element={<Profile />} />
+          <Route path="/profile/:username" element={<Profile />} />
 
-          {/* --- LEVEL 1: STANDARD USERS (Just need to log in) --- */}
+          {/* --- STANDARD USERS --- */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/me" element={<Profile me={true}/>} />
             <Route path="/verify-account" element={<VerifyAccount />} />
           </Route>
 
+          {/* --- BUYER ONLY --- */}
           <Route element={<ProtectedRoute requiredRole="buyer" />}>
             <Route path="/become-seller" element={<BecomeSeller />} />
           </Route>
 
-          {/* --- LEVEL 2: SELLER ONLY (Needs 'seller' role) --- */}
+          {/* --- SELLER ONLY --- */}
           <Route element={<ProtectedRoute requiredRole="seller" />}>
             <Route path="/create-auction" element={<CreateAuction />} />
           </Route>
@@ -59,7 +59,7 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Route>
 
-        {/* --- LEVEL 3: ADMIN ONLY (Needs 'admin' role) --- */}
+        {/* --- ADMIN ONLY --- */}
         <Route element={<AdminLayout />}>
           <Route element={<ProtectedRoute requiredRole="admin" />}>
             <Route path="/admin" element={<AdminDashboard />} />

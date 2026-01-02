@@ -64,7 +64,7 @@ export default function ProfileSidebar({ userData, isOwnProfile }) {
     // Helper function to save URL to DB (Example)
     const updateUserProfileImage = async (imageUrl) => {
         const token = localStorage.getItem('authToken');
-        await fetch('http://localhost:3000/users/profile', {
+        await fetch('http://localhost:3000/user/profile', {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',

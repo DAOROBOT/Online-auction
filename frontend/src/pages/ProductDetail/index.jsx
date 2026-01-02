@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useNav } from '../../hooks/useNavigate.js';
-import { formatTimeLeft, formatCurrency } from '../../utils/format.js';
-import productService from '../../services/productService.js';
+import { products as productService } from '../../data/index.js';
 import ImageGallery from './ImageGallery'
 import BiddingSection from './BiddingSection'
 import Description from './Description';
