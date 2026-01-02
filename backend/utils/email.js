@@ -3,8 +3,8 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
 
-import { formatCurrency } from './format';
-import { formatDate } from './format';
+import { formatCurrency } from './format.js';
+import { formatDate } from './format.js';
 
 const BREVO_API_KEY = process.env.EMAIL_PASSWORD;
 const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
