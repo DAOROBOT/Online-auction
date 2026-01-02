@@ -19,10 +19,7 @@ import error_handler from "./middleware/error_handler.js";
 const app = express();
 
 // --- Dependencies ---
-app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-    credentials: true
-}));
+app.use(cors());
 
 app.use(morgan('dev'));
 
