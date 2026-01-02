@@ -109,7 +109,7 @@ export default function Header() {
                   
                   {/* DYNAMIC ACTION BUTTONS */}
                   <Link
-                    to={user.role === 'admin' ? "/admin" : (user.role === 'seller') ? "/create-auction" : "/become-seller"}
+                    to={user.role === 'admin' ? "/admin" : (user.role === 'seller') ? "/create-auction" : (user.role === 'buyer') ? "/become-seller" : "/verify-account"}
                     className="hidden sm:flex items-center gap-2 font-bold py-2 px-4 rounded-lg transition text-sm shadow-lg hover:shadow-xl hover:scale-105"
                     style={{ 
                       backgroundColor: user.role === 'admin' ? 'var(--text)' : (user.role === 'seller') ? 'var(--theme-secondary)' : 'var(--accent)', 
@@ -118,7 +118,7 @@ export default function Header() {
                   >
                     {user.role === 'admin' ? <LayoutDashboard size={18} /> : (user.role === 'seller') ? <Plus size={18} /> : <ArrowRight size={18} />}
                     <span className="hidden md:inline">
-                      {user.role === 'admin' ? "Dashboard" : (user.role === 'seller') ? "Create" : "Start Selling"}
+                      {user.role === 'admin' ? "Dashboard" : (user.role === 'seller') ? "Create" : (user.role === 'buyer') ? "Start Selling" : "Verify Account"}
                     </span>
                   </Link>
 

@@ -6,12 +6,21 @@ const service = {
     findAll: async function(){
         return db.select().from(auctions);
     },
-    findAuctions: async function({ q, category, minPrice, maxPrice, sortBy, limit, offset }){
+    findAuctions: async function({ q, category, minPrice, maxPrice, sortBy, limit, offset, status }){
         console.log('=== Search Service Called ===');
-        console.log({ q, category, minPrice, maxPrice, sortBy, limit, offset });
+        console.log({ q, category, minPrice, maxPrice, sortBy, limit, offset, status });
         
         // Build WHERE conditions
-        const conditions = [eq(auctions.status, 'active')];
+        const conditions = [];
+        
+        // Status filter - default to 'active' for public search, allow all for admin
+        if (status && status !== 'all') {
+            conditions.push(eq(auctions.status, status));
+        } else if (!status) {
+            // Default behavior: only show active auctions for public search
+            conditions.push(eq(auctions.status, 'active'));
+        }
+        // If status === 'all', don't add any status condition (admin view)
 
         // Full-text search condition
         if (q && q.trim()) {
@@ -34,22 +43,22 @@ const service = {
             conditions.push(lte(auctions.currentPrice, maxPrice.toString()));
         }
 
-        // // Build ORDER BY
+        // Build ORDER BY
         let orderBy;
         switch (sortBy) {
             case 'popularity':
                 orderBy = desc(auctions.bidCount);
                 break;
-            case 'priceLowToHigh':
+            case 'price-asc':
                 orderBy = asc(auctions.currentPrice);
                 break;
-            case 'priceHighToLow':
+            case 'price-desc':
                 orderBy = desc(auctions.currentPrice);
                 break;
-            case 'timeEndingSoon':
+            case 'ending-soon':
                 orderBy = asc(auctions.endTime);
                 break;
-            case 'newlyListed':
+            case 'newest':
                 orderBy = desc(auctions.createdAt);
                 break;
             case 'aToZ':
@@ -63,19 +72,26 @@ const service = {
                 orderBy = desc(auctions.createdAt);
         }
         console.log('Order by:', sortBy, orderBy);
+        
+        // Build where clause - handle empty conditions
+        const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+        
         // Main query
         const results = await db
             .select({
                 id: auctions.id,
                 title: auctions.title,
                 currentPrice: auctions.currentPrice,
+                startingPrice: auctions.startingPrice,
                 buyNowPrice: auctions.buyNowPrice,
                 endTime: auctions.endTime,
                 createdAt: auctions.createdAt,
                 bidCount: auctions.bidCount,
+                status: auctions.status,
                 sellerName: users.fullName,
+                sellerId: users.id,
                 categoryName: categories.name,
-                image: auctionImages.imageUrl
+                primaryImage: auctionImages.imageUrl
             })
             .from(auctions)
             .innerJoin(users, eq(auctions.sellerId, users.id))
@@ -84,7 +100,7 @@ const service = {
                 eq(auctions.id, auctionImages.auctionId),
                 eq(auctionImages.isPrimary, true)
             ))
-            .where(and(...conditions))
+            .where(whereClause)
             .orderBy(orderBy)
             .limit(limit)
             .offset(offset);
@@ -124,7 +140,7 @@ const service = {
             .from(auctions)
             .innerJoin(users, eq(auctions.sellerId, users.id))
             .innerJoin(categories, eq(auctions.categoryId, categories.id))
-            .where(and(...conditions));
+            .where(whereClause);
 
         const totalItems = countResult.length > 0 ? parseInt(countResult[0].count) : 0;
         console.log('Total items matching filters:', totalItems);
@@ -135,12 +151,18 @@ const service = {
                 id: row.id,
                 title: row.title,
                 currentPrice: parseFloat(row.currentPrice),
+                startingPrice: row.startingPrice ? parseFloat(row.startingPrice) : null,
                 buyNowPrice: row.buyNowPrice ? parseFloat(row.buyNowPrice) : null,
                 endTime: row.endTime,
                 createdAt: row.createdAt,
                 bidCount: parseInt(row.bidCount || 0),
-                image: row.image || 'https://via.placeholder.com/300',
+                status: row.status,
+                primaryImage: row.primaryImage || 'https://via.placeholder.com/300',
+                image: row.primaryImage || 'https://via.placeholder.com/300',
                 category: row.categoryName,
+                categoryName: row.categoryName,
+                sellerName: row.sellerName,
+                sellerId: row.sellerId,
                 highestBidder: highestBidsByAuction[row.id]
                     ? {
                         id: highestBidsByAuction[row.id].bidderId,

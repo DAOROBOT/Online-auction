@@ -5,10 +5,10 @@ const controller = {
     // GET /search
     searchAuctions: async function(req, res, next) {
         try {
-            const { q, category, minPrice, maxPrice, sortBy, page } = req.query;
+            const { q, category, minPrice, maxPrice, sortBy, page, status } = req.query;
             console.log(req.query);
             const pageNum = parseInt(page) || 1;
-            const limit = 1;
+            const limit = 12;
             const offset = (pageNum - 1) * limit;
             console.log({ q, category, minPrice, maxPrice, sortBy, pageNum, limit, offset });
             
@@ -19,7 +19,8 @@ const controller = {
                 maxPrice: maxPrice ? parseFloat(maxPrice) : null,
                 sortBy,
                 limit,
-                offset
+                offset,
+                status
             });
         
             res.json({

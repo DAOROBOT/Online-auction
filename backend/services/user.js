@@ -25,8 +25,7 @@ const service = {
     },
     getByUsername: async function(username){
         const result = await db.select().from(users).where(eq(users.username, username));
-        // return result.length > 0 ? result[0] : null;
-        return result;
+        return result.length > 0 ? result[0] : null;
     },
     getByGoogleId: async function(googleId){
         const result = await db.select().from(users).where(eq(users.googleId, googleId));

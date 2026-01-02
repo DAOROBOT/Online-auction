@@ -7,7 +7,7 @@ const service = {
         return db.select().from(auctions);
     },
     findById: async function(id){
-        return await db.select().from(auctions).where(eq(auctions.auction_id, id));
+        return await db.select().from(auctions).where(eq(auctions.id, id));
     },
     create: async function(auction){
         if(auction.created_at) {
@@ -25,10 +25,11 @@ const service = {
         if(auc.end_time) {
             auc.end_time = new Date(auc.end_time);
         }
-        await db.update(auctions).set(auc).where(eq(auctions.auction_id, id));
+        await db.update(auctions).set(auc).where(eq(auctions.id, id));
     },
     delete: async function(id){
-        await db.delete(auctions).where(eq(auctions.auction_id, id));
+        console.log('Deleting auction with ID:', id);
+        await db.delete(auctions).where(eq(auctions.id, id));
     }
 }
 

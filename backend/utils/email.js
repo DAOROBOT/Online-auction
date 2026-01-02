@@ -123,6 +123,27 @@ export const sendPasswordResetEmail = async (to, username, resetToken) => {
   return sendEmailViaAPI(to, 'Password Reset Request', htmlContent);
 };
 
+// Send password reset OTP
+export const sendPasswordResetOTP = async (to, username, otp) => {
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #333;">Password Reset Verification Code</h2>
+      <p>Hello ${username},</p>
+      <p>We received a request to reset your password. Use the verification code below to proceed:</p>
+      <div style="background: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0; text-align: center;">
+        <p style="font-size: 14px; margin: 0;">Your verification code:</p>
+        <p style="font-size: 32px; font-weight: bold; color: #E0B84C; letter-spacing: 5px; margin: 10px 0;">${otp}</p>
+      </div>
+      <p><strong>This code will expire in 15 minutes.</strong></p>
+      <p>If you didn't request this password reset, please ignore this email and your password will remain unchanged.</p>
+      <hr style="border: 1px solid #eee; margin: 20px 0;">
+      <p style="color: #999; font-size: 12px;">This is an automated message, please do not reply.</p>
+    </div>
+  `;
+
+  return sendEmailViaAPI(to, 'Password Reset Verification Code - Online Auction', htmlContent);
+};
+
 // Send email verification
 export const sendEmailVerification = async (to, username, verificationToken) => {
   const verifyUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-email?token=${verificationToken}`;
@@ -155,6 +176,7 @@ export default {
   sendWelcomeEmail,
   sendLoginNotification,
   sendPasswordResetEmail,
+  sendPasswordResetOTP,
   sendEmailVerification,
   sendEmail,
 };

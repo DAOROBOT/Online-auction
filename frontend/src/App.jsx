@@ -8,12 +8,15 @@ import ProductDetail from './pages/ProductDetail';
 import SearchPage from './pages/SearchPage';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
-import Validation from './pages/Auth/Validation';
+import VerifyAccount from './pages/Auth/VerifyAccount';
 import AuthCallback from './pages/Auth/AuthCallback';
 import Profile from './pages/Profile';
 import CreateAuction from './pages/CreateAuction';
 import AdminDashboard from './pages/AdminDashboard';
 import NotFound from './pages/NotFound';
+import ForgetPassword from './pages/Auth/ForgetPassword';
+import BecomeSeller from './pages/BecomeSeller';
+import { Verified } from 'lucide-react';
 
 function App() {
   return (
@@ -23,7 +26,7 @@ function App() {
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/validate" element={<Validation />} />
+          <Route path="/forgot-password" element={<ForgetPassword />} />
         </Route>
 
         {/* OAuth Callback Route */}
@@ -39,6 +42,11 @@ function App() {
           {/* --- LEVEL 1: STANDARD USERS (Just need to log in) --- */}
           <Route element={<ProtectedRoute />}>
             <Route path="/me" element={<Profile me={true}/>} />
+            <Route path="/verify-account" element={<VerifyAccount />} />
+          </Route>
+
+          <Route element={<ProtectedRoute requiredRole="buyer" />}>
+            <Route path="/become-seller" element={<BecomeSeller />} />
           </Route>
 
           {/* --- LEVEL 2: SELLER ONLY (Needs 'seller' role) --- */}

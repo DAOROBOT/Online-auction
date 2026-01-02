@@ -20,6 +20,7 @@ export function useNav() {
         state: { from: window.location.pathname } 
     }),
     validate: (options) => n("/validate", options),
+    verifyAccount: () => n("/verify-account"),
     
     // Logout: Use REPLACE to clear history so "Back" button doesn't work
     logout: () => n("/login", { replace: true }),
