@@ -4,7 +4,7 @@ import { useNav } from '../hooks/useNavigate';
 
 const AuthLayout = () => {
   const location = useLocation();
-  const isLogin = location.pathname === '/login';
+//   const isLogin = location.pathname === '/login';
   const nav = useNav();
 
   return (
@@ -19,7 +19,7 @@ const AuthLayout = () => {
                 }}
             >
                 {/* Overlay - Dark in light mode, Light in dark mode */}
-                <div className="absolute inset-0 bg-gradient-to-br from-red-900/80 to-gray-900/90 dark:from-gray-100/90 dark:to-white/95"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-red-900/80 to-gray-900/90"></div>
             </div>
 
             
@@ -41,7 +41,7 @@ const AuthLayout = () => {
                 </div>
                 
                 {/* Title */}
-                <h1 className="text-4xl md:text-5xl font-bold mb-6 text-white dark:text-[var(--text)]">
+                <h1 className="text-4xl md:text-5xl font-bold mb-6 text-white text-[var(--text)]">
                     <span className="text-[var(--accent)]">AURUM</span> AUCTIONS
                 </h1>
                 

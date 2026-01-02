@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 // Create the context
 const AuthContext = createContext();
 
@@ -12,7 +14,7 @@ export const AuthProvider = ({ children }) => {
       try {
         const token = localStorage.getItem('authToken');
         if (token) {
-          const response = await fetch('http://localhost:3000/auth/', {
+          const response = await fetch(`${API_URL}/auth/`, {
             headers: {
               'Authorization': `Bearer ${token}`
             }
@@ -37,7 +39,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (identifier, password) => {
-    const response = await fetch('http://localhost:3000/auth/login', {
+    const response = await fetch(`${API_URL}/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

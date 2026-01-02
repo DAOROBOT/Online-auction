@@ -2,6 +2,9 @@ import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useNav } from '../../hooks/useNavigate';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+
 export default function AuthCallback() {
     const [searchParams] = useSearchParams();
     const nav = useNav();
@@ -20,7 +23,7 @@ export default function AuthCallback() {
             localStorage.setItem('authToken', token);
             
             // Fetch user data and redirect
-            fetch('http://localhost:3000/auth/me', {
+            fetch(`${API_URL}/auth/me`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }

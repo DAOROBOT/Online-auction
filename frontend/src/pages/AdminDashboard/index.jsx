@@ -20,7 +20,7 @@ export default function AdminDashboard() {
     { id: 'categories', label: 'Categories', icon: FolderTree },
     { id: 'products', label: 'Products', icon: ShoppingBag },
     { id: 'users', label: 'Users', icon: Users },
-    { id: 'upgrades', label: 'Upgrade Requests', icon: UserPlus, badge: 3 },
+    { id: 'upgrades', label: 'Upgrade Requests', icon: UserPlus},
   ];
 
   return (
@@ -71,13 +71,13 @@ export default function AdminDashboard() {
               <item.icon size={20} />
               <span className={`font-medium ${!isSidebarOpen && 'hidden'}`}>{item.label}</span>
               
-              {/* Badge */}
+              {/* Badge
               {item.badge && isSidebarOpen && (
                 <span className="absolute right-3 text-white text-xs font-bold px-2 py-0.5 rounded-full"
                     style={{ backgroundColor: 'var(--danger)' }}>
                   {item.badge}
                 </span>
-              )}
+              )} */}
             </button>
           ))}
         </nav>

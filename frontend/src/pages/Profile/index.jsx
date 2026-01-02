@@ -7,11 +7,16 @@ import ProductGrid from "../../components/ProductGrid";
 import FilterBar from "../../components/Filter/FilterBar";
 import Pagination from "../../components/Pagination";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+
 export default function Profile({ me = false }) {
   const { user, logout } = useAuth();
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('active-bids');
+
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -22,7 +27,7 @@ export default function Profile({ me = false }) {
           return;
         }
 
-        const response = await fetch('http://localhost:3000/users/me', {
+        const response = await fetch(`${API_URL}/users/me`, {
           headers: { 'Authorization': `Bearer ${token}` },
         });
         console.log('Fetching user data response:', response);

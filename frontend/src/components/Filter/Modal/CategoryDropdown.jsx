@@ -2,10 +2,13 @@ import { Layers, Check } from "lucide-react";
 import FilterButton from "../FilterButton";
 import { useEffect, useState } from "react";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+
 export default function CategoryDropdown({ selectedCategory, setSelectedCategory, activeDropdown, toggleDropdown, setActiveDropdown}) {
     const [categories, setCategories] = useState([]);
     useEffect(() => {
-        fetch('http://localhost:3000/categories')
+        fetch(`${API_URL}/categories`)
             .then(response => response.json())
             .then(data => {
                 console.log("Fetched categories:", data);
