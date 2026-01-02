@@ -191,10 +191,11 @@ export default function Register() {
                 <div className="flex justify-center">
                     <ReCAPTCHA
                         sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'}
-                        onChange={(token) => setRecaptchaToken(token)}
+                        onChange={(token) => {setRecaptchaToken(token); console.log("reCAPTCHA token:", token);}}
                         onExpired={() => setRecaptchaToken(null)}
                         theme="light"
                     />
+                    
                 </div>
 
                 {/* Register Button */}
