@@ -1,21 +1,26 @@
 import { Router } from "express";
+import requireAuth, { requireAdmin, requireBuyer } from "../middleware/auth.js";
 import sellerRequestController from "../controllers/sellerRequest.js";
 
 const route = new Router();
 
-// POST: submit a seller upgrade request (for buyers)
-route.post('/request', sellerRequestController.submitRequest);
+route.use(requireAuth);
+
+// POST: submit a seller upgrade request (buyers)
+route.post('/request', requireBuyer, sellerRequestController.submitRequest);
 
 // GET: get current user's request status
 route.get('/my-request', sellerRequestController.getMyRequest);
 
-// GET: get all requests (admin only)
+route.use(requireAdmin);
+
+// GET: get all requests (admin)
 route.get('/requests', sellerRequestController.getAllRequests);
 
-// POST: approve a request (admin only)
+// POST: approve a request (admin)
 route.post('/requests/:id/approve', sellerRequestController.approveRequest);
 
-// POST: reject a request (admin only)
+// POST: reject a request (admin)
 route.post('/requests/:id/reject', sellerRequestController.rejectRequest);
 
 export default route;

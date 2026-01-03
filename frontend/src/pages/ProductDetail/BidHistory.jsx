@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { TrendingUp, Gavel, Activity, Filter, Eye, EyeOff, Flame, Zap, Trophy, Clock, User, DollarSign } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import productService from '../../services/productService';
+import { products as productService} from '../../data/index';
 import { formatCurrency, formatTimeAgo } from '../../utils/format';
 
 function formatFullTime(timestamp) {

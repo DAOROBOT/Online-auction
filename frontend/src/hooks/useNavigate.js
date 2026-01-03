@@ -31,10 +31,8 @@ export function useNav() {
     // Admin
     admin: () => n('/admin', { replace: true }),
     
-    // User
-    me: () => n("/me"),
     editProfile: () => n("/edit-profile"),
-    profile: (id) => n(`/profile/${id}`),
+    profile: (u) => n(`/profile/${u}`),
     notifications: () => n("/notifications"),
 
     // Actions

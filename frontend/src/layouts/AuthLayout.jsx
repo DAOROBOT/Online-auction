@@ -41,7 +41,7 @@ const AuthLayout = () => {
                 </div>
                 
                 {/* Title */}
-                <h1 className="text-4xl md:text-5xl font-bold mb-6 text-white text-[var(--text)]">
+                <h1 className="text-4xl md:text-5xl font-bold mb-6 text-[var(--text)]">
                     <span className="text-[var(--accent)]">AURUM</span> AUCTIONS
                 </h1>
                 

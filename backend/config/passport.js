@@ -86,19 +86,4 @@ if (process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET) {
     }));
 }
 
-// Serialize user for session
-passport.serializeUser((user, done) => {
-    done(null, user.id);
-});
-
-// Deserialize user from session
-passport.deserializeUser(async (id, done) => {
-    try {
-        const user = await userService.getById(id);
-        done(null, user);
-    } catch (error) {
-        done(error, null);
-    }
-});
-
 export default passport;

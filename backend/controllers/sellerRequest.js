@@ -8,45 +8,21 @@ const controller = {
     // Submit a seller upgrade request (for buyers)
     submitRequest: async function(req, res) {
         try {
-            // Get user from token
-            const authorization = req.header('Authorization');
-            if (!authorization) {
-                return res.status(401).json({ message: 'Authorization required' });
-            }
-
-            const token = authorization.replace('Bearer ', '').trim();
-            const userData = await authService.validateToken(token);
-
-            if (!userData || !userData.userId) {
-                return res.status(401).json({ message: 'Invalid token' });
-            }
-
             // Check if user is a buyer
-            const user = await userService.getById(userData.userId);
-            if (!user) {
-                return res.status(404).json({ message: 'User not found' });
-            }
-
-            if (user.role === 'seller') {
-                return res.status(400).json({ message: 'You are already a seller' });
-            }
-
-            if (user.role === 'admin') {
-                return res.status(400).json({ message: 'Admins cannot request seller upgrade' });
-            }
+            const user = req.user;
 
             if (user.isVerified === false) {
                 return res.status(400).json({ message: 'Please verify your email first' });
             }
 
             // Check for existing pending request
-            const hasPending = await sellerRequestService.hasPendingRequest(userData.userId);
+            const hasPending = await sellerRequestService.hasPendingRequest(user.id);
             if (hasPending) {
                 return res.status(400).json({ message: 'You already have a pending request' });
             }
 
             // Check if user has an active seller status (not expired yet)
-            const sellerStatus = await sellerRequestService.getActiveSellerStatus(userData.userId);
+            const sellerStatus = await sellerRequestService.getActiveSellerStatus(user.id);
             if (sellerStatus && sellerStatus.isActive) {
                 return res.status(400).json({ 
                     message: `You are currently a seller. Your seller status expires on ${sellerStatus.expiryDate.toLocaleDateString()}`,
@@ -56,7 +32,7 @@ const controller = {
             }
 
             // Check if user can reapply after rejection (7 days cooldown)
-            const reapplyStatus = await sellerRequestService.canReapplyAfterRejection(userData.userId);
+            const reapplyStatus = await sellerRequestService.canReapplyAfterRejection(user.id);
             if (!reapplyStatus.canReapply) {
                 return res.status(400).json({ 
                     message: `You can reapply after ${reapplyStatus.canReapplyDate.toLocaleDateString()} (${reapplyStatus.daysRemaining} days remaining)`,
@@ -68,7 +44,7 @@ const controller = {
             const { reason } = req.body;
 
             // Create the request
-            const request = await sellerRequestService.create(userData.userId, reason || '');
+            const request = await sellerRequestService.create(user.id, reason || '');
 
             res.status(201).json({
                 message: 'Seller upgrade request submitted successfully',
@@ -87,22 +63,12 @@ const controller = {
     // Get current user's request status
     getMyRequest: async function(req, res) {
         try {
-            const authorization = req.header('Authorization');
-            if (!authorization) {
-                return res.status(401).json({ message: 'Authorization required' });
-            }
-
-            const token = authorization.replace('Bearer ', '').trim();
-            const userData = await authService.validateToken(token);
-
-            if (!userData || !userData.userId) {
-                return res.status(401).json({ message: 'Invalid token' });
-            }
-
-            // Check and update seller status (revert to buyer if expired)
-            const sellerStatusCheck = await sellerRequestService.checkAndUpdateSellerStatus(userData.userId);
+            const user = req.user;
             
-            const request = await sellerRequestService.getByUserId(userData.userId);
+            // Check and update seller status (revert to buyer if expired)
+            const sellerStatusCheck = await sellerRequestService.checkAndUpdateSellerStatus(user.id);
+            
+            const request = await sellerRequestService.getByUserId(user.id);
 
             // Add additional status info
             let statusInfo = null;
@@ -126,7 +92,7 @@ const controller = {
                         };
                     }
                 } else if (request.status === 'rejected') {
-                    const reapplyStatus = await sellerRequestService.canReapplyAfterRejection(userData.userId);
+                    const reapplyStatus = await sellerRequestService.canReapplyAfterRejection(user.id);
                     statusInfo = reapplyStatus;
                 }
             }
@@ -145,18 +111,6 @@ const controller = {
     // Get all requests (admin only)
     getAllRequests: async function(req, res) {
         try {
-            const authorization = req.header('Authorization');
-            if (!authorization) {
-                return res.status(401).json({ message: 'Authorization required' });
-            }
-
-            const token = authorization.replace('Bearer ', '').trim();
-            const userData = await authService.validateToken(token);
-
-            if (!userData || userData.role !== 'admin') {
-                return res.status(403).json({ message: 'Admin access required' });
-            }
-
             const { status } = req.query;
             const requests = await sellerRequestService.findAll(status || null);
 
@@ -170,20 +124,8 @@ const controller = {
     // Approve a request (admin only)
     approveRequest: async function(req, res) {
         try {
-            const authorization = req.header('Authorization');
-            if (!authorization) {
-                return res.status(401).json({ message: 'Authorization required' });
-            }
-
-            const token = authorization.replace('Bearer ', '').trim();
-            const userData = await authService.validateToken(token);
-
-            if (!userData || userData.role !== 'admin') {
-                return res.status(403).json({ message: 'Admin access required' });
-            }
-
             const { id } = req.params;
-            const { adminNote } = req.body;
+            // const { adminNote } = req.body;
 
             const request = await sellerRequestService.getById(parseInt(id));
             
@@ -209,7 +151,7 @@ const controller = {
             const updatedRequest = await sellerRequestService.updateStatus(
                 parseInt(id), 
                 'approved', 
-                adminNote,
+                // adminNote,
                 request.userId  // Pass userId to update role immediately
             );
 
@@ -230,20 +172,7 @@ const controller = {
     // Reject a request (admin only)
     rejectRequest: async function(req, res) {
         try {
-            const authorization = req.header('Authorization');
-            if (!authorization) {
-                return res.status(401).json({ message: 'Authorization required' });
-            }
-
-            const token = authorization.replace('Bearer ', '').trim();
-            const userData = await authService.validateToken(token);
-
-            if (!userData || userData.role !== 'admin') {
-                return res.status(403).json({ message: 'Admin access required' });
-            }
-
             const { id } = req.params;
-            const { adminNote } = req.body;
 
             const request = await sellerRequestService.getById(parseInt(id));
             if (!request) {
