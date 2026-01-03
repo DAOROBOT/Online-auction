@@ -1,12 +1,11 @@
 import { Router } from "express";
-import passport from "../config/passport.js";
+import { requireAuth } from "../middleware/auth.js";
 import authController from "../controllers/auth.js"
-import authService from "../services/auth.js";
 
 const route = new Router();
 
 // GET: get current user
-route.get('/me', authController.verifyUser);
+route.get('/me', requireAuth, authController.verifyUser);
 
 // POST: register
 route.post('/register', authController.createUser);

@@ -5,15 +5,14 @@ import cors from "cors";
 import session from "express-session";
 import passport from "./config/passport.js";
 import auctionRoute from "./routes/auction.js";
-import searchRoute from "./routes/search.js";
-import categoryRoute from "./routes/category.js"
 import authRoute from "./routes/auth.js"
+import categoryRoute from "./routes/category.js"
+import searchRoute from "./routes/search.js";
 import sellerRequestRoute from "./routes/sellerRequest.js"
-import userRoute from "./routes/user.js"
 import uploadRoute from "./routes/upload.js";
-import verifyToken from "./middleware/auth.js";
-import not_found from "./middleware/not_found.js";
+import userRoute from "./routes/user.js"
 import error_handler from "./middleware/error_handler.js";
+import not_found from "./middleware/not_found.js";
 
 
 // import productRoute from "./routes/product.routes.js";
@@ -42,21 +41,18 @@ app.use(session({
 app.use(passport.initialize());
 // app.use(passport.session());
 
-// Authentication middleware globally
-app.use(verifyToken);
-
 // --- Routes ---
 app.use('/auction', auctionRoute);
 app.use('/auth', authRoute);
-app.use('/search', searchRoute);
 app.use('/categories', categoryRoute);
+app.use('/search', searchRoute);
 app.use('/seller', sellerRequestRoute);
-app.use('/user', userRoute);
 app.use('/upload', uploadRoute);
+app.use('/user', userRoute);
 
 // --- Middleware ---
-app.use(not_found);
 app.use(error_handler);
+app.use(not_found);
 
 
 

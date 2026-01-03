@@ -3,9 +3,8 @@ import authService from "../services/auth.js";
 import sellerRequestService from "../services/sellerRequest.js";
 import { sendWelcomeEmail, sendEmailVerification, sendPasswordResetOTP } from "../utils/email.js";
 import crypto from 'crypto';
-import { create } from "domain";
-import { is } from "drizzle-orm";
 import passport from "passport";
+
 const controller = {
     listUser: function(req, res, next){
         userService.findAll().then((users) => {
@@ -23,13 +22,11 @@ const controller = {
         if (!found) {
             found = await userService.getByEmail(identifier);
         }
-        console.log('User found:', found);
         if (!found){
             return res.status(401).json({
                 message: "Account does not exist"
             })
         }
-        console.log('Checking if account is verified');
         // Check if user is banned
         console.log('User status:', found.status);
         if (found.status === 'banned') {
@@ -59,7 +56,6 @@ const controller = {
             userId: found.id,
             username: found.username,
             email: found.email,
-            role: found.role,
         }) 
         console.log('User authenticated successfully:', found);
         res.status(200).json({
@@ -70,8 +66,8 @@ const controller = {
                 email: found.email,
                 fullName: found.fullName,
                 role: found.role,
-                avatarUrl: found.avatarUrl,
                 status: found.status,
+                isVerified: found.isVerified,
             }
         })
     },
@@ -162,6 +158,7 @@ const controller = {
             message: "Registration successful. Please check your email to verify your account."
         });
     },
+
     validateEmail: async function(req, res){
         const { email, code } = req.body;
         console.log('Validating email for:', email);

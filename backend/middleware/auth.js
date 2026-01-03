@@ -3,15 +3,13 @@ import userService from "../services/user.js";
 import sellerRequestService from "../services/sellerRequest.js";
 
 // Verify token and attach user to request
-export const verifyToken = async (req, res, next) => {
+export const requireAuth = async (req, res, next) => {
     try {
         const authorization = req.header('Authorization');
-        
-        // if (!authorization) {
-        //     return res.status(401).json({
-        //         message: 'Authorization header missing',
-        //     });
-        // }
+
+        if (!authorization) {
+            return res.status(401).json({ message: 'Authorization required' });
+        }
 
         // Authorization: Bearer ey...
         const token = authorization?.replace('Bearer ', '').trim();
@@ -45,10 +43,19 @@ export const verifyToken = async (req, res, next) => {
         next();
     } catch (error) {
         return res.status(401).json({
-            message: 'Invalid Token',
+            message: 'Invalid or expired token',
         });
     }
 };
+
+// export const requireAuth = (req, res, next) => {
+//     if (!req.user) {
+//         return res.status(401).json({
+//             message: 'User not authenticated',
+//         });
+//     }
+//     next();
+// };
 
 // Check if user has required role(s)
 // export const requireRole = (...allowedRoles) => {
@@ -120,4 +127,4 @@ export const requireAdmin = (req, res, next) => {
     next();
 };
 
-export default verifyToken;
+export default requireAuth;

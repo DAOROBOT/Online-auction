@@ -16,19 +16,6 @@ const controller = {
     // GET /categories/admin - Get all categories with product counts for admin
     listCategoriesAdmin: async function(req, res, next) {
         try {
-            // Verify admin role
-            const authorization = req.header('Authorization');
-            if (!authorization) {
-                return res.status(401).json({ message: 'Authorization required' });
-            }
-
-            const token = authorization.replace('Bearer ', '').trim();
-            const userData = await authService.validateToken(token);
-
-            if (!userData || userData.role !== 'admin') {
-                return res.status(403).json({ message: 'Admin access required' });
-            }
-
             const categories = await categoryService.findAllWithProductCount();
             res.json(categories);
         } catch (error) {
@@ -39,19 +26,6 @@ const controller = {
     // POST /categories - Create a new category
     createCategory: async function(req, res, next) {
         try {
-            // Verify admin role
-            const authorization = req.header('Authorization');
-            if (!authorization) {
-                return res.status(401).json({ message: 'Authorization required' });
-            }
-
-            const token = authorization.replace('Bearer ', '').trim();
-            const userData = await authService.validateToken(token);
-
-            if (!userData || userData.role !== 'admin') {
-                return res.status(403).json({ message: 'Admin access required' });
-            }
-
             const { name, parentId, description } = req.body;
 
             if (!name || name.trim() === '') {
@@ -79,19 +53,6 @@ const controller = {
     // PUT /categories/:id - Update a category
     updateCategory: async function(req, res, next) {
         try {
-            // Verify admin role
-            const authorization = req.header('Authorization');
-            if (!authorization) {
-                return res.status(401).json({ message: 'Authorization required' });
-            }
-
-            const token = authorization.replace('Bearer ', '').trim();
-            const userData = await authService.validateToken(token);
-
-            if (!userData || userData.role !== 'admin') {
-                return res.status(403).json({ message: 'Admin access required' });
-            }
-
             const { id } = req.params;
             const { name, description } = req.body;
 
@@ -117,19 +78,6 @@ const controller = {
     // DELETE /categories/:id - Delete a category
     deleteCategory: async function(req, res, next) {
         try {
-            // Verify admin role
-            const authorization = req.header('Authorization');
-            if (!authorization) {
-                return res.status(401).json({ message: 'Authorization required' });
-            }
-
-            const token = authorization.replace('Bearer ', '').trim();
-            const userData = await authService.validateToken(token);
-
-            if (!userData || userData.role !== 'admin') {
-                return res.status(403).json({ message: 'Admin access required' });
-            }
-
             const { id } = req.params;
             const categoryId = parseInt(id);
 

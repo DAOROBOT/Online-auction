@@ -5,18 +5,6 @@ const controller = {
     // Get all users with pagination, filtering, and search (admin only)
     getAllUsers: async function(req, res) {
         try {
-            const authorization = req.header('Authorization');
-            if (!authorization) {
-                return res.status(401).json({ message: 'Authorization required' });
-            }
-
-            const token = authorization.replace('Bearer ', '').trim();
-            const userData = await authService.validateToken(token);
-
-            if (!userData || userData.role !== 'admin') {
-                return res.status(403).json({ message: 'Admin access required' });
-            }
-
             const { 
                 page = 1, 
                 limit = 10, 
@@ -43,18 +31,6 @@ const controller = {
     // Get user by ID with stats (admin only)
     getUserById: async function(req, res) {
         try {
-            const authorization = req.header('Authorization');
-            if (!authorization) {
-                return res.status(401).json({ message: 'Authorization required' });
-            }
-
-            const token = authorization.replace('Bearer ', '').trim();
-            const userData = await authService.validateToken(token);
-
-            if (!userData || userData.role !== 'admin') {
-                return res.status(403).json({ message: 'Admin access required' });
-            }
-
             const { id } = req.params;
             const user = await userService.getById(parseInt(id));
 
@@ -92,18 +68,6 @@ const controller = {
     // Ban a user (admin only)
     banUser: async function(req, res) {
         try {
-            const authorization = req.header('Authorization');
-            if (!authorization) {
-                return res.status(401).json({ message: 'Authorization required' });
-            }
-
-            const token = authorization.replace('Bearer ', '').trim();
-            const userData = await authService.validateToken(token);
-
-            if (!userData || userData.role !== 'admin') {
-                return res.status(403).json({ message: 'Admin access required' });
-            }
-
             const { id } = req.params;
             const user = await userService.getById(parseInt(id));
 
@@ -138,18 +102,6 @@ const controller = {
     // Unban a user (admin only)
     unbanUser: async function(req, res) {
         try {
-            const authorization = req.header('Authorization');
-            if (!authorization) {
-                return res.status(401).json({ message: 'Authorization required' });
-            }
-
-            const token = authorization.replace('Bearer ', '').trim();
-            const userData = await authService.validateToken(token);
-
-            if (!userData || userData.role !== 'admin') {
-                return res.status(403).json({ message: 'Admin access required' });
-            }
-
             const { id } = req.params;
             const user = await userService.getById(parseInt(id));
 
@@ -180,18 +132,6 @@ const controller = {
     // Update user role (admin only)
     updateUserRole: async function(req, res) {
         try {
-            const authorization = req.header('Authorization');
-            if (!authorization) {
-                return res.status(401).json({ message: 'Authorization required' });
-            }
-
-            const token = authorization.replace('Bearer ', '').trim();
-            const userData = await authService.validateToken(token);
-
-            if (!userData || userData.role !== 'admin') {
-                return res.status(403).json({ message: 'Admin access required' });
-            }
-
             const { id } = req.params;
             const { role } = req.body;
 
@@ -224,18 +164,6 @@ const controller = {
     // Get user statistics summary (admin only)
     getUserStatsSummary: async function(req, res) {
         try {
-            const authorization = req.header('Authorization');
-            if (!authorization) {
-                return res.status(401).json({ message: 'Authorization required' });
-            }
-
-            const token = authorization.replace('Bearer ', '').trim();
-            const userData = await authService.validateToken(token);
-
-            if (!userData || userData.role !== 'admin') {
-                return res.status(403).json({ message: 'Admin access required' });
-            }
-
             const allUsers = await userService.findAll();
 
             const stats = {
@@ -260,23 +188,8 @@ const controller = {
     },
     getCurrentUserProfile: async function(req, res) {
         try {
-            const authorization = req.header('Authorization');
-            if (!authorization) {
-                return res.status(401).json({ message: 'Authorization required' });
-            }
-            console.log('Authorization header:', authorization);
-            const token = authorization.replace('Bearer ', '').trim();
-            const userData = await authService.validateToken(token);
-            if (!userData) {
-                return res.status(401).json({ message: 'Invalid token' });
-            }
-            console.log('Validated user data:', userData);
-            const user = await userService.getById(userData.userId);
-            if (!user) {
-                return res.status(404).json({ message: 'User not found' });
-            }
-
-            const auctions = await userService.getUserAuctions(userData.userId, user.role);
+            const user = req.user;
+            const auctions = await userService.getUserAuctions(user.id, user.role);
             console.log('User auctions data:', auctions);
             res.status(200).json({
                 id: user.id,

@@ -4,26 +4,24 @@ import { eq } from "drizzle-orm";
 
 const service = {
     findAll: async function(){
-        return db.select().from(auctions);
+        const result = await db.select().from(auctions);
+        return result.length > 0 ? result[0] : null
     },
     findById: async function(id){
-        return await db.select().from(auctions).where(eq(auctions.id, id));
+        const result = await db.select().from(auctions).where(eq(auctions.id, id));
+        return result.length > 0 ? result[0] : null
     },
     create: async function(auction){
-        if(auction.created_at) {
-            auction.created_at = new Date(auction.created_at);
-        }
-        if(auction.end_time) {
-            auction.end_time = new Date(auction.end_time);
-        }
+        auction.createdAt = auction.createdAt ? new Date(auction.createdAt) : new Date();
+        auction.endTime = auction.endTime ? new Date(auction.endTime) : new Date(auction.createdAt.getTime() + 24*60*60*1000); // default to 24 hours later
         return await db.insert(auctions).values(auction).returning();
     },
     update: async function(id, auc){
-        if(auc.created_at) {
-            auc.created_at = new Date(auc.created_at);
+        if(auc.createdAt) {
+            auc.createdAt = new Date(auc.createdAt);
         }
-        if(auc.end_time) {
-            auc.end_time = new Date(auc.end_time);
+        if(auc.endTime) {
+            auc.endTime = new Date(auc.endTime);
         }
         await db.update(auctions).set(auc).where(eq(auctions.id, id));
     },
