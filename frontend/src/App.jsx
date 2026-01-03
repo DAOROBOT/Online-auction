@@ -16,6 +16,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import NotFound from './pages/NotFound';
 import ForgetPassword from './pages/Auth/ForgetPassword';
 import BecomeSeller from './pages/BecomeSeller';
+import OrderCompletion from './pages/OrderCompletion';
 import { Verified } from 'lucide-react';
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/me" element={<Profile me={true}/>} />
             <Route path="/verify-account" element={<VerifyAccount />} />
+            <Route path="/order/:auctionId" element={<OrderCompletion />} />
           </Route>
 
           <Route element={<ProtectedRoute requiredRole="buyer" />}>

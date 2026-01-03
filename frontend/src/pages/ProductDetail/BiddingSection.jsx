@@ -1,6 +1,8 @@
-import { useState } from 'react';
-import { Clock, MapPin, Gavel, Heart, Share2, ShieldCheck, User, TrendingUp, Trophy, Zap, AlertCircle, ChevronRight, Crown, Star } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { Clock, MapPin, Gavel, Heart, Share2, ShieldCheck, User, TrendingUp, Trophy, Zap, AlertCircle, ChevronRight, Crown, Star, CheckCircle } from 'lucide-react';
 import { formatCurrency, formatTimeLeft } from '../../utils/format';
+import { useAuth } from '../../contexts/AuthContext';
 
 // Mock data for demonstration
 // const mockProduct = {
@@ -19,17 +21,24 @@ import { formatCurrency, formatTimeLeft } from '../../utils/format';
 
 export default function BiddingSection({ product }) {
   // const [product] = useState(mockProduct);
+  const { user } = useAuth();
   const [bidAmount, setBidAmount] = useState(product.currentPrice + product.biddingStep);
   const [isWatchlisted, setIsWatchlisted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(formatTimeLeft(product.endTime));
 
-  // Update timer
-  // useState(() => {
-  //   const interval = setInterval(() => {
-  //     setTimeLeft(formatTimeLeft(product.endTime));
-  //   }, 1000);
-  //   return () => clearInterval(interval);
-  // });
+  // Check if auction has ended
+  const isAuctionEnded = timeLeft.urgencyLevel === 'ended';
+  const isWinner = user?.id === product.winnerId;
+  const isSeller = user?.id === product.sellerId;
+  const isParticipant = isWinner || isSeller;
+
+  // Update timer every second
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeLeft(formatTimeLeft(product.endTime));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [product.endTime]);
 
   const incrementBid = (amount) => {
     setBidAmount(prev => prev + amount);
@@ -52,6 +61,177 @@ export default function BiddingSection({ product }) {
   };
 
   const priceIncrease = ((product.currentPrice - product.startingPrice) / product.startingPrice * 100).toFixed(1);
+
+  // Render auction ended state
+  if (isAuctionEnded) {
+    return (
+      <div className="min-h-screen bg-(--bg)">
+        <div className="max-w-lg mx-auto">
+          {/* Header */}
+          <div className="relative px-6 pt-6 pb-4">
+            {/* Seller Info */}
+            <div className="flex items-center justify-between mb-4">
+              <div className='flex gap-2'>
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border"
+                  style={{ 
+                    backgroundColor: 'var(--accent-soft)', 
+                    borderColor: 'var(--accent)',
+                    color: 'var(--accent)'
+                  }}>
+                  <User size={12} />
+                  {product.sellerName}
+                </div>
+                {product.sellerRating && (
+                  <div className="inline-flex items-center gap-1.5 text-xs text-(--text) font-bold transition-colors">
+                    <Star size={12} className="fill-amber-400 text-amber-400" />
+                    <span>{(product.sellerRating.positive / (product.sellerRating.positive + product.sellerRating.negative) || 0).toFixed(1)}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Title */}
+            <h1 className="text-2xl md:text-3xl font-black leading-tight mb-3" 
+                style={{ color: 'var(--text)' }}>
+              {product.title}
+            </h1>
+          </div>
+
+          {/* Auction Ended Card */}
+          <div className="mx-6 mb-6 rounded-2xl overflow-hidden border"
+            style={{ 
+              backgroundColor: 'var(--bg)',
+              borderColor: 'var(--border-strong)',
+              boxShadow: '0 8px 16px -4px rgba(0,0,0,0.1)'
+            }}>
+            
+            {/* Ended Status Banner */}
+            <div className="p-6 text-center relative bg-gradient-to-b from-gray-50 to-white dark:from-gray-800 dark:to-gray-900">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <CheckCircle size={24} className="text-green-500" />
+                <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                  Auction Ended
+                </p>
+              </div>
+              
+              <p className="text-xs font-bold uppercase tracking-widest mb-2" 
+                  style={{ color: 'var(--text-muted)' }}>
+                Final Price
+              </p>
+              
+              <div className="text-4xl md:text-5xl font-black tracking-tight mb-4" 
+                    style={{ 
+                      color: 'var(--accent)',
+                      textShadow: '0 2px 20px var(--accent-soft)'
+                    }}>
+                {formatCurrency(product.currentPrice)}
+              </div>
+
+              {product.bidCount > 0 && (
+                <p className="text-sm text-(--text-muted)">
+                  Total bids: <span className="font-bold">{product.bidCount}</span>
+                </p>
+              )}
+            </div>
+
+            {/* Winner / No Bids Info */}
+            <div className="p-6 border-t" style={{ borderColor: 'var(--border)' }}>
+              {product.bidCount > 0 ? (
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-2 mb-3">
+                    <Trophy size={20} className="text-amber-500" />
+                    <p className="text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                      Winner
+                    </p>
+                  </div>
+                  
+                  {isWinner ? (
+                    <div>
+                      <p className="text-xl font-bold text-green-600 dark:text-green-400 mb-3">
+                        🎉 Congratulations! You won!
+                      </p>
+                      <Link
+                        to={`/order/${product.id}`}
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all hover:scale-105"
+                      >
+                        Complete Order
+                        <ChevronRight size={18} />
+                      </Link>
+                    </div>
+                  ) : isSeller ? (
+                    <div>
+                      <p className="text-lg font-semibold text-(--text) mb-3">
+                        Your item has been sold!
+                      </p>
+                      <Link
+                        to={`/order/${product.id}`}
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-all hover:scale-105"
+                      >
+                        Manage Order
+                        <ChevronRight size={18} />
+                      </Link>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-lg font-semibold text-(--text)">
+                        {product.winnerName || 'Anonymous'}
+                      </p>
+                      <p className="text-sm text-(--text-muted) mt-1">
+                        won this auction
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center">
+                  <p className="text-lg font-semibold text-(--text-muted)">
+                    No bids were placed
+                  </p>
+                  <p className="text-sm text-(--text-muted) mt-1">
+                    This auction ended without any bids
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Actions for non-participants */}
+          {!isParticipant && (
+            <div className="px-6 pb-6">
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setIsWatchlisted(!isWatchlisted)}
+                  className={`flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-sm border-2 transition-all hover:scale-105 active:scale-95 ${
+                    isWatchlisted ? 'shadow-md' : ''
+                  }`}
+                  style={{ 
+                    backgroundColor: isWatchlisted ? 'var(--danger-soft)' : 'var(--bg-soft)',
+                    borderColor: isWatchlisted ? 'var(--danger)' : 'var(--border)',
+                    color: isWatchlisted ? 'var(--danger)' : 'var(--text)'
+                  }}>
+                  <Heart size={18} className={isWatchlisted ? 'fill-current' : ''} />
+                  {isWatchlisted ? 'Saved' : 'Save'}
+                </button>
+                
+                <button
+                  className="flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-sm border-2 transition-all hover:scale-105 active:scale-95"
+                  style={{ 
+                    backgroundColor: 'var(--bg-soft)',
+                    borderColor: 'var(--border)',
+                    color: 'var(--text)'
+                  }}>
+                  <Share2 size={18} />
+                  Share
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Normal auction in progress
 
   return (
     <div className="min-h-screen bg-(--bg)">
