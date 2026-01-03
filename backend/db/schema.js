@@ -111,6 +111,65 @@ export const userFavorites = pgTable('user_favorites', {
   pk: primaryKey({ columns: [table.userId, table.auctionId] }),
 }));
 
+// --- 9. ORDERS TABLE (Post-auction transaction) ---
+export const orderStatusEnum = pgEnum('order_status', [
+  'pending_payment',      // Step 1: Waiting for buyer to provide payment info
+  'pending_confirmation', // Step 2: Waiting for seller to confirm payment
+  'pending_delivery',     // Step 2b: Seller confirmed, waiting for shipping
+  'pending_receipt',      // Step 3: Waiting for buyer to confirm receipt
+  'pending_review',       // Step 4: Waiting for reviews
+  'completed',            // All done
+  'cancelled'             // Cancelled by seller
+]);
+
+export const orders = pgTable('orders', {
+  id: serial('order_id').primaryKey(),
+  auctionId: integer('auction_id').notNull().references(() => auctions.id, { onDelete: 'cascade' }).unique(),
+  buyerId: integer('buyer_id').notNull().references(() => users.id),
+  sellerId: integer('seller_id').notNull().references(() => users.id),
+  
+  // Final price
+  finalPrice: decimal('final_price', { precision: 10, scale: 2 }).notNull(),
+  
+  // Status tracking
+  status: orderStatusEnum('status').default('pending_payment'),
+  
+  // Step 1: Buyer payment info
+  paymentProofUrl: text('payment_proof_url'),      // Payment screenshot/invoice
+  shippingAddress: text('shipping_address'),
+  buyerPhone: varchar('buyer_phone', { length: 20 }),
+  paymentSubmittedAt: timestamp('payment_submitted_at'),
+  
+  // Step 2: Seller confirmation
+  paymentConfirmedAt: timestamp('payment_confirmed_at'),
+  shippingProofUrl: text('shipping_proof_url'),    // Shipping invoice/tracking
+  trackingNumber: varchar('tracking_number', { length: 100 }),
+  shippingSubmittedAt: timestamp('shipping_submitted_at'),
+  
+  // Step 3: Buyer confirms receipt
+  receiptConfirmedAt: timestamp('receipt_confirmed_at'),
+  
+  // Cancellation
+  cancelledAt: timestamp('cancelled_at'),
+  cancelledBy: integer('cancelled_by').references(() => users.id),
+  cancelReason: text('cancel_reason'),
+  
+  // Timestamps
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// --- 10. ORDER MESSAGES TABLE (Chat between buyer and seller) ---
+export const orderMessages = pgTable('order_messages', {
+  id: serial('message_id').primaryKey(),
+  orderId: integer('order_id').notNull().references(() => orders.id, { onDelete: 'cascade' }),
+  senderId: integer('sender_id').notNull().references(() => users.id),
+  message: text('message').notNull(),
+  imageUrl: text('image_url'),  // Optional image attachment
+  isRead: boolean('is_read').default(false),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
 
 // --- ADVANCED: RELATIONS (For easier querying) ---
 

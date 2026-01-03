@@ -10,6 +10,7 @@ import categoryRoute from "./routes/category.js"
 import authRoute from "./routes/auth.js"
 import sellerRequestRoute from "./routes/sellerRequest.js"
 import userRoute from "./routes/user.js"
+import orderRoute from "./routes/order.js"
 import not_found from "./middleware/not_found.js";
 import error_handler from "./middleware/error_handler.js";
 
@@ -46,6 +47,7 @@ app.use('/search', searchRoute);
 app.use('/categories', categoryRoute);
 app.use('/seller', sellerRequestRoute);
 app.use('/users', userRoute);
+app.use('/orders', orderRoute);
 
 // --- Product route ---
 // app.use('/products', productRoute);
