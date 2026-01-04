@@ -13,7 +13,7 @@ import uploadRoute from "./routes/upload.js";
 import userRoute from "./routes/user.js"
 import not_found from "./middleware/not_found.js";
 import error_handler from "./middleware/error_handler.js";
-import not_found from "./middleware/not_found.js";
+
 
 
 // import productRoute from "./routes/product.routes.js";

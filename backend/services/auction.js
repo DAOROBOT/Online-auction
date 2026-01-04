@@ -1,26 +1,26 @@
 import db from "../db/index.js"
-import { auctions, auctionImages } from "../db/schema.js" // Đảm bảo đã import auctionImages
+import { auctions, auctionImages } from "../db/schema.js"
 import { eq } from "drizzle-orm";
 
 const service = {
+    // Lấy tất cả, kèm ảnh (Lấy ảnh đầu tiên làm ảnh đại diện)
     findAll: async function(){
-        // Join để lấy luôn ảnh đại diện (ảnh đầu tiên)
         const result = await db.query.auctions.findMany({
             with: {
-                images: true, // Lấy kèm danh sách ảnh
-                seller: true, // Lấy thông tin người bán
+                images: true, 
+                seller: true,
             },
             orderBy: (auctions, { desc }) => [desc(auctions.createdAt)],
         });
         
-        // Map lại dữ liệu để frontend dễ dùng (lấy ảnh đầu tiên làm ảnh chính)
         return result.map(auction => ({
             ...auction,
             image: auction.images.length > 0 ? auction.images[0].imageUrl : 'https://via.placeholder.com/300',
-            sellerName: auction.seller.username // Flatten seller name
+            sellerName: auction.seller.username
         }));
     },
 
+    // Lấy chi tiết 1 sản phẩm
     findById: async function(id){
         const result = await db.query.auctions.findFirst({
             where: eq(auctions.id, id),
@@ -40,26 +40,28 @@ const service = {
         };
     },
 
+    // Tạo đấu giá mới (Có Transaction để lưu ảnh an toàn)
     create: async function(auctionData){
-        // 1. Tách thông tin ảnh ra khỏi dữ liệu auction
+        // 1. Tách danh sách ảnh ra
         const { images, ...mainInfo } = auctionData;
 
-        // Xử lý ngày tháng
+        // 2. Chuẩn hóa dữ liệu ngày tháng
         mainInfo.createdAt = new Date();
         mainInfo.endTime = new Date(mainInfo.endTime);
-        
-        // Mặc định status
         mainInfo.status = 'active';
+        mainInfo.bidCount = 0; // Mặc định 0 bid
 
+        // 3. Thực hiện Transaction (Tạo Auction -> Tạo Images)
         return await db.transaction(async (tx) => {
-            // 2. Tạo Auction
+            // Insert bảng auctions
             const [newAuction] = await tx.insert(auctions).values(mainInfo).returning();
 
-            // 3. Nếu có ảnh, lưu vào bảng auction_images
+            // Insert bảng auction_images (nếu có ảnh)
             if (images && images.length > 0) {
-                const imageValues = images.map(url => ({
+                const imageValues = images.map((url, index) => ({
                     auctionId: newAuction.id,
-                    imageUrl: url
+                    imageUrl: url,
+                    isPrimary: index === 0 // Ảnh đầu tiên là ảnh chính
                 }));
                 await tx.insert(auctionImages).values(imageValues);
             }
@@ -74,7 +76,6 @@ const service = {
     },
 
     delete: async function(id){
-        // Xóa ảnh trước (nếu không set cascade ở DB)
         await db.delete(auctionImages).where(eq(auctionImages.auctionId, id));
         await db.delete(auctions).where(eq(auctions.id, id));
     }

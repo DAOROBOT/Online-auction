@@ -19,8 +19,7 @@ const controller = {
             const auction = await auctionService.findById(id);
             
             if (!auction) {
-                res.status(404);
-                throw new Error('Auction Not Found');
+                return res.status(404).json({ message: 'Auction Not Found' });
             }
             
             res.json(auction);
@@ -29,12 +28,12 @@ const controller = {
         }
     },
 
-    // POST /auctions
+    // POST /auctions (Tạo sản phẩm)
     createAuction: async function(req, res, next) {
         try {
-            const { title, startingPrice, stepPrice, buyNowPrice, endTime, categoryId } = req.body;
+            const { title, startingPrice, stepPrice, buyNowPrice, endTime, categoryId, images, description, autoExtend } = req.body;
 
-            // --- VALIDATION ---
+            // 1. Validate dữ liệu đầu vào (Theo yêu cầu đồ án)
             if (!title || !startingPrice || !stepPrice || !endTime || !categoryId) {
                 return res.status(400).json({ message: 'Missing required fields' });
             }
@@ -47,13 +46,26 @@ const controller = {
                 return res.status(400).json({ message: 'Buy Now price must be greater than Starting price' });
             }
 
-            // Gán sellerId từ user đang đăng nhập (đã có từ middleware auth)
+            if (!images || images.length < 3) {
+                return res.status(400).json({ message: 'At least 3 images are required' });
+            }
+
+            // 2. Chuẩn bị dữ liệu để lưu
             const auctionData = {
-                ...req.body,
-                sellerId: req.user.id, 
-                currentPrice: Number(startingPrice) // Giá hiện tại ban đầu = Giá khởi điểm
+                sellerId: req.user.id, // Lấy ID người đang đăng nhập
+                categoryId: Number(categoryId),
+                title,
+                description,
+                startingPrice: Number(startingPrice),
+                currentPrice: Number(startingPrice), // Giá hiện tại = Giá khởi điểm lúc tạo
+                stepPrice: Number(stepPrice),
+                buyNowPrice: buyNowPrice ? Number(buyNowPrice) : null,
+                endTime,
+                autoExtend: autoExtend || false,
+                images // Mảng URL ảnh
             };
 
+            // 3. Gọi Service
             const auction = await auctionService.create(auctionData);
             res.status(201).json(auction);
         } catch (error) {
@@ -66,14 +78,16 @@ const controller = {
         try {
             const id = Number(req.params.id);
             
-            // 1. Check if it exists
+            // Check quyền sở hữu (chỉ người bán mới được sửa)
             const existingAuction = await auctionService.findById(id);
             if (!existingAuction) {
-                res.status(404);
-                throw new Error('Auction Not Found');
+                return res.status(404).json({ message: 'Auction Not Found' });
+            }
+            
+            if (existingAuction.sellerId !== req.user.id) {
+                return res.status(403).json({ message: 'Unauthorized to update this auction' });
             }
 
-            // 2. Update
             const updatedAuction = await auctionService.update(id, req.body);
             res.json(updatedAuction);
         } catch (error) {
@@ -86,16 +100,18 @@ const controller = {
         try {
             const id = Number(req.params.id);
 
-            // 1. Check if it exists
             const existingAuction = await auctionService.findById(id);
             if (!existingAuction) {
-                res.status(404);
-                throw new Error('Auction Not Found');
+                return res.status(404).json({ message: 'Auction Not Found' });
             }
 
-            // 2. Delete
+            // Check quyền (Admin hoặc chính chủ mới được xóa)
+            if (req.user.role !== 'admin' && existingAuction.sellerId !== req.user.id) {
+                return res.status(403).json({ message: 'Unauthorized' });
+            }
+
             await auctionService.delete(id);
-            res.json({}); // Return empty JSON on success
+            res.json({ message: 'Deleted successfully' });
         } catch (error) {
             next(error);
         }
