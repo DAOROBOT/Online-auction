@@ -64,7 +64,7 @@ export default function CreateAuction() {
     e.preventDefault();
     setError(null);
 
-    // --- Validation Client-side (Theo thang điểm) ---
+    // --- Validation Client-side ---
     if (formData.images.length < 3) {
         setError("Requirements not met: Please upload at least 3 images.");
         window.scrollTo(0,0);
@@ -100,8 +100,8 @@ export default function CreateAuction() {
             stepPrice: Number(formData.stepPrice),
             buyNowPrice: formData.buyNowPrice ? Number(formData.buyNowPrice) : null,
             categoryId: Number(formData.categoryId), // Convert sang số
-            // endTime đã là string dạng datetime-local, Backend (Service) cần convert sang Date hoặc giữ nguyên tùy logic
-            // Ở đây ta cứ gửi string ISO cho an toàn
+            // endTime đã là string dạng datetime-local
+            // Ở đây cứ gửi string ISO cho an toàn
             endTime: new Date(formData.endTime).toISOString()
         };
 
@@ -283,7 +283,7 @@ export default function CreateAuction() {
                         />
                     </div>
                     
-                    {/* Auto Extend Toggle (Yêu cầu nâng cao) */}
+                    {/* Auto Extend Toggle*/}
                     <div className="flex items-center gap-3 p-3 rounded-lg border border-[var(--border)] bg-[var(--bg)]">
                         <input 
                             type="checkbox" 
