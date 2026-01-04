@@ -32,7 +32,29 @@ const controller = {
     // POST /auctions
     createAuction: async function(req, res, next) {
         try {
-            const auction = await auctionService.create(req.body);
+            const { title, startingPrice, stepPrice, buyNowPrice, endTime, categoryId } = req.body;
+
+            // --- VALIDATION ---
+            if (!title || !startingPrice || !stepPrice || !endTime || !categoryId) {
+                return res.status(400).json({ message: 'Missing required fields' });
+            }
+
+            if (Number(stepPrice) <= 0) {
+                return res.status(400).json({ message: 'Step price must be positive' });
+            }
+
+            if (buyNowPrice && Number(buyNowPrice) <= Number(startingPrice)) {
+                return res.status(400).json({ message: 'Buy Now price must be greater than Starting price' });
+            }
+
+            // Gán sellerId từ user đang đăng nhập (đã có từ middleware auth)
+            const auctionData = {
+                ...req.body,
+                sellerId: req.user.id, 
+                currentPrice: Number(startingPrice) // Giá hiện tại ban đầu = Giá khởi điểm
+            };
+
+            const auction = await auctionService.create(auctionData);
             res.status(201).json(auction);
         } catch (error) {
             next(error);
