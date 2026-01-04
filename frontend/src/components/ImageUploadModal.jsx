@@ -1,23 +1,24 @@
 import { useState, useRef, useEffect } from 'react';
 import { UploadCloud, X, Check, Loader2 } from 'lucide-react';
+import { auctionService } from '../services/auctionService';
 
-export default function ImageUploadModal({ isOpen, onClose, onUpload, title = "Upload Image" }) {
+export default function ImageUploadModal({ isOpen, onClose, onUploadSuccess, title = "Upload Image" }) {
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
-  
   const inputRef = useRef(null);
 
   useEffect(() => {
     const shouldBlur = isOpen;
+    // Dispatch event để MainLayout có thể blur
     window.dispatchEvent(new CustomEvent('toggle-modal-blur', { detail: shouldBlur }));
     return () => {
         window.dispatchEvent(new CustomEvent('toggle-modal-blur', { detail: false }));
     };
   }, [isOpen]);
 
-  // Reset state when modal closes
+  // Reset state khi đóng modal
   useEffect(() => {
     if (!isOpen) {
         setPreview(null);
@@ -28,18 +29,30 @@ export default function ImageUploadModal({ isOpen, onClose, onUpload, title = "U
 
   if (!isOpen) return null;
 
-  // Handle Drag Events
-  const handleDrag = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
+  const handleFile = (file) => {
+    if (file && file.type.startsWith('image/')) {
+        setSelectedFile(file);
+        // Dùng cách mới gọn hơn: URL.createObjectURL
+        setPreview(URL.createObjectURL(file));
+    } else {
+        alert("Please upload an image file");
     }
   };
 
-  // Handle Drop
+  const handleChange = (e) => {
+    e.preventDefault();
+    if (e.target.files && e.target.files[0]) {
+      handleFile(e.target.files[0]);
+    }
+  };
+
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") setDragActive(true);
+    else if (e.type === "dragleave") setDragActive(false);
+  };
+
   const handleDrop = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -49,168 +62,88 @@ export default function ImageUploadModal({ isOpen, onClose, onUpload, title = "U
     }
   };
 
-  // Handle Manual Selection
-  const handleChange = (e) => {
-    e.preventDefault();
-    if (e.target.files && e.target.files[0]) {
-      handleFile(e.target.files[0]);
-    }
-  };
-
-  // Process File
-  const handleFile = (file) => {
-    if (file.type.startsWith("image/")) {
-      setSelectedFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => setPreview(reader.result);
-      reader.readAsDataURL(file);
-    } else {
-      alert("Please upload an image file.");
-    }
-  };
-
-  // --- SUBMIT LOGIC ---
   const handleSubmit = async () => {
-    if (selectedFile) {
-      try {
-        setIsUploading(true);
-        // We await the parent's upload function. 
-        // This keeps the modal open and showing the spinner until Cloudinary responds.
-        await onUpload(selectedFile);
-      } catch (error) {
-        console.error("Upload failed", error);
-        // If error, we stop loading so user can try again
+    if (!selectedFile) return;
+    
+    setIsUploading(true);
+    try {
+        //Gọi Service upload
+        const data = await auctionService.uploadImage(selectedFile);
+        
+        // Trả URL về (quan trọng để lưu vào form tạo đấu giá)
+        onUploadSuccess(data.url); 
+        onClose();
+    } catch (error) {
+        console.error(error);
+        alert("Upload failed: " + error.message);
+    } finally {
         setIsUploading(false);
-      }
-      // Note: We don't need to close or setUploading(false) on success 
-      // because the parent (ProfileSidebar) will close the modal (unmount this component).
     }
   };
 
   return (
-    <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={onClose} />
       
-      {/* Modal Card */}
-      <div className="relative w-full max-w-md bg-(--card-bg) border border-(--border) rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+      {/* Modal Content */}
+      <div className="relative w-full max-w-md bg-[var(--bg-soft)] rounded-2xl shadow-2xl border border-[var(--border)] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-(--border)">
-          <h3 className="font-bold text-lg text-(--text)">{title}</h3>
-          <button 
-            onClick={!isUploading ? onClose : undefined} 
-            className={`p-2 rounded-full transition-colors ${isUploading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-(--bg-hover) text-(--text-muted)'}`}
-            disabled={isUploading}
-          >
-            <X size={20} />
-          </button>
+        <div className="p-4 border-b border-[var(--border)] flex justify-between items-center">
+            <h3 className="font-bold text-lg">{title}</h3>
+            <button onClick={onClose} disabled={isUploading} className="p-1 hover:bg-[var(--bg-hover)] rounded-full transition-colors disabled:opacity-50">
+                <X size={20} />
+            </button>
         </div>
 
         {/* Body */}
         <div className="p-6">
-          {preview ? (
-            // Preview State
-            <div className="relative aspect-square rounded-xl overflow-hidden border border-(--border) bg-(--bg)">
-                <img src={preview} alt="Preview" className="w-full h-full object-contain" />
-                
-                {/* Only show remove button if not currently uploading */}
-                {!isUploading && (
+            {!preview ? (
+                <div 
+                    className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center transition-colors cursor-pointer
+                        ${dragActive ? 'border-[var(--accent)] bg-[var(--accent)]/5' : 'border-[var(--border)] hover:bg-[var(--bg-hover)]'}
+                    `}
+                    onDragEnter={handleDrag} onDragLeave={handleDrag} onDragOver={handleDrag} onDrop={handleDrop}
+                    onClick={() => inputRef.current?.click()}
+                >
+                    <input ref={inputRef} type="file" className="hidden" accept="image/*" onChange={handleChange} />
+                    <div className="w-16 h-16 rounded-full bg-[var(--bg-subtle)] flex items-center justify-center mb-4">
+                        <UploadCloud size={32} className="text-[var(--text-muted)]" />
+                    </div>
+                    <p className="font-medium mb-1">Click to upload or drag and drop</p>
+                    <p className="text-xs text-[var(--text-muted)]">SVG, PNG, JPG or GIF (max 5MB)</p>
+                </div>
+            ) : (
+                <div className="relative rounded-xl overflow-hidden border border-[var(--border)]">
+                    <img src={preview} alt="Preview" className="w-full h-64 object-cover" />
                     <button 
                         onClick={() => { setPreview(null); setSelectedFile(null); }}
-                        className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 text-white hover:bg-red-500 transition-colors"
+                        disabled={isUploading}
+                        className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full hover:bg-red-500 transition-colors disabled:opacity-0"
                     >
                         <X size={16} />
                     </button>
-                )}
-
-                {/* Loading Overlay */}
-                {isUploading && (
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[2px]">
-                        <Loader2 size={40} className="text-white animate-spin" />
-                    </div>
-                )}
-            </div>
-          ) : (
-            // Upload State
-            <div 
-              className={`
-                relative flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-xl transition-all duration-200
-                ${dragActive 
-                  ? 'border-(--accent) bg-(--accent-soft)/10 scale-[1.02]' 
-                  : 'border-(--border-strong) bg-(--bg-soft) hover:border-(--text-muted)'
-                }
-              `}
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-            >
-              <input 
-                ref={inputRef} 
-                type="file" 
-                className="hidden" 
-                accept="image/*" 
-                onChange={handleChange} 
-              />
-              
-              <div className="p-4 rounded-full bg-(--bg) shadow-sm mb-4">
-                <UploadCloud size={32} className={dragActive ? "text-(--accent)" : "text-(--text-muted)"} />
-              </div>
-              
-              <p className="text-sm font-medium text-(--text) mb-1">
-                Click or drag image here
-              </p>
-              <p className="text-xs text-(--text-muted)">
-                PNG, JPG up to 10MB
-              </p>
-              
-              <button 
-                onClick={() => inputRef.current?.click()}
-                className="mt-4 px-4 py-2 rounded-lg text-sm font-bold bg-(--text) text-(--bg) hover:opacity-90 transition-opacity"
-              >
-                Select File
-              </button>
-            </div>
-          )}
+                    
+                    {/* Loading Overlay */}
+                    {isUploading && (
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[2px]">
+                            <Loader2 size={40} className="text-white animate-spin" />
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-(--bg-soft) border-t border-(--border)] flex justify-end gap-3">
-          <button 
-            onClick={onClose}
-            disabled={isUploading}
-            className={`
-                px-4 py-2 rounded-lg font-medium text-sm transition-colors
-                ${isUploading 
-                    ? 'text-(--text-muted) opacity-50 cursor-not-allowed' 
-                    : 'text-(--text-muted) hover:text-(--text)] over:bg-(--bg-hover)'
-                }
-            `}
-          >
-            Cancel
-          </button>
-          
+        <div className="p-4 bg-[var(--bg-subtle)] border-t border-[var(--border)] flex justify-end gap-3">
+          <button onClick={onClose} disabled={isUploading} className="px-4 py-2 rounded-lg font-medium text-sm hover:bg-[var(--bg-hover)] disabled:opacity-50">Cancel</button>
           <button 
             onClick={handleSubmit}
             disabled={!selectedFile || isUploading}
-            className={`
-                px-6 py-2 rounded-lg font-bold text-sm flex items-center gap-2 transition-all
-                ${!selectedFile || isUploading
-                    ? 'bg-(--border) text-(--text-muted) cursor-not-allowed'
-                    : 'bg-(--accent) text-[#1a1205] hover:brightness-110 shadow-lg shadow-(--accent)/20' 
-                }
-            `}
+            className="px-6 py-2 rounded-lg font-bold text-sm bg-[var(--accent)] text-[#1a1205] hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            {isUploading ? (
-                <>
-                    <Loader2 size={16} className="animate-spin" />
-                    Uploading...
-                </>
-            ) : (
-                <>
-                    <Check size={16} />
-                    Save Changes
-                </>
-            )}
+            {isUploading ? 'Uploading...' : <><Check size={16} /> Confirm Upload</>}
           </button>
         </div>
       </div>
