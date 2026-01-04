@@ -1,24 +1,23 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Upload, X, Plus, Info, Loader2 } from "lucide-react";
+import { ArrowLeft, Upload, X, Plus, Info, Loader2, AlertCircle } from "lucide-react";
 import { useNav } from "../hooks/useNavigate";
-import { useAuth } from "../contexts/AuthContext"; // Thêm Auth context
+import { useAuth } from "../contexts/AuthContext";
 import ImageUploadModal from '../components/ImageUploadModal';
 import RichTextEditor from "../components/RichTextEditor";
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+import { auctionService } from "../services/auctionService"; // Sử dụng Service
 
 export default function CreateAuction() {
   const nav = useNav();
-  const { user } = useAuth(); // Lấy token để gửi request
+  const { user } = useAuth();
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   
-  // Dữ liệu danh mục
+  // Dữ liệu danh mục lấy từ API
   const [categories, setCategories] = useState([]);
-  const [subcategories, setSubcategories] = useState([]);
   
+  // Form State
   const [formData, setFormData] = useState({ 
     title: "", 
     description: "", // HTML content từ RichTextEditor
@@ -26,49 +25,31 @@ export default function CreateAuction() {
     stepPrice: "",
     buyNowPrice: "",
     categoryId: "", 
-    images: [], // Mảng chứa URL ảnh sau khi upload
+    images: [], // Mảng URL ảnh (Backend cần mảng này)
     endTime: "",
-    autoExtend: true // Mặc định true theo yêu cầu đồ án để tăng trải nghiệm
+    autoExtend: true // Mặc định true (Yêu cầu nâng cao)
   });
 
-  // 1. Fetch Categories khi trang load
+  // 1. Load danh mục khi vào trang
   useEffect(() => {
-    fetch(`${API_URL}/categories`)
-      .then(res => res.json())
-      .then(data => setCategories(data))
-      .catch(err => console.error("Error loading categories", err));
+    const loadCategories = async () => {
+      try {
+        const data = await auctionService.getCategories();
+        setCategories(data);
+      } catch (err) {
+        console.error("Error loading categories", err);
+        setError("Failed to load categories. Please refresh.");
+      }
+    };
+    loadCategories();
   }, []);
 
-  // 2. Xử lý Upload ảnh (Nhận file từ Modal -> Upload -> Lưu URL)
-  const handleImageUpload = async (file) => {
-    const uploadData = new FormData();
-    uploadData.append('image', file);
-    
-    // Lấy token
-    const token = localStorage.getItem('authToken');
-
-    try {
-        const res = await fetch(`${API_URL}/upload`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` },
-            body: uploadData
-        });
-        const data = await res.json();
-        
-        if (res.ok) {
-            // Thêm URL vào mảng images
-            setFormData(prev => ({
-                ...prev,
-                images: [...prev.images, data.url]
-            }));
-            setIsUploadModalOpen(false); // Đóng modal
-        } else {
-            alert("Upload failed: " + data.message);
-        }
-    } catch (err) {
-        console.error(err);
-        alert("Error uploading image");
-    }
+  // 2. Xử lý khi Upload ảnh thành công (Nhận URL từ Modal)
+  const handleImageSuccess = (url) => {
+    setFormData(prev => ({
+        ...prev,
+        images: [...prev.images, url]
+    }));
   };
 
   const handleRemoveImage = (indexToRemove) => {
@@ -78,54 +59,61 @@ export default function CreateAuction() {
     }));
   };
 
-  // 3. Xử lý Submit Form
+  // 3. Submit Form
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
 
-    // Validation cơ bản phía Client
+    // --- Validation Client-side (Theo thang điểm) ---
     if (formData.images.length < 3) {
-        setError("Please upload at least 3 images as required.");
+        setError("Requirements not met: Please upload at least 3 images.");
         window.scrollTo(0,0);
         return;
     }
-    if (!formData.description) {
-        setError("Please provide a detailed description.");
+    if (!formData.description || formData.description === '<p></p>') {
+        setError("Description is required.");
+        window.scrollTo(0,0);
+        return;
+    }
+    if (new Date(formData.endTime) <= new Date()) {
+        setError("End time must be in the future.");
+        window.scrollTo(0,0);
+        return;
+    }
+    if (Number(formData.stepPrice) <= 0) {
+        setError("Step price must be greater than 0.");
+        return;
+    }
+    if (formData.buyNowPrice && Number(formData.buyNowPrice) <= Number(formData.startingPrice)) {
+        setError("Buy Now price must be greater than Starting price.");
         window.scrollTo(0,0);
         return;
     }
 
     setLoading(true);
-    const token = localStorage.getItem('authToken');
 
     try {
-        const response = await fetch(`${API_URL}/auction`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                ...formData,
-                startingPrice: Number(formData.startingPrice),
-                stepPrice: Number(formData.stepPrice),
-                buyNowPrice: formData.buyNowPrice ? Number(formData.buyNowPrice) : null,
-                // Chuyển endTime từ datetime-local string sang ISO string
-                endTime: new Date(formData.endTime).toISOString() 
-            })
-        });
+        // Chuẩn bị payload gửi về Backend
+        const payload = {
+            ...formData,
+            startingPrice: Number(formData.startingPrice),
+            stepPrice: Number(formData.stepPrice),
+            buyNowPrice: formData.buyNowPrice ? Number(formData.buyNowPrice) : null,
+            categoryId: Number(formData.categoryId), // Convert sang số
+            // endTime đã là string dạng datetime-local, Backend (Service) cần convert sang Date hoặc giữ nguyên tùy logic
+            // Ở đây ta cứ gửi string ISO cho an toàn
+            endTime: new Date(formData.endTime).toISOString()
+        };
 
-        const data = await response.json();
+        // Gọi API
+        await auctionService.create(payload);
 
-        if (!response.ok) {
-            throw new Error(data.message || 'Failed to create auction');
-        }
-
-        // Thành công -> Redirect về trang chủ hoặc trang chi tiết
+        // Thành công -> Về trang chủ
         nav.home();
         
     } catch (err) {
-        setError(err.message);
+        console.error(err);
+        setError(err.message || "Failed to create auction");
         window.scrollTo(0,0);
     } finally {
         setLoading(false);
@@ -147,19 +135,20 @@ export default function CreateAuction() {
         </div>
 
         {error && (
-            <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500">
+            <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 flex items-center gap-3">
+                <AlertCircle size={20} />
                 {error}
             </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-8">
             
-            {/* 1. SECTION: IMAGES (Requirement: Multiple Images) */}
+            {/* 1. SECTION: IMAGES (Yêu cầu đồ án: Nhiều ảnh) */}
             <div className="p-6 rounded-2xl border border-[var(--border)] bg-[var(--bg-soft)]">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-xl font-bold">Product Images</h3>
-                    <span className="text-xs px-2 py-1 rounded bg-[var(--bg-subtle)] text-[var(--text-muted)]">
-                        Required: At least 3 photos
+                    <span className={`text-xs px-2 py-1 rounded ${formData.images.length >= 3 ? 'bg-green-100 text-green-700' : 'bg-[var(--bg-subtle)] text-[var(--text-muted)]'}`}>
+                        {formData.images.length}/3 Required
                     </span>
                 </div>
                 
@@ -167,7 +156,7 @@ export default function CreateAuction() {
                     {/* Danh sách ảnh đã upload */}
                     {formData.images.map((url, idx) => (
                         <div key={idx} className="relative aspect-square rounded-xl overflow-hidden group border border-[var(--border)]">
-                            <img src={url} alt="Preview" className="w-full h-full object-cover" />
+                            <img src={url} alt={`Upload ${idx}`} className="w-full h-full object-cover" />
                             <button 
                                 type="button"
                                 onClick={() => handleRemoveImage(idx)}
@@ -177,7 +166,7 @@ export default function CreateAuction() {
                             </button>
                             {idx === 0 && (
                                 <div className="absolute bottom-0 w-full bg-black/60 text-white text-[10px] text-center py-1">
-                                    Cover Image
+                                    Main Image
                                 </div>
                             )}
                         </div>
@@ -212,36 +201,40 @@ export default function CreateAuction() {
                     />
                 </div>
 
-                {/* Category & Subcategory */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label className="block text-sm font-medium mb-2">Category</label>
-                        <select 
-                            required
-                            className="w-full px-4 py-3 rounded-lg bg-[var(--input-bg)] border border-[var(--border)] focus:ring-2 focus:ring-[var(--accent)] outline-none"
-                            onChange={(e) => {
-                                const catId = parseInt(e.target.value);
-                                setFormData({...formData, categoryId: catId});
-                                // Tìm subcategories (giả sử backend trả về cấu trúc lồng nhau hoặc lọc ở frontend)
-                                const selectedCat = categories.find(c => c.id === catId);
-                                setSubcategories(selectedCat?.subcategories || []); 
-                            }}
-                        >
-                            <option value="">Select Category</option>
-                            {categories.map(cat => (
-                                <option key={cat.id} value={cat.id}>{cat.name}</option>
-                            ))}
-                        </select>
-                    </div>
+                {/* Category Selection */}
+                <div>
+                    <label className="block text-sm font-medium mb-2">Category</label>
+                    <select 
+                        required
+                        className="w-full px-4 py-3 rounded-lg bg-[var(--input-bg)] border border-[var(--border)] focus:ring-2 focus:ring-[var(--accent)] outline-none"
+                        value={formData.categoryId}
+                        onChange={(e) => setFormData({...formData, categoryId: e.target.value})}
+                    >
+                        <option value="">Select Category</option>
+                        {categories.map(cat => (
+                            <optgroup key={cat.id} label={cat.name}>
+                                {/* Nếu có subcategories thì map, nếu không thì render chính nó */}
+                                {cat.subcategories && cat.subcategories.length > 0 ? (
+                                    cat.subcategories.map(sub => (
+                                        <option key={sub.id} value={sub.id}>{sub.name}</option>
+                                    ))
+                                ) : (
+                                    <option value={cat.id}>{cat.name}</option>
+                                )}
+                            </optgroup>
+                        ))}
+                    </select>
                 </div>
 
                 {/* Description - WYSIWYG EDITOR (Requirement) */}
                 <div>
                     <label className="block text-sm font-medium mb-2">Description</label>
-                    <RichTextEditor 
-                        value={formData.description} 
-                        onChange={(html) => setFormData({...formData, description: html})} 
-                    />
+                    <div className="min-h-[200px]">
+                        <RichTextEditor 
+                            value={formData.description} 
+                            onChange={(html) => setFormData({...formData, description: html})} 
+                        />
+                    </div>
                 </div>
             </div>
 
@@ -290,7 +283,7 @@ export default function CreateAuction() {
                         />
                     </div>
                     
-                    {/* Auto Extend Toggle */}
+                    {/* Auto Extend Toggle (Yêu cầu nâng cao) */}
                     <div className="flex items-center gap-3 p-3 rounded-lg border border-[var(--border)] bg-[var(--bg)]">
                         <input 
                             type="checkbox" 
@@ -299,7 +292,7 @@ export default function CreateAuction() {
                             checked={formData.autoExtend}
                             onChange={e => setFormData({...formData, autoExtend: e.target.checked})}
                         />
-                        <label htmlFor="autoExtend" className="text-sm font-medium cursor-pointer">
+                        <label htmlFor="autoExtend" className="text-sm font-medium cursor-pointer select-none">
                             Enable Auto-Extend
                             <span className="block text-xs text-[var(--text-muted)] font-normal">
                                 Extends 5 mins if bid placed in last 5 mins
@@ -314,10 +307,10 @@ export default function CreateAuction() {
                 <button 
                     type="submit" 
                     disabled={loading}
-                    className="flex-1 bg-[var(--accent)] text-[#1a1205] py-4 rounded-xl font-bold text-lg hover:brightness-110 shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="flex-1 bg-[var(--accent)] text-[#1a1205] py-4 rounded-xl font-bold text-lg hover:brightness-110 shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
                 >
                     {loading ? <Loader2 className="animate-spin" /> : <Plus size={20} />}
-                    {loading ? "Creating..." : "Create Auction"}
+                    {loading ? "Creating Listing..." : "Create Auction"}
                 </button>
                 <button 
                     type="button" 
@@ -335,7 +328,7 @@ export default function CreateAuction() {
       <ImageUploadModal 
         isOpen={isUploadModalOpen} 
         onClose={() => setIsUploadModalOpen(false)} 
-        onUpload={handleImageUpload}
+        onUploadSuccess={handleImageSuccess} // Truyền prop callback
         title="Upload Product Image"
       />
     </div>
