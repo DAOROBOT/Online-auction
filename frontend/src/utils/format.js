@@ -10,15 +10,18 @@ export const formatCurrency = (amount) => {
 /**
  * Format the ending date
  * @param {string|Date} date - The auction end time (ISO string or Date object)
+ * @param {boolean} includeTime - Whether to include time
  * @returns {string} Formatted date string
  */
-export const formatDate = (date) => {
+export const formatDate = (date, includeTime = false) => {
   if (!date) return 'Unknown';
-  return new Date(date).toLocaleDateString('en-US', { 
+  const options = { 
     month: 'short', 
     day: 'numeric', 
-    year: 'numeric' 
-  });
+    year: 'numeric',
+    ...(includeTime && { hour: '2-digit', minute: '2-digit' })
+  };
+  return new Date(date).toLocaleDateString('en-US', options);
 };
 
 /**

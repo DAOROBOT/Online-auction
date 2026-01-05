@@ -10,8 +10,9 @@ import categoryRoute from "./routes/category.js"
 import searchRoute from "./routes/search.js";
 import sellerRequestRoute from "./routes/sellerRequest.js"
 import userRoute from "./routes/user.js"
-import error_handler from "./middleware/error_handler.js";
 import not_found from "./middleware/not_found.js";
+import error_handler from "./middleware/error_handler.js";
+
 
 
 // import productRoute from "./routes/product.routes.js";
