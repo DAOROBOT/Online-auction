@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { UploadCloud, X, Check, Loader2 } from 'lucide-react';
 import { auctionService } from '../services/auctionService';
 
-export default function ImageUploadModal({ isOpen, onClose, onUploadSuccess, title = "Upload Image" }) {
+export default function ImageUploadModal({ isOpen, onClose, onUpload, title = "Upload Image" }) {
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -67,11 +67,10 @@ export default function ImageUploadModal({ isOpen, onClose, onUploadSuccess, tit
     
     setIsUploading(true);
     try {
-        //Gọi Service upload
-        const data = await auctionService.uploadImage(selectedFile);
-        
-        // Trả URL về (quan trọng để lưu vào form tạo đấu giá)
-        onUploadSuccess(data.url); 
+        // Mỗi component có cách xử lý ảnh khác nhau => sử dụng hàm onUpload riêng cho từng component thay vì dùng service upload
+        // Profile Sidebar upload 1 ảnh duy nhất nên khi modal được submit, ảnh sẽ được gửi cho backend ngay lập tức.
+        // Create Auction upload nhiều ảnh nên khi modal được submit, ảnh sẽ được lưu ở frontend tới khi toàn bộ form được gửi.
+        onUpload(selectedFile); 
         onClose();
     } catch (error) {
         console.error(error);
@@ -87,12 +86,12 @@ export default function ImageUploadModal({ isOpen, onClose, onUploadSuccess, tit
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={onClose} />
       
       {/* Modal Content */}
-      <div className="relative w-full max-w-md bg-[var(--bg-soft)] rounded-2xl shadow-2xl border border-[var(--border)] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-md bg-(--bg-soft) rounded-2xl shadow-2xl border border-(--border) overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         
         {/* Header */}
-        <div className="p-4 border-b border-[var(--border)] flex justify-between items-center">
+        <div className="p-4 border-b border-(--border) flex justify-between items-center">
             <h3 className="font-bold text-lg">{title}</h3>
-            <button onClick={onClose} disabled={isUploading} className="p-1 hover:bg-[var(--bg-hover)] rounded-full transition-colors disabled:opacity-50">
+            <button onClick={onClose} disabled={isUploading} className="p-1 hover:bg-(--bg-hover) rounded-full transition-colors disabled:opacity-50">
                 <X size={20} />
             </button>
         </div>
@@ -102,20 +101,20 @@ export default function ImageUploadModal({ isOpen, onClose, onUploadSuccess, tit
             {!preview ? (
                 <div 
                     className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center transition-colors cursor-pointer
-                        ${dragActive ? 'border-[var(--accent)] bg-[var(--accent)]/5' : 'border-[var(--border)] hover:bg-[var(--bg-hover)]'}
+                        ${dragActive ? 'border-(--accent) bg-(--accent)/5' : 'border-(--border) hover:bg-(--bg-hover)'}
                     `}
                     onDragEnter={handleDrag} onDragLeave={handleDrag} onDragOver={handleDrag} onDrop={handleDrop}
                     onClick={() => inputRef.current?.click()}
                 >
                     <input ref={inputRef} type="file" className="hidden" accept="image/*" onChange={handleChange} />
-                    <div className="w-16 h-16 rounded-full bg-[var(--bg-subtle)] flex items-center justify-center mb-4">
-                        <UploadCloud size={32} className="text-[var(--text-muted)]" />
+                    <div className="w-16 h-16 rounded-full bg-(--bg-subtle) flex items-center justify-center mb-4">
+                        <UploadCloud size={32} className="text-(--text-muted)" />
                     </div>
                     <p className="font-medium mb-1">Click to upload or drag and drop</p>
-                    <p className="text-xs text-[var(--text-muted)]">SVG, PNG, JPG or GIF (max 5MB)</p>
+                    <p className="text-xs text-(--text-muted)">SVG, PNG, JPG or GIF (max 5MB)</p>
                 </div>
             ) : (
-                <div className="relative rounded-xl overflow-hidden border border-[var(--border)]">
+                <div className="relative rounded-xl overflow-hidden border border-(--border)">
                     <img src={preview} alt="Preview" className="w-full h-64 object-cover" />
                     <button 
                         onClick={() => { setPreview(null); setSelectedFile(null); }}
@@ -136,12 +135,12 @@ export default function ImageUploadModal({ isOpen, onClose, onUploadSuccess, tit
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-[var(--bg-subtle)] border-t border-[var(--border)] flex justify-end gap-3">
-          <button onClick={onClose} disabled={isUploading} className="px-4 py-2 rounded-lg font-medium text-sm hover:bg-[var(--bg-hover)] disabled:opacity-50">Cancel</button>
+        <div className="p-4 bg-(--bg-subtle) border-t border-(--border) flex justify-end gap-3">
+          <button onClick={onClose} disabled={isUploading} className="px-4 py-2 rounded-lg font-medium text-sm hover:bg-(--bg-hover) disabled:opacity-50">Cancel</button>
           <button 
             onClick={handleSubmit}
             disabled={!selectedFile || isUploading}
-            className="px-6 py-2 rounded-lg font-bold text-sm bg-[var(--accent)] text-[#1a1205] hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-6 py-2 rounded-lg font-bold text-sm bg-(--accent) text-[#1a1205] hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {isUploading ? 'Uploading...' : <><Check size={16} /> Confirm Upload</>}
           </button>

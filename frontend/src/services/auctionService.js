@@ -26,23 +26,25 @@ export const auctionService = {
         const error = await res.json();
         throw new Error(error.message || 'Image upload failed');
     }
-    return res.json(); // Trả về { url: "..." }
+    return res.json();
   },
 
   // Tạo đấu giá mới
   create: async (auctionData) => {
     const token = localStorage.getItem('authToken');
-    const res = await fetch(`${API_URL}/auction`, {
+    const response = await fetch(`${API_URL}/auction`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify(auctionData)
+      body: auctionData,
     });
     
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || 'Failed to create auction');
-    return data;
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to create auction');
+    }
+
+    return response.json();
   }
 };

@@ -20,14 +20,14 @@ export default function CreateAuction() {
   // Form State
   const [formData, setFormData] = useState({ 
     title: "", 
-    description: "", // HTML content từ RichTextEditor
+    description: "",
     startingPrice: "", 
     stepPrice: "",
     buyNowPrice: "",
     categoryId: "", 
-    images: [], // Mảng URL ảnh (Backend cần mảng này)
     endTime: "",
-    autoExtend: true // Mặc định true (Yêu cầu nâng cao)
+    autoExtend: true,
+    images: [],
   });
 
   // 1. Load danh mục khi vào trang
@@ -44,11 +44,12 @@ export default function CreateAuction() {
     loadCategories();
   }, []);
 
-  // 2. Xử lý khi Upload ảnh thành công (Nhận URL từ Modal)
-  const handleImageSuccess = (url) => {
-    setFormData(prev => ({
-        ...prev,
-        images: [...prev.images, url]
+  const handleUploadImage = (file) => {
+    const preview = URL.createObjectURL(file);
+    console.log(file, preview);
+    setFormData(prev => ({ 
+      ...prev, 
+      images: [...prev.images, { file, preview }] 
     }));
   };
 
@@ -93,22 +94,22 @@ export default function CreateAuction() {
     setLoading(true);
 
     try {
-        // Chuẩn bị payload gửi về Backend
-        const payload = {
-            ...formData,
-            startingPrice: Number(formData.startingPrice),
-            stepPrice: Number(formData.stepPrice),
-            buyNowPrice: formData.buyNowPrice ? Number(formData.buyNowPrice) : null,
-            categoryId: Number(formData.categoryId), // Convert sang số
-            // endTime đã là string dạng datetime-local
-            // Ở đây cứ gửi string ISO cho an toàn
-            endTime: new Date(formData.endTime).toISOString()
-        };
+        const payload = new FormData();
+        payload.append('title', formData.title);
+        payload.append('description', formData.description);
+        payload.append('categoryId', formData.categoryId);
+        payload.append('startingPrice', formData.startingPrice);
+        payload.append('stepPrice', formData.stepPrice);
+        payload.append('buyNowPrice', formData.buyNowPrice || "");
+        payload.append('endTime', formData.endTime);
+        payload.append('autoExtend', formData.autoExtend);
 
-        // Gọi API
+        formData.images.forEach((image) => {
+            payload.append('images', image.file);
+        });
+
         await auctionService.create(payload);
 
-        // Thành công -> Về trang chủ
         nav.home();
         
     } catch (err) {
@@ -121,16 +122,16 @@ export default function CreateAuction() {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-12 px-4 bg-[var(--bg)] text-[var(--text)] transition-colors duration-300">
+    <div className="min-h-screen pt-24 pb-12 px-4 bg-(--bg) text-(--text) transition-colors duration-300">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
-          <button onClick={() => nav.back()} className="p-2 rounded-full hover:bg-[var(--bg-hover)]">
+          <button onClick={() => nav.back()} className="p-2 rounded-full hover:bg-(--bg-hover)">
             <ArrowLeft size={24} />
           </button>
           <div>
             <h1 className="text-3xl font-bold">Create New Auction</h1>
-            <p className="text-[var(--text-muted)]">List your item for thousands of bidders</p>
+            <p className="text-(--text-muted)">List your item for thousands of bidders</p>
           </div>
         </div>
 
@@ -144,19 +145,19 @@ export default function CreateAuction() {
         <form onSubmit={handleSubmit} className="space-y-8">
             
             {/* 1. SECTION: IMAGES (Yêu cầu đồ án: Nhiều ảnh) */}
-            <div className="p-6 rounded-2xl border border-[var(--border)] bg-[var(--bg-soft)]">
+            <div className="p-6 rounded-2xl border border-(--border) bg-(--bg-soft)">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-xl font-bold">Product Images</h3>
-                    <span className={`text-xs px-2 py-1 rounded ${formData.images.length >= 3 ? 'bg-green-100 text-green-700' : 'bg-[var(--bg-subtle)] text-[var(--text-muted)]'}`}>
+                    <span className={`text-xs px-2 py-1 rounded ${formData.images.length >= 3 ? 'bg-green-100 text-green-700' : 'bg-(--bg-subtle) text-(--text-muted)'}`}>
                         {formData.images.length}/3 Required
                     </span>
                 </div>
                 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {/* Danh sách ảnh đã upload */}
-                    {formData.images.map((url, idx) => (
-                        <div key={idx} className="relative aspect-square rounded-xl overflow-hidden group border border-[var(--border)]">
-                            <img src={url} alt={`Upload ${idx}`} className="w-full h-full object-cover" />
+                    {formData.images.map((image, idx) => (
+                        <div key={idx} className="relative aspect-square rounded-xl overflow-hidden group border border-(--border)">
+                            <img src={image.preview} alt={`Upload ${idx}`} className="w-full h-full object-cover" />
                             <button 
                                 type="button"
                                 onClick={() => handleRemoveImage(idx)}
@@ -176,7 +177,7 @@ export default function CreateAuction() {
                     <button
                         type="button"
                         onClick={() => setIsUploadModalOpen(true)}
-                        className="aspect-square rounded-xl border-2 border-dashed border-[var(--border)] flex flex-col items-center justify-center gap-2 hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors"
+                        className="aspect-square rounded-xl border-2 border-dashed border-(--border) flex flex-col items-center justify-center gap-2 hover:border-(--accent) hover:text-(--accent) transition-colors"
                     >
                         <Upload size={24} />
                         <span className="text-sm font-medium">Add Photo</span>
@@ -185,7 +186,7 @@ export default function CreateAuction() {
             </div>
 
             {/* 2. SECTION: BASIC INFO */}
-            <div className="p-6 rounded-2xl border border-[var(--border)] bg-[var(--bg-soft)] space-y-6">
+            <div className="p-6 rounded-2xl border border-(--border) bg-(--bg-soft) space-y-6">
                 <h3 className="text-xl font-bold">Item Details</h3>
                 
                 {/* Title */}
@@ -194,7 +195,7 @@ export default function CreateAuction() {
                     <input 
                         type="text" 
                         required
-                        className="w-full px-4 py-3 rounded-lg bg-[var(--input-bg)] border border-[var(--border)] focus:ring-2 focus:ring-[var(--accent)] outline-none"
+                        className="w-full px-4 py-3 rounded-lg bg-(--input-bg) border border-(--border) focus:ring-2 focus:ring-(--accent) outline-none"
                         placeholder="e.g. Vintage Rolex Submariner 1980"
                         value={formData.title}
                         onChange={e => setFormData({...formData, title: e.target.value})}
@@ -206,7 +207,7 @@ export default function CreateAuction() {
                     <label className="block text-sm font-medium mb-2">Category</label>
                     <select 
                         required
-                        className="w-full px-4 py-3 rounded-lg bg-[var(--input-bg)] border border-[var(--border)] focus:ring-2 focus:ring-[var(--accent)] outline-none"
+                        className="w-full px-4 py-3 rounded-lg bg-(--input-bg) border border-(--border) focus:ring-2 focus:ring-(--accent) outline-none"
                         value={formData.categoryId}
                         onChange={(e) => setFormData({...formData, categoryId: e.target.value})}
                     >
@@ -239,7 +240,7 @@ export default function CreateAuction() {
             </div>
 
             {/* 3. SECTION: PRICING & TIMING */}
-            <div className="p-6 rounded-2xl border border-[var(--border)] bg-[var(--bg-soft)] space-y-6">
+            <div className="p-6 rounded-2xl border border-(--border) bg-(--bg-soft) space-y-6">
                 <h3 className="text-xl font-bold">Settings</h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -247,7 +248,7 @@ export default function CreateAuction() {
                         <label className="block text-sm font-medium mb-2">Starting Price (VND)</label>
                         <input 
                             type="number" required min="0"
-                            className="w-full px-4 py-3 rounded-lg bg-[var(--input-bg)] border border-[var(--border)]"
+                            className="w-full px-4 py-3 rounded-lg bg-(--input-bg) border border-(--border)"
                             value={formData.startingPrice}
                             onChange={e => setFormData({...formData, startingPrice: e.target.value})}
                         />
@@ -256,7 +257,7 @@ export default function CreateAuction() {
                         <label className="block text-sm font-medium mb-2">Step Price (VND)</label>
                         <input 
                             type="number" required min="1"
-                            className="w-full px-4 py-3 rounded-lg bg-[var(--input-bg)] border border-[var(--border)]"
+                            className="w-full px-4 py-3 rounded-lg bg-(--input-bg) border border-(--border)"
                             value={formData.stepPrice}
                             onChange={e => setFormData({...formData, stepPrice: e.target.value})}
                         />
@@ -265,7 +266,7 @@ export default function CreateAuction() {
                         <label className="block text-sm font-medium mb-2">Buy Now Price (Optional)</label>
                         <input 
                             type="number" min="0"
-                            className="w-full px-4 py-3 rounded-lg bg-[var(--input-bg)] border border-[var(--border)]"
+                            className="w-full px-4 py-3 rounded-lg bg-(--input-bg border border-(--border)"
                             value={formData.buyNowPrice}
                             onChange={e => setFormData({...formData, buyNowPrice: e.target.value})}
                         />
@@ -277,24 +278,24 @@ export default function CreateAuction() {
                         <label className="block text-sm font-medium mb-2">End Date & Time</label>
                         <input 
                             type="datetime-local" required
-                            className="w-full px-4 py-3 rounded-lg bg-[var(--input-bg)] border border-[var(--border)] [color-scheme:dark]"
+                            className="w-full px-4 py-3 rounded-lg bg-(--input-bg) border border-(--border) scheme-dark"
                             value={formData.endTime}
                             onChange={e => setFormData({...formData, endTime: e.target.value})}
                         />
                     </div>
                     
                     {/* Auto Extend Toggle*/}
-                    <div className="flex items-center gap-3 p-3 rounded-lg border border-[var(--border)] bg-[var(--bg)]">
+                    <div className="flex items-center gap-3 p-3 rounded-lg border border-(--border) bg-(--bg)">
                         <input 
                             type="checkbox" 
                             id="autoExtend"
-                            className="w-5 h-5 accent-[var(--accent)]"
+                            className="w-5 h-5 accent-(--accent)"
                             checked={formData.autoExtend}
                             onChange={e => setFormData({...formData, autoExtend: e.target.checked})}
                         />
                         <label htmlFor="autoExtend" className="text-sm font-medium cursor-pointer select-none">
                             Enable Auto-Extend
-                            <span className="block text-xs text-[var(--text-muted)] font-normal">
+                            <span className="block text-xs text-(--text-muted) font-normal">
                                 Extends 5 mins if bid placed in last 5 mins
                             </span>
                         </label>
@@ -307,7 +308,7 @@ export default function CreateAuction() {
                 <button 
                     type="submit" 
                     disabled={loading}
-                    className="flex-1 bg-[var(--accent)] text-[#1a1205] py-4 rounded-xl font-bold text-lg hover:brightness-110 shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
+                    className="flex-1 bg-(--accent) text-[#1a1205] py-4 rounded-xl font-bold text-lg hover:brightness-110 shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
                 >
                     {loading ? <Loader2 className="animate-spin" /> : <Plus size={20} />}
                     {loading ? "Creating Listing..." : "Create Auction"}
@@ -316,7 +317,7 @@ export default function CreateAuction() {
                     type="button" 
                     onClick={() => nav.back()} 
                     disabled={loading}
-                    className="flex-1 border border-[var(--border)] rounded-xl text-[var(--text)] font-semibold py-4 transition hover:bg-[var(--bg-hover)]"
+                    className="flex-1 border border-(--border) rounded-xl text-(--text) font-semibold py-4 transition hover:bg-(--bg-hover)"
                 >
                     Cancel
                 </button>
@@ -328,7 +329,7 @@ export default function CreateAuction() {
       <ImageUploadModal 
         isOpen={isUploadModalOpen} 
         onClose={() => setIsUploadModalOpen(false)} 
-        onUploadSuccess={handleImageSuccess} // Truyền prop callback
+        onUpload={handleUploadImage}
         title="Upload Product Image"
       />
     </div>

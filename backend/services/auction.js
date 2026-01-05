@@ -41,27 +41,25 @@ const service = {
     },
 
     // Tạo đấu giá mới (Có Transaction để lưu ảnh an toàn)
-    create: async function(auctionData){
-        // 1. Tách danh sách ảnh ra
-        const { images, ...mainInfo } = auctionData;
+    create: async function(info, images){
+        // Chuẩn hóa dữ liệu ngày tháng
+        info.createdAt = new Date();
+        info.endTime = new Date(info.endTime);
+        info.status = 'active';
+        info.bidCount = 0;
 
-        // 2. Chuẩn hóa dữ liệu ngày tháng
-        mainInfo.createdAt = new Date();
-        mainInfo.endTime = new Date(mainInfo.endTime);
-        mainInfo.status = 'active';
-        mainInfo.bidCount = 0;
-
-        // 3. Thực hiện Transaction (Tạo Auction -> Tạo Images)
+        // Thực hiện Transaction (Tạo Auction -> Tạo Images)
         return await db.transaction(async (tx) => {
             // Insert bảng auctions
-            const [newAuction] = await tx.insert(auctions).values(mainInfo).returning();
+            const [newAuction] = await tx.insert(auctions).values(info).returning();
 
             // Insert bảng auction_images (nếu có ảnh)
             if (images && images.length > 0) {
-                const imageValues = images.map((url, index) => ({
+                console.log(images);
+                const imageValues = images.map((image, index) => ({
                     auctionId: newAuction.id,
-                    imageUrl: url,
-                    isPrimary: index === 0 // Ảnh đầu tiên là ảnh chính
+                    imageUrl: image.path,
+                    isPrimary: index === 0
                 }));
                 await tx.insert(auctionImages).values(imageValues);
             }

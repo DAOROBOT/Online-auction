@@ -29,9 +29,10 @@ const controller = {
     },
 
     // POST /auctions
-    createAuction: async function(req, res, next) {
+    create: async function(req, res, next) {
         try {
-            const { title, startingPrice, stepPrice, buyNowPrice, endTime, categoryId, description, autoExtend, images } = req.body;
+            const { title, startingPrice, stepPrice, buyNowPrice, endTime, categoryId, description, autoExtend } = req.body;
+            const images = req.files;
 
             // 1. Validate dữ liệu đầu vào
             if (!title || !startingPrice || !stepPrice || !endTime || !categoryId) {
@@ -51,7 +52,7 @@ const controller = {
             }
 
             // 2. Chuẩn bị dữ liệu để lưu
-            const auctionData = {
+            const info = {
                 sellerId: req.user.id, // Lấy ID người đang đăng nhập
                 categoryId: Number(categoryId),
                 title,
@@ -62,34 +63,18 @@ const controller = {
                 buyNowPrice: buyNowPrice ? Number(buyNowPrice) : null,
                 endTime,
                 autoExtend: autoExtend || false,
-                images,
             };
 
             // 3. Gọi Service
-            const auction = await auctionService.create(auctionData);
+            const auction = await auctionService.create(info, images);
 
             if (!auction) {
                 throw new Error('Failed to insert auction record.');
             }
 
-            // const files = req.files;
-
-            // if (!files || files.length === 0) {
-            //     return res.status(400).json({ error: 'At least one image is required.' });
-            // }
-
-            // const imagesData = files.map((file, index) => ({
-            //     auction_id: auction.auction_id,
-            //     image_url: file.path,
-            //     is_primary: index === 0
-            // }));
-
-            // const insertedImages = auctionService.upload(imagesData);
-
             return res.status(201).json({
                 message: 'Auction created successfully!',
                 auction: auction,
-                // images: insertedImages
             });
 
         } catch (error) {

@@ -15,7 +15,7 @@ cloudinary.config({
 const productStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'Aurum/auctions', // Specific folder for products
+    folder: 'Aurum/auctions',
     allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
     transformation: [{ width: 1000, height: 1000, crop: 'limit' }] // Keep original aspect ratio, max 1000px
   },

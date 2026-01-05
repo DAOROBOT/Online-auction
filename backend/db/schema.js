@@ -37,7 +37,7 @@ export const categories = pgTable('categories', {
   description: text('description'),
 });
 
-// --- 3. AUCTIONS TABLE (Đã sửa theo CSV) ---
+// --- 3. AUCTIONS TABLE ---
 export const auctions = pgTable('auctions', {
   id: serial('auction_id').primaryKey(), // Map 'id' -> 'auction_id'
   sellerId: integer('seller_id').references(() => users.id).notNull(),
@@ -52,7 +52,6 @@ export const auctions = pgTable('auctions', {
   buyNowPrice: decimal('buy_now_price', { precision: 15, scale: 0 }),
   
   status: auctionStatusEnum('status').default('active'),
-  // LƯU Ý: Đã bỏ startTime vì trong CSV không có, chỉ dùng createdAt
   endTime: timestamp('end_time', { withTimezone: true }).notNull(),
   
   winnerId: integer('winner_id').references(() => users.id),
