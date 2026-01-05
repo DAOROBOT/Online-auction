@@ -3,6 +3,8 @@ import { useLocation, Link } from 'react-router-dom';
 import { useNav } from '../../hooks/useNavigate';
 import { useAuth } from '../../contexts/AuthContext';
 import ReCAPTCHA from 'react-google-recaptcha';
+import { registerSchema } from '../../schemas/auth.schemas';
+import { validateForm } from '../../utils/validation';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -23,15 +25,15 @@ export default function Register() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        // 1. Validation
-        if (formData.password !== formData.confirmPassword) {
-            return setError("Passwords do not match");
-        }
-        if (formData.password.length < 6) {
-            return setError("Password must be at least 6 characters");
-        }
-        if (!recaptchaToken) {
-            return setError("Please verify you are human using reCAPTCHA");
+        // Zod Validation
+        const validation = validateForm(registerSchema, {
+            ...formData,
+            recaptchaToken: recaptchaToken || ''
+        });
+
+        if (!validation.success) {
+            setError(validation.message);
+            return;
         }
 
         setError('');
@@ -188,14 +190,15 @@ export default function Register() {
                 </div>
 
                 {/* reCAPTCHA */}
-                <div className="flex justify-center">
-                    <ReCAPTCHA
-                        sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'}
-                        onChange={(token) => {setRecaptchaToken(token); console.log("reCAPTCHA token:", token);}}
-                        onExpired={() => setRecaptchaToken(null)}
-                        theme="light"
-                    />
-                    
+                <div className="space-y-2">
+                    <div className="flex justify-center">
+                        <ReCAPTCHA
+                            sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'}
+                            onChange={(token) => {setRecaptchaToken(token); console.log("reCAPTCHA token:", token);}}
+                            onExpired={() => setRecaptchaToken(null)}
+                            theme="light"
+                        />
+                    </div>
                 </div>
 
                 {/* Register Button */}

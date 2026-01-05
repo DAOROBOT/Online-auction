@@ -3,6 +3,10 @@ import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import orderService from '../../services/orderService';
 import { formatCurrency, formatDate, formatTimeAgo } from '../../utils/format';
+import ImageUploadModal from '../../components/ImageUploadModal';
+import { auctionService } from '../../services/auctionService';
+import { paymentFormSchema, confirmPaymentSchema, reviewFormSchema, cancelOrderSchema, chatMessageSchema } from '../../schemas/order.schemas';
+import { validateForm } from '../../utils/validation';
 
 // Status step mapping
 const STATUS_STEPS = {
@@ -58,12 +62,15 @@ export default function OrderCompletion() {
 
   const [submitting, setSubmitting] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [imageUploadType, setImageUploadType] = useState(null); // 'payment' or 'shipping'
 
   // Determine user role
-  const isSeller = user?.id === order?.sellerId;
-  const isBuyer = user?.id === order?.buyerId;
+  const isSeller = user?.userId === order?.sellerId;
+  const isBuyer = user?.userId === order?.buyerId;
+  console.log("Seller id:", order?.sellerId, "Buyer id:", order?.buyerId, "User id:", user?.userId);
   const isParticipant = isSeller || isBuyer;
-
+  console.log("Is participant:", isParticipant);
   useEffect(() => {
     loadData();
   }, [auctionId]);
@@ -87,17 +94,21 @@ export default function OrderCompletion() {
       setLoading(true);
       const orderData = await orderService.getByAuctionId(auctionId);
       console.log('Order Data:', orderData);
-      // orderData.order contains { order, auction, buyer, seller }
-      const orderDetails = orderData.order;
-      if (orderDetails) {
-        // Flatten the structure for easier access
-        setOrder({
-          ...orderDetails.order,
-          auction: orderDetails.auction,
-          buyer: orderDetails.buyer,
-          seller: orderDetails.seller,
-        });
-        setAuction(orderDetails.auction);
+      console.log('Order object:', orderData.order);
+      // The backend returns order with nested structure from getOrderWithDetails
+      // It spreads { order: {...}, auction: {...}, buyer: {...}, seller: {...} }
+      if (orderData.order) {
+        // Need to flatten the structure properly
+        const flattenedOrder = {
+          ...orderData.order.order, // The actual order data
+          auction: orderData.order.auction,
+          buyer: orderData.order.buyer,
+          seller: orderData.order.seller,
+          buyerReviewSubmitted: orderData.order.buyerReviewSubmitted,
+          sellerReviewSubmitted: orderData.order.sellerReviewSubmitted,
+        };
+        setOrder(flattenedOrder);
+        setAuction(orderData.order.auction);
       }
     } catch (err) {
       setError(err.message);
@@ -117,15 +128,23 @@ export default function OrderCompletion() {
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || sendingMessage) return;
+    if (sendingMessage) return;
+
+    // Validate message
+    const validation = validateForm(chatMessageSchema, { message: newMessage });
+    if (!validation.success) {
+      alert(validation.message);
+      return;
+    }
 
     try {
       setSendingMessage(true);
-      await orderService.sendMessage(order.id, newMessage.trim());
+      await orderService.sendMessage(order.id, validation.data.message);
       setNewMessage('');
       await loadMessages();
     } catch (err) {
       console.error('Error sending message:', err);
+      alert(err.message || 'Failed to send message');
     } finally {
       setSendingMessage(false);
     }
@@ -135,9 +154,16 @@ export default function OrderCompletion() {
     e.preventDefault();
     if (submitting) return;
 
+    // Validate payment form
+    const validation = validateForm(paymentFormSchema, paymentForm);
+    if (!validation.success) {
+      alert(validation.message);
+      return;
+    }
+
     try {
       setSubmitting(true);
-      const result = await orderService.submitPayment(order.id, paymentForm);
+      const result = await orderService.submitPayment(order.id, validation.data);
       setOrder(result.order);
     } catch (err) {
       alert(err.message);
@@ -150,9 +176,16 @@ export default function OrderCompletion() {
     e.preventDefault();
     if (submitting) return;
 
+    // Validate confirm payment form
+    const validation = validateForm(confirmPaymentSchema, confirmForm);
+    if (!validation.success) {
+      alert(validation.message);
+      return;
+    }
+
     try {
       setSubmitting(true);
-      const result = await orderService.confirmPayment(order.id, confirmForm);
+      const result = await orderService.confirmPayment(order.id, validation.data);
       setOrder(result.order);
     } catch (err) {
       alert(err.message);
@@ -181,10 +214,19 @@ export default function OrderCompletion() {
     e.preventDefault();
     if (submitting) return;
 
+    // Validate review form
+    const validation = validateForm(reviewFormSchema, reviewForm);
+    if (!validation.success) {
+      alert(validation.message);
+      return;
+    }
+
     try {
       setSubmitting(true);
-      const result = await orderService.submitReview(order.id, reviewForm);
-      setOrder(result.order);
+      const result = await orderService.submitReview(order.id, validation.data);
+      
+      // Reload the full order data to get updated status
+      await loadData();
     } catch (err) {
       alert(err.message);
     } finally {
@@ -192,13 +234,42 @@ export default function OrderCompletion() {
     }
   };
 
+  const handleImageUpload = async (file) => {
+    try {
+      const result = await auctionService.uploadImage(file);
+      const imageUrl = result.url;
+
+      if (imageUploadType === 'payment') {
+        setPaymentForm({ ...paymentForm, paymentProofUrl: imageUrl });
+      } else if (imageUploadType === 'shipping') {
+        setConfirmForm({ ...confirmForm, shippingProofUrl: imageUrl });
+      }
+    } catch (error) {
+      console.error('Image upload error:', error);
+      alert('Failed to upload image: ' + error.message);
+      throw error;
+    }
+  };
+
+  const openImageUpload = (type) => {
+    setImageUploadType(type);
+    setShowImageModal(true);
+  };
+
   const handleCancelOrder = async (e) => {
     e.preventDefault();
     if (submitting) return;
 
+    // Validate cancel form
+    const validation = validateForm(cancelOrderSchema, cancelForm);
+    if (!validation.success) {
+      alert(validation.message);
+      return;
+    }
+
     try {
       setSubmitting(true);
-      const result = await orderService.cancelOrder(order.id, cancelForm);
+      const result = await orderService.cancelOrder(order.id, validation.data);
       setOrder(result.order);
       setShowCancelModal(false);
     } catch (err) {
@@ -244,7 +315,7 @@ export default function OrderCompletion() {
     );
   }
 
-  if (!isParticipant) {
+  if (!loading && !isParticipant && order) {
     return (
       <div className="min-h-screen py-8" style={{ backgroundColor: 'var(--bg)' }}>
         <div className="max-w-4xl mx-auto px-4">
@@ -332,7 +403,7 @@ export default function OrderCompletion() {
                   <div key={label} className="flex-1 relative">
                     <div className="flex flex-col items-center">
                       <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-colors ${
+                        className={`w-10 h-10 z-20 rounded-full flex items-center justify-center font-semibold transition-colors ${
                           isCompleted
                             ? 'bg-green-500 text-white'
                             : isCurrent
@@ -341,7 +412,7 @@ export default function OrderCompletion() {
                         }`}
                       >
                         {isCompleted ? (
-                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-5 h-5 z-20" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
                         ) : (
@@ -354,7 +425,7 @@ export default function OrderCompletion() {
                     </div>
                     {index < STEP_LABELS.length - 1 && (
                       <div
-                        className={`absolute top-5 left-1/2 w-full h-0.5 ${
+                        className={`absolute top-5 left-1/2 w-full h-0.5 z-10 ${
                           stepNum < currentStep ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-700'
                         }`}
                       />
@@ -399,16 +470,42 @@ export default function OrderCompletion() {
                 <form onSubmit={handleSubmitPayment} className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-(--text) mb-2">
-                      Payment Proof (Receipt/Screenshot URL)
+                      Payment Proof (Receipt/Screenshot)
                     </label>
-                    <input
-                      type="url"
-                      value={paymentForm.paymentProofUrl}
-                      onChange={(e) => setPaymentForm({ ...paymentForm, paymentProofUrl: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl border border-(--border) bg-(--input-bg) text-(--text) focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="https://example.com/receipt.png"
-                      required
-                    />
+                    {paymentForm.paymentProofUrl ? (
+                      <div className="space-y-2">
+                        <div className="relative rounded-xl overflow-hidden border border-(--border)">
+                          <img src={paymentForm.paymentProofUrl} alt="Payment proof" className="w-full h-48 object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => setPaymentForm({ ...paymentForm, paymentProofUrl: '' })}
+                            className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => openImageUpload('payment')}
+                          className="w-full px-4 py-2 border border-(--border) text-(--text) rounded-xl hover:bg-(--hover) transition"
+                        >
+                          Change Image
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => openImageUpload('payment')}
+                        className="w-full px-4 py-3 rounded-xl border-2 border-dashed border-(--border) text-(--text-muted) hover:border-(--accent) hover:bg-(--accent)/5 transition flex items-center justify-center gap-2"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Upload Payment Proof
+                      </button>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-(--text) mb-2">
@@ -503,16 +600,42 @@ export default function OrderCompletion() {
                 <form onSubmit={handleConfirmPayment} className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-(--text) mb-2">
-                      Shipping Invoice URL
+                      Shipping Invoice
                     </label>
-                    <input
-                      type="url"
-                      value={confirmForm.shippingProofUrl}
-                      onChange={(e) => setConfirmForm({ ...confirmForm, shippingProofUrl: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl border border-(--border) bg-(--input-bg) text-(--text) focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="https://example.com/shipping-invoice.png"
-                      required
-                    />
+                    {confirmForm.shippingProofUrl ? (
+                      <div className="space-y-2">
+                        <div className="relative rounded-xl overflow-hidden border border-(--border)">
+                          <img src={confirmForm.shippingProofUrl} alt="Shipping proof" className="w-full h-48 object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => setConfirmForm({ ...confirmForm, shippingProofUrl: '' })}
+                            className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => openImageUpload('shipping')}
+                          className="w-full px-4 py-2 border border-(--border) text-(--text) rounded-xl hover:bg-(--hover) transition"
+                        >
+                          Change Image
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => openImageUpload('shipping')}
+                        className="w-full px-4 py-3 rounded-xl border-2 border-dashed border-(--border) text-(--text-muted) hover:border-(--accent) hover:bg-(--accent)/5 transition flex items-center justify-center gap-2"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Upload Shipping Invoice
+                      </button>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-(--text) mb-2">
@@ -626,18 +749,39 @@ export default function OrderCompletion() {
                   {order?.status === 'completed' ? 'Transaction Completed' : 'Leave a Review'}
                 </h2>
 
-                {order?.status === 'completed' && (
-                  <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 mb-4">
-                    <div className="flex items-center gap-3 text-green-600">
-                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      <p>This transaction has been completed successfully!</p>
+                {order?.status === 'completed' ? (
+                  <div className="text-center py-8">
+                    <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-6 mb-6">
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center">
+                          <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-green-700 dark:text-green-400 mb-2">
+                            Order Completed!
+                          </h3>
+                          <p className="text-green-600 dark:text-green-300">
+                            This transaction has been completed successfully!
+                          </p>
+                          <p className="text-sm text-(--text-muted) mt-2">
+                            Both parties have submitted their reviews.
+                          </p>
+                        </div>
+                      </div>
                     </div>
+                    <Link
+                      to="/"
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                      </svg>
+                      Go to Homepage
+                    </Link>
                   </div>
-                )}
-
-                {canUserReview() ? (
+                ) : canUserReview() ? (
                   <form onSubmit={handleSubmitReview} className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-(--text) mb-3">
@@ -692,15 +836,19 @@ export default function OrderCompletion() {
                   </form>
                 ) : hasUserReviewed() ? (
                   <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4">
-                    <p className="text-(--text-muted)">
-                      You have already submitted your review. You can update it anytime.
+                    <div className="flex items-center gap-2 mb-3">
+                      <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      <p className="font-medium text-(--text)">
+                        You have submitted your review
+                      </p>
+                    </div>
+                    <p className="text-(--text-muted) text-sm">
+                      {order?.status === 'pending_review' 
+                        ? 'Waiting for the other party to complete their review.'
+                        : 'Thank you for your feedback!'}
                     </p>
-                    <button
-                      onClick={() => {/* Load existing review into form */}}
-                      className="mt-3 text-blue-500 hover:underline text-sm"
-                    >
-                      Edit your review
-                    </button>
                   </div>
                 ) : (
                   <div className="flex items-center gap-3 text-yellow-600">
@@ -728,25 +876,54 @@ export default function OrderCompletion() {
                     No messages yet. Start a conversation!
                   </p>
                 ) : (
-                  messages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`flex ${msg.senderId === user?.id ? 'justify-end' : 'justify-start'}`}
-                    >
+                  messages.map((msg) => {
+                    const isCurrentUser = msg.senderId === user?.userId;
+                    return (
                       <div
-                        className={`max-w-[80%] rounded-2xl px-4 py-2 ${
-                          msg.senderId === user?.id
-                            ? 'bg-blue-500 text-white rounded-br-sm'
-                            : 'bg-gray-100 dark:bg-gray-700 text-(--text) rounded-bl-sm'
-                        }`}
+                        key={msg.id}
+                        className={`flex gap-2 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
                       >
-                        <p className="text-sm">{msg.message}</p>
-                        <p className={`text-xs mt-1 ${msg.senderId === user?.id ? 'text-blue-100' : 'text-(--text-muted)'}`}>
-                          {formatTimeAgo(msg.createdAt)}
-                        </p>
+                        {/* Avatar for other user (left side) */}
+                        {!isCurrentUser && (
+                          <img
+                            src={msg.sender?.avatarUrl || 'https://via.placeholder.com/32'}
+                            alt={msg.sender?.username}
+                            className="w-8 h-8 rounded-full flex-shrink-0"
+                          />
+                        )}
+                        
+                        <div className={`flex flex-col ${isCurrentUser ? 'items-end' : 'items-start'} max-w-[70%]`}>
+                          {/* Username */}
+                          <span className="text-xs text-(--text-muted) mb-1 px-1">
+                            {msg.sender?.username || 'Unknown'}
+                          </span>
+                          
+                          {/* Message bubble */}
+                          <div
+                            className={`rounded-2xl px-4 py-2 ${
+                              isCurrentUser
+                                ? 'bg-blue-500 text-white rounded-br-sm'
+                                : 'bg-gray-100 dark:bg-gray-700 text-(--text) rounded-bl-sm'
+                            }`}
+                          >
+                            <p className="text-sm break-words">{msg.message}</p>
+                            <p className={`text-xs mt-1 ${isCurrentUser ? 'text-blue-100' : 'text-(--text-muted)'}`}>
+                              {formatTimeAgo(msg.createdAt)}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Avatar for current user (right side) */}
+                        {isCurrentUser && (
+                          <img
+                            src={msg.sender?.avatarUrl || 'https://via.placeholder.com/32'}
+                            alt={msg.sender?.username}
+                            className="w-8 h-8 rounded-full flex-shrink-0"
+                          />
+                        )}
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
                 <div ref={messagesEndRef} />
               </div>
@@ -842,6 +1019,14 @@ export default function OrderCompletion() {
           </div>
         </div>
       )}
+
+      {/* Image Upload Modal */}
+      <ImageUploadModal
+        isOpen={showImageModal}
+        onClose={() => setShowImageModal(false)}
+        onUpload={handleImageUpload}
+        title={imageUploadType === 'payment' ? 'Upload Payment Proof' : 'Upload Shipping Invoice'}
+      />
     </div>
   );
 }

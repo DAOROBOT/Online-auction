@@ -1,16 +1,24 @@
 import { useState } from 'react';
 import { Reply, X } from 'lucide-react';
+import { commentSchema } from '../../schemas/auction.schemas';
+import { validateForm } from '../../utils/validation';
 
 export default function Comment({ comment, onReplySubmit }) {
   const [isReplying, setIsReplying] = useState(false);
   const [replyText, setReplyText] = useState("");
 
   const handleSubmit = () => {
-    if (replyText.trim()) {
-      onReplySubmit(comment.id, replyText);
-      setIsReplying(false);
-      setReplyText("");
+    // Zod Validation
+    const validation = validateForm(commentSchema, { content: replyText });
+    
+    if (!validation.success) {
+      alert(validation.message);
+      return;
     }
+    
+    onReplySubmit(comment.id, validation.data.content);
+    setIsReplying(false);
+    setReplyText("");
   };
 
   return (

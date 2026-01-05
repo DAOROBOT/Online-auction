@@ -60,8 +60,11 @@ export default function VerifyAccount() {
         setSuccessMessage('');
         
         const code = otp.join('');
-        if (code.length !== 6) {
-            setError('Please enter the complete 6-digit code');
+        
+        // Zod Validation
+        const validation = validateForm(verificationCodeSchema, { code });
+        if (!validation.success) {
+            setError(validation.message);
             return;
         }
         

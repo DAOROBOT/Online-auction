@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { Clock, MapPin, Gavel, Heart, Share2, ShieldCheck, User, TrendingUp, Trophy, Zap, AlertCircle, ChevronRight, Crown, Star, CheckCircle } from 'lucide-react';
 import { formatCurrency, formatTimeLeft } from '../../utils/format';
 import { useAuth } from '../../contexts/AuthContext';
+import { placeBidSchema } from '../../schemas/auction.schemas';
+import { validateForm } from '../../utils/validation';
 
 // Mock data for demonstration
 // const mockProduct = {
@@ -45,14 +47,29 @@ export default function BiddingSection({ product }) {
   };
 
   const handleBid = async () => {
-    if (!bidAmount || parseFloat(bidAmount) <= product.currentPrice) {
+    // Zod Validation
+    const validation = validateForm(placeBidSchema, { bidAmount: parseFloat(bidAmount) });
+    
+    if (!validation.success) {
+      alert(validation.message);
+      return;
+    }
+    
+    // Additional business logic validation
+    if (validation.data.bidAmount <= product.currentPrice) {
       alert('Bid amount must be higher than current price');
       return;
     }
+    
+    if (validation.data.bidAmount < product.currentPrice + product.biddingStep) {
+      alert(`Bid must be at least ${formatCurrency(product.currentPrice + product.biddingStep)}`);
+      return;
+    }
+    
     try {
-      const result = await productService.placeBid(product.id, parseFloat(bidAmount));
+      const result = await productService.placeBid(product.id, validation.data.bidAmount);
       if (result.success) {
-        alert(`Bid placed: ${formatCurrency(parseFloat(bidAmount))}`);
+        alert(`Bid placed: ${formatCurrency(validation.data.bidAmount)}`);
         const bidders = await productService.getTopBidders(product.id, 3);
       }
     } catch (error) {

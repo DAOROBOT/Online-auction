@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { Plus, Edit2, Trash2, Package, ChevronDown, ChevronRight, X, FolderPlus } from "lucide-react";
+import { categorySchema } from '../../schemas/admin.schemas';
+import { validateForm } from '../../utils/validation';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -63,6 +65,18 @@ export default function CategoryList() {
   const handleAddCategory = async (e) => {
     e.preventDefault();
     setModalError('');
+    
+    // Zod Validation
+    const validation = validateForm(categorySchema, {
+      name: newCategoryName,
+      description: newCategoryDescription || undefined,
+    });
+    
+    if (!validation.success) {
+      setModalError(validation.message);
+      return;
+    }
+    
     setModalLoading(true);
 
     try {
@@ -100,6 +114,18 @@ export default function CategoryList() {
   const handleAddSubcategory = async (e) => {
     e.preventDefault();
     setModalError('');
+    
+    // Zod Validation
+    const validation = validateForm(categorySchema, {
+      name: newCategoryName,
+      description: newCategoryDescription || undefined,
+    });
+    
+    if (!validation.success) {
+      setModalError(validation.message);
+      return;
+    }
+    
     setModalLoading(true);
 
     try {
