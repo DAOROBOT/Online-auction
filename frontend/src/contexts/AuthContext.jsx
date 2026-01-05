@@ -55,17 +55,26 @@ export const AuthProvider = ({ children }) => {
     const data = await response.json();
     localStorage.setItem('authToken', data.token);
     localStorage.setItem('userRole', data.user.role);
+    console.log(data.user);
     setUser(data.user);
     return data.user;
   };
 
+  const oauthLogin = (userData, token) => {
+    localStorage.setItem('authToken', token);
+    localStorage.setItem('userRole', userData.role);
+    setUser(userData);
+    return userData;
+  };
+
   const logout = () => {
     localStorage.removeItem('authToken');
+    localStorage.removeItem('userRole');
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, oauthLogin }}>
       {children}
     </AuthContext.Provider>
   );

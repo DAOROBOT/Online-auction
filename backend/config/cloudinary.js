@@ -11,13 +11,26 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const storage = new CloudinaryStorage({
+// --- 1. Storage for Auction Products ---
+const productStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'Aurum',
+    folder: 'Aurum/auctions',
     allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
-    transformation: [{ width: 1000, height: 1000, crop: 'limit' }] // Resize big images automatically
+    transformation: [{ width: 1000, height: 1000, crop: 'limit' }] // Keep original aspect ratio, max 1000px
   },
 });
 
-export const upload = multer({ storage: storage });
+// --- 2. Storage for User Avatars ---
+const avatarStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'Aurum/avatars', // Specific folder for profiles
+    allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
+    // Avatars usually look best as squares. 'fill' ensures exact dimensions.
+    transformation: [{ width: 500, height: 500, crop: 'fill', gravity: 'face' }] 
+  },
+});
+
+export const uploadProductImage = multer({ storage: productStorage });
+export const uploadAvatar = multer({ storage: avatarStorage });

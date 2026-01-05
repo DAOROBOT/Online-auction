@@ -3,7 +3,7 @@ import auctionService from "../services/auction.js";
 const controller = {
     
     // GET /auctions
-    listAuctions: async function(req, res, next) {
+    list: async function(req, res, next) {
         try {
             const auctions = await auctionService.findAll();
             res.json(auctions);
@@ -13,14 +13,13 @@ const controller = {
     },
 
     // GET /auctions/:id
-    getAuction: async function(req, res, next) {
+    get: async function(req, res, next) {
         try {
             const id = Number(req.params.id);
             const auction = await auctionService.findById(id);
             
             if (!auction) {
-                res.status(404);
-                throw new Error('Auction Not Found');
+                return res.status(404).json({ message: 'Auction Not Found' });
             }
             
             res.json(auction);
@@ -30,28 +29,75 @@ const controller = {
     },
 
     // POST /auctions
-    createAuction: async function(req, res, next) {
+    create: async function(req, res, next) {
         try {
-            const auction = await auctionService.create(req.body);
-            res.status(201).json(auction);
+            const { title, startingPrice, stepPrice, buyNowPrice, endTime, categoryId, description, autoExtend } = req.body;
+            const images = req.files;
+
+            // 1. Validate dữ liệu đầu vào
+            if (!title || !startingPrice || !stepPrice || !endTime || !categoryId) {
+                return res.status(400).json({ message: 'Missing required fields' });
+            }
+
+            if (Number(stepPrice) <= 0) {
+                return res.status(400).json({ message: 'Step price must be positive' });
+            }
+
+            if (buyNowPrice && Number(buyNowPrice) <= Number(startingPrice)) {
+                return res.status(400).json({ message: 'Buy Now price must be greater than Starting price' });
+            }
+
+            if (!images || images.length < 3) {
+                return res.status(400).json({ message: 'At least 3 images are required' });
+            }
+
+            // 2. Chuẩn bị dữ liệu để lưu
+            const info = {
+                sellerId: req.user.id, // Lấy ID người đang đăng nhập
+                categoryId: Number(categoryId),
+                title,
+                description,
+                startingPrice: Number(startingPrice),
+                currentPrice: Number(startingPrice), // Giá hiện tại = Giá khởi điểm lúc tạo
+                stepPrice: Number(stepPrice),
+                buyNowPrice: buyNowPrice ? Number(buyNowPrice) : null,
+                endTime,
+                autoExtend: autoExtend || false,
+            };
+
+            // 3. Gọi Service
+            const auction = await auctionService.create(info, images);
+
+            if (!auction) {
+                throw new Error('Failed to insert auction record.');
+            }
+
+            return res.status(201).json({
+                message: 'Auction created successfully!',
+                auction: auction,
+            });
+
         } catch (error) {
-            next(error);
+            console.error('Create Auction Error:', error);
+            return res.status(500).json({ error: error.message });
         }
     },
 
     // PUT /auctions/:id
-    updateAuction: async function(req, res, next) {
+    update: async function(req, res, next) {
         try {
             const id = Number(req.params.id);
             
-            // 1. Check if it exists
+            // Check quyền sở hữu (chỉ người bán mới được sửa)
             const existingAuction = await auctionService.findById(id);
             if (!existingAuction) {
-                res.status(404);
-                throw new Error('Auction Not Found');
+                return res.status(404).json({ message: 'Auction Not Found' });
+            }
+            
+            if (existingAuction.sellerId !== req.user.id) {
+                return res.status(403).json({ message: 'Unauthorized to update this auction' });
             }
 
-            // 2. Update
             const updatedAuction = await auctionService.update(id, req.body);
             res.json(updatedAuction);
         } catch (error) {
@@ -60,20 +106,22 @@ const controller = {
     },
 
     // DELETE /auctions/:id
-    deleteAuction: async function(req, res, next) {
+    delete: async function(req, res, next) {
         try {
             const id = Number(req.params.id);
 
-            // 1. Check if it exists
             const existingAuction = await auctionService.findById(id);
             if (!existingAuction) {
-                res.status(404);
-                throw new Error('Auction Not Found');
+                return res.status(404).json({ message: 'Auction Not Found' });
             }
 
-            // 2. Delete
+            // Check quyền (Admin hoặc chính chủ mới được xóa)
+            if (req.user.role !== 'admin' && existingAuction.sellerId !== req.user.id) {
+                return res.status(403).json({ message: 'Unauthorized' });
+            }
+
             await auctionService.delete(id);
-            res.json({}); // Return empty JSON on success
+            res.json({ message: 'Deleted successfully' });
         } catch (error) {
             next(error);
         }

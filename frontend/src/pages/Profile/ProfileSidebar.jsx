@@ -8,16 +8,19 @@ import {
 } from "lucide-react";
 
 import ImageUploadModal from '../../components/ImageUploadModal';
+import { formatDate } from '../../utils/format';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export default function ProfileSidebar({ userData, isOwnProfile }) {
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     
     const [formData, setFormData] = useState({
-        name: userData.name || "",
+        name: userData.username || "",
         bio: userData.bio || "",
-        location: "San Francisco, CA", // Default based on previous UI
-        website: `aurum.com/u/${userData.username}`
+        birthday: formatDate(userData.birthDate),
+        joinDay: formatDate(userData.createdAt),
     });
 
     const { logout } = useAuth();
@@ -25,18 +28,14 @@ export default function ProfileSidebar({ userData, isOwnProfile }) {
     
     const handleAvatarUpload = async (file) => {
         try {
-            // 1. Prepare FormData
             const formData = new FormData();
-            formData.append('image', file); // 'image' must match the backend upload.single('image')
+            formData.append('avatar', file);
 
-            // 2. Get Token (if route is protected)
             const token = localStorage.getItem('authToken');
 
-            // 3. Send to Backend
-            const response = await fetch('http://localhost:3000/upload', {
-                method: 'POST',
+            const response = await fetch(`${API_URL}/user/avatar`, {
+                method: 'PUT',
                 headers: {
-                    // Do NOT set Content-Type here
                     'Authorization': `Bearer ${token}` 
                 },
                 body: formData
@@ -47,13 +46,8 @@ export default function ProfileSidebar({ userData, isOwnProfile }) {
             const data = await response.json();
             console.log("Uploaded Image URL:", data.url);
 
-            // 4. Update the user's profile with the new URL
-            // You likely need a separate API call here to save this URL to your User table
-            await updateUserProfileImage(data.url); 
-
             setIsUploadModalOpen(false);
-            // Refresh user data or context here
-            window.location.reload(); // Temporary refresh to see changes
+            window.location.reload();
 
         } catch (error) {
             console.error("Upload error:", error);
@@ -61,25 +55,10 @@ export default function ProfileSidebar({ userData, isOwnProfile }) {
         }
     };
 
-    // Helper function to save URL to DB (Example)
-    const updateUserProfileImage = async (imageUrl) => {
-        const token = localStorage.getItem('authToken');
-        await fetch('http://localhost:3000/user/profile', {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ avatar: imageUrl })
-        });
-    };
-
     // Logout Handler
     const handleLogout = () => {
-        if(confirm("Are you sure you want to log out?")) {
-            logout();
-            nav.home();
-        }
+        logout();
+        nav.home();
     };
 
     // Handle input changes
@@ -88,10 +67,38 @@ export default function ProfileSidebar({ userData, isOwnProfile }) {
     };
 
     // Handle Save
-    const handleSave = () => {
-        // In a real app, you would send formData to an API here
-        console.log("Saving profile:", formData);
-        setIsEditing(false);
+    const handleSave = async () => {
+        try {
+            const token = localStorage.getItem('authToken');
+            if (!token) return;
+
+            const payload = {
+                fullName: formData.name,
+                bio: formData.bio,
+                birthday: formData.birthday == "unknown" ? undefined : new Date(formData.birthday),
+            };
+
+            const response = await fetch(`${API_URL}/user/info`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to update profile');
+            }
+
+            setIsEditing(false);
+            window.location.reload(); 
+
+        } catch (error) {
+            console.error("Profile update error:", error);
+            alert(error.message || "Failed to save profile changes.");
+        }
     };
 
     return (
@@ -152,28 +159,13 @@ export default function ProfileSidebar({ userData, isOwnProfile }) {
                         </div>
 
                         <div>
-                            <label className="block text-xs font-bold text-(--text-muted) uppercase mb-1">Location</label>
+                            <label className="block text-xs font-bold text-(--text-muted) uppercase mb-1">Birthday</label>
                             <div className="relative">
                                 <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-(--text-muted)" />
                                 <input 
                                     type="text" 
-                                    name="location"
-                                    value={formData.location}
-                                    onChange={handleChange}
-                                    className="w-full pl-9 pr-3 py-2 rounded-lg border bg-(--input-bg) text-(--text) focus:ring-2 focus:ring-(--accent) outline-none"
-                                    style={{ borderColor: 'var(--border)' }}
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-xs font-bold text-(--text-muted) uppercase mb-1">Website / Link</label>
-                            <div className="relative">
-                                <LinkIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-(--text-muted)" />
-                                <input 
-                                    type="text" 
-                                    name="website"
-                                    value={formData.website}
+                                    name="birthday"
+                                    value={formData.birthday}
                                     onChange={handleChange}
                                     className="w-full pl-9 pr-3 py-2 rounded-lg border bg-(--input-bg) text-(--text) focus:ring-2 focus:ring-(--accent) outline-none"
                                     style={{ borderColor: 'var(--border)' }}
@@ -220,12 +212,12 @@ export default function ProfileSidebar({ userData, isOwnProfile }) {
                         {/* Mini Stats Row */}
                         <div className="flex items-center justify-between py-4 border-y border-(--border) mb-6 bg-(--bg-soft)/30 -mx-6 px-6 backdrop-blur-sm">
                             <div className="text-center flex-1">
-                                <div className="text-lg font-bold text-(--text)">{userData.wonAuctions?.length || 0}</div>
+                                <div className="text-lg font-bold text-(--text)">{userData.counts?.totalWonAuctions || 0}</div>
                                 <div className="text-[10px] text-(--text-muted) font-bold uppercase tracking-wider">Won</div>
                             </div>
                             <div className="w-px h-8 bg-(--border)" />
                             <div className="text-center flex-1">
-                                <div className="text-lg font-bold text-(--text)">{userData.activeBids?.length || 0}</div>
+                                <div className="text-lg font-bold text-(--text)">{userData.counts?.totalActiveBids || 0}</div>
                                 <div className="text-[10px] text-(--text-muted) font-bold uppercase tracking-wider">Active</div>
                             </div>
                             <div className="w-px h-8 bg-(--border)"></div>
@@ -239,23 +231,15 @@ export default function ProfileSidebar({ userData, isOwnProfile }) {
                         <div className="flex justify-around lg:flex-col gap-3 mb-8 text-left w-full mx-auto">
                             <div className="flex items-center gap-3 text-sm text-(--text-muted) group/item">
                                 <div className="p-1.5 rounded-md bg-(--bg-soft) text-(--text-muted) group-hover/item:text-(--accent) transition-colors">
-                                        <MapPin size={14} />
+                                    <LinkIcon size={14} />
                                 </div>
-                                <span>{formData.location}</span>
-                            </div>
-                            <div className="flex items-center gap-3 text-sm text-(--text-muted) group/item">
-                                <div className="p-1.5 rounded-md bg-(--bg-soft) text-(--text-muted) group-hover/item:text-(--accent) transition-colors">
-                                        <LinkIcon size={14} />
-                                </div>
-                                <a href="#" className="hover:text-(--accent) transition-colors truncate hover:underline decoration-(--accent) decoration-2 underline-offset-4">
-                                    {formData.website}
-                                </a>
+                                <span>{formData.birthday}</span>
                             </div>
                             <div className="flex items-center gap-3 text-sm text-(--text-muted) group/item">
                                 <div className="p-1.5 rounded-md bg-(--bg-soft) text-(--text-muted) group-hover/item:text-(--accent) transition-colors">
                                         <Calendar size={14} />
                                 </div>
-                                <span>Joined March 2023</span>
+                                <span>{formData.joinDay}</span>
                             </div>
                         </div>
 

@@ -1,13 +1,14 @@
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useNav } from '../../hooks/useNavigate';
+import { useAuth } from '../../contexts/AuthContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-
 
 export default function AuthCallback() {
     const [searchParams] = useSearchParams();
     const nav = useNav();
+    const { oauthLogin } = useAuth();
 
     useEffect(() => {
         const token = searchParams.get('token');
@@ -20,10 +21,7 @@ export default function AuthCallback() {
         }
 
         if (token) {
-            // Store the token
-            localStorage.setItem('authToken', token);
-            
-            // Fetch user data and redirect
+            // Fetch user data and update context
             fetch(`${API_URL}/auth/me`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -31,6 +29,9 @@ export default function AuthCallback() {
             })
             .then(res => res.json())
             .then(userData => {
+                // Update auth context with user data and token
+                oauthLogin(userData, token);
+                
                 // Redirect based on role
                 if (userData.role === 'admin') {
                     nav.go('/admin');
@@ -39,12 +40,43 @@ export default function AuthCallback() {
                 }
             })
             .catch(() => {
-                nav.home();
+                console.error('Failed to fetch user data');
+                nav.login();
             });
         } else {
             nav.login();
         }
     }, [searchParams, nav]);
+
+    useEffect(() => {
+    const initAuth = async () => {
+        try {
+        const token = localStorage.getItem('authToken');
+        if (token) {
+            const response = await fetch(`${API_URL}/auth/me`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+            });
+            
+            if (response.ok) {
+                const userData = await response.json();
+                setUser(userData);
+            } else {
+                localStorage.removeItem('authToken');
+            }
+        }
+        } catch (error) {
+            console.log("User not logged in", error);
+            localStorage.removeItem('authToken');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    initAuth();
+    }, []);
+
 
     return (
         <div className="flex items-center justify-center min-h-screen">

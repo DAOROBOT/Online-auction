@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { uploadAvatar } from "../config/cloudinary.js";
 import userController from "../controllers/user.js";
 import requireAuth, { requireAdmin } from "../middleware/auth.js";
 
@@ -7,10 +8,16 @@ const route = new Router();
 // GET: Get user profile by username
 route.get('/profile/:username', userController.getUserProfile);
 
+// GET: get active tab content
+route.get('/:userId/:tab', userController.getTabContent);
+
 route.use(requireAuth);
 
-// GET: get current user profile
-route.get('/me', userController.getCurrentUserProfile);
+// PUT: update current user information
+route.put('/info', userController.updateUserInfo);
+
+// PUT: update current user avatar
+route.put('/avatar', uploadAvatar.single('avatar'), userController.updateUserAvatar);
 
 route.use(requireAdmin);
 
