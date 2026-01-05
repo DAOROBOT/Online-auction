@@ -186,49 +186,6 @@ const controller = {
             res.status(500).json({ message: 'An error occurred. Please try again.' });
         }
     },
-    getCurrentUserProfile: async function(req, res) {
-        try {
-            const user = req.user;
-            const auctions = await userService.getUserAuctions(user.id, user.role);
-            console.log('User auctions data:', auctions);
-            res.status(200).json({
-                id: user.id,
-                username: user.username,
-                name: user.fullName,
-                email: user.email,
-                role: user.role,
-                avatar: user.avatarUrl,
-                bio: user.bio,
-                birthDate: user.birthday,
-                createdAt: user.createdAt,
-                rating: {
-                    positive: user.positiveRatingCount || 0,
-                    negative: (user.ratingCount || 0) - (user.positiveRatingCount || 0),
-                    percentage: user.ratingCount > 0 
-                        ? Math.round((user.positiveRatingCount / user.ratingCount) * 100) 
-                        : 100,
-                },
-                // Auction data matching frontend expectations
-                activeListings: auctions.activeListings,
-                soldItems: auctions.soldItems,
-                wonAuctions: auctions.wonAuctions,
-                activeBids: auctions.activeBids,
-                favoriteProducts: auctions.favoriteProducts,
-            });
-        } catch (error) {
-            console.error('Get current user profile error:', error);
-            
-            // Handle JWT errors specifically
-            if (error.name === 'TokenExpiredError') {
-                return res.status(401).json({ message: 'Token expired', code: 'TOKEN_EXPIRED' });
-            }
-            if (error.name === 'JsonWebTokenError') {
-                return res.status(401).json({ message: 'Invalid token', code: 'INVALID_TOKEN' });
-            }
-            
-            res.status(500).json({ message: 'An error occurred. Please try again.' });
-        }
-    },
 
     getUserProfile: async function (req, res) {
         try {
@@ -238,15 +195,12 @@ const controller = {
                 return res.status(400).json({ message: 'Username is required' });
             }
 
-            // Fetch user by username
             const user = await userService.getByUsername(username);
             if (!user) {
                 return res.status(404).json({ message: 'User not found' });
             }
 
-            // Get user auction data
-            const auctions = await userService.getUserAuctions(user.id, user.role);
-            console.log('User auctions data:', auctions);
+            const auctions = await userService.getUserStats(user.id, user.role);
 
             res.status(200).json({
                 id: user.id,
@@ -265,18 +219,88 @@ const controller = {
                         ? Math.round((user.positiveRatingCount / user.ratingCount) * 100) 
                         : 100,
                 },
-                // Auction data matching frontend expectations
-                activeListings: auctions.activeListings,
-                soldItems: auctions.soldItems,
-                wonAuctions: auctions.wonAuctions,
-                activeBids: auctions.activeBids,
-                favoriteProducts: auctions.favoriteProducts,
+                counts: auctions,
             });
         } catch (error) {
             console.error('Get user profile error:', error);
             res.status(500).json({ message: 'An error occurred. Please try again.' });
         }
-    }
+    },
+
+    getTabContent: async function(req, res) {
+        try {
+            const { userId, tab } = req.params;
+            const { category } = req.query;
+
+            console.log(req.params, userId, tab, category);
+
+            if (!userId || !tab) {
+                return res.status(400).json({ error: "Missing User ID or Tab Name" });
+            }
+
+            const results = await userService.getUserAuctions(userId, tab, category);
+
+            return res.status(200).json({
+                data: results,
+                meta: { tab }
+            });
+
+        } catch (error) {
+            console.error("Tab Query Error:", error);
+            return res.status(500).json({ error: "Internal Server Error" });
+        }
+    },
+
+    updateUserInfo: async function(req, res) {
+        try {
+            const user = req.user;
+            const { fullName, bio, birthday } = req.body;
+
+            const updatedUser = await userService.update(user.id, {
+                fullName,
+                bio,
+                birthday,
+            });
+
+            res.status(200).json({
+                message: 'User updated successfully',
+                user: updatedUser
+            });
+        } catch (error) {
+            console.error('Update current user error:', error);
+            res.status(500).json({ message: 'An error occurred. Please try again.' });
+        }
+    },
+
+    updateUserAvatar: async function(req, res) {
+        try {
+            // 1. Validation
+            if (!req.file) {
+                return res.status(400).json({ error: 'No image file provided.' });
+            }
+
+            const newAvatarUrl = req.file.path;
+
+            const [updatedUser] = await userService.update(req.user.id, {
+                avatarUrl: newAvatarUrl
+            });
+
+            if (!updatedUser) {
+                return res.status(404).json({ error: 'User not found.' });
+            }
+
+            // 5. Success Response
+            return res.status(200).json({
+                message: 'Avatar updated successfully',
+                user: updatedUser,
+                new_url: newAvatarUrl
+            });
+
+        } catch (error) {
+            console.error('Update Avatar Error:', error);
+            return res.status(500).json({ error: error.message });
+        }
+    },
 };
 
 export default controller;

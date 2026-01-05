@@ -9,7 +9,6 @@ import authRoute from "./routes/auth.js"
 import categoryRoute from "./routes/category.js"
 import searchRoute from "./routes/search.js";
 import sellerRequestRoute from "./routes/sellerRequest.js"
-import uploadRoute from "./routes/upload.js";
 import userRoute from "./routes/user.js"
 import error_handler from "./middleware/error_handler.js";
 import not_found from "./middleware/not_found.js";
@@ -39,7 +38,6 @@ app.use(session({
 
 // Initialize Passport
 app.use(passport.initialize());
-// app.use(passport.session());
 
 // --- Routes ---
 app.use('/auction', auctionRoute);
@@ -47,7 +45,6 @@ app.use('/auth', authRoute);
 app.use('/categories', categoryRoute);
 app.use('/search', searchRoute);
 app.use('/seller', sellerRequestRoute);
-app.use('/upload', uploadRoute);
 app.use('/user', userRoute);
 
 // --- Middleware ---

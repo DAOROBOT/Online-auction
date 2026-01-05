@@ -8,9 +8,6 @@ import dotenv from 'dotenv'
 
 dotenv.config();
 
-
-
-
 const service = {
     findAll: async function(){
         return db.select().from(users);
@@ -84,22 +81,60 @@ const service = {
     },
 
     // Get user stats (bids count, auctions count)
-    getUserStats: async function(userId) {
-        // Get total bids
+    getUserStats: async function(userId, role) {
+        // Total bids
         const bidsResult = await db
             .select({ count: count() })
             .from(bids)
             .where(eq(bids.bidderId, userId));
         
-        // Get total auctions (as seller)
+        // Total auctions (as seller)
         const auctionsResult = await db
             .select({ count: count() })
             .from(auctions)
             .where(eq(auctions.sellerId, userId));
 
+        // Total auctions still active
+        const activeListings = await db
+            .select({ count: count() })
+            .from(auctions)
+            .where(and(eq(auctions.sellerId, userId), eq(auctions.status, 'active')));
+
+        // Total sold auctions
+        const soldItems = await db
+            .select({ count: count() })
+            .from(auctions)
+            .where(and(eq(auctions.sellerId, userId), eq(auctions.status, 'sold')));
+        
+        // Total won auctions
+        const wonAuctions = await db
+            .select({ count: count() })
+            .from(auctions)
+            .where(eq(auctions.winnerId, userId));
+
+        // Total active bids (auctions where user has placed a bid and auction is still active)
+        const activeBids = await db
+            .select({ count: count() })
+            .from(bids)
+            .innerJoin(auctions, eq(auctions.id, bids.auctionId))
+            .where(and(eq(bids.bidderId, userId), eq(auctions.status, 'active')))
+            .groupBy(auctions.id);
+
+        // Total favourite products
+        const favoriteProducts = await db
+            .select({ count: count() })
+            .from(userFavorites)
+            .innerJoin(auctions, eq(auctions.id, userFavorites.auctionId))
+            .where(eq(userFavorites.userId, userId));
+
         return {
             totalBids: bidsResult[0]?.count || 0,
             totalAuctions: auctionsResult[0]?.count || 0,
+            totalActiveListings: activeListings[0]?.count || 0,
+            totalSoldItems: soldItems[0]?.count || 0,
+            totalWonAuctions: wonAuctions[0]?.count || 0,
+            totalActiveBids: activeBids.length,
+            totalFavoriteProducts: favoriteProducts[0]?.count || 0,
         };
     },
 
@@ -107,33 +142,40 @@ const service = {
         const result = await db.select().from(users).where(eq(users.id, id));
         return result.length > 0 ? result[0] : null;
     },
+
     getByEmail: async function(email){
         const result = await db.select().from(users).where(eq(users.email, email));
         return result.length > 0 ? result[0] : null;
     },
+
     getByUsername: async function(username){
         console.log('Searching for user by username:', username);
         const result = await db.select().from(users).where(eq(users.username, username));
         return result.length > 0 ? result[0] : null;
     },
+
     getByGoogleId: async function(googleId){
         const result = await db.select().from(users).where(eq(users.googleId, googleId));
         return result.length > 0 ? result[0] : null;
     },
+
     getByFacebookId: async function(facebookId){
         const result = await db.select().from(users).where(eq(users.facebookId, facebookId));
         return result.length > 0 ? result[0] : null;
     },
+
     create: async function(userData){
         const result = await db.insert(users).values(userData).returning();
         return result[0];
     },
-    update: async function(id, user){
-        if(user.createdAt) {
-            user.createdAt = new Date(user.createdAt);
+
+    update: async function(id, info){
+        if(info.createdAt) {
+            info.createdAt = new Date(info.createdAt);
         }
-        return db.update(users).set(user).where(eq(users.id, id));
+        return db.update(users).set(info).where(eq(users.id, id)).returning();
     },
+
     delete: async function(id){
         return db.delete(users).where(eq(users.id, id));
     },
@@ -155,59 +197,113 @@ const service = {
             .returning();
         return result[0];
     },
-    getUserAuctions: async function(userId, role) {
-        // Get active listings (for sellers)
-        let activeListings = [];
-        if (role === 'seller') {
-            activeListings = await db
-                .select()
-                .from(auctions)
-                .where(and(eq(auctions.sellerId, userId), eq(auctions.status, 'active')));
+    
+    // getUserAuctions: async function(userId, role) {
+    //     let activeListings = [];
+    //     let soldItems = []
+    //     if (role === 'seller') {
+    //         activeListings = await db
+    //             .select()
+    //             .from(auctions)
+    //             .where(and(eq(auctions.sellerId, userId), eq(auctions.status, 'active')));
+
+    //         soldItems = await db
+    //             .select()
+    //             .from(auctions)
+    //             .where(and(eq(auctions.sellerId, userId), eq(auctions.status, 'sold')));
+    //     }
+        
+    //     // Get won auctions
+    //     const wonAuctions = await db
+    //         .select()
+    //         .from(auctions)
+    //         .where(eq(auctions.winnerId, userId));
+
+    //     // Get active bids (auctions where user has placed a bid and auction is still active)
+    //     const activeBids = await db
+    //         .select({
+    //             auction: auctions
+    //         })
+    //         .from(bids)
+    //         .innerJoin(auctions, eq(auctions.id, bids.auctionId))
+    //         .where(and(eq(bids.bidderId, userId), eq(auctions.status, 'active')))
+    //         .groupBy(auctions.id);
+
+    //     // TODO: Add favorites when user_favorites table is created
+    //     const favoriteProducts = await db
+    //         .select({
+    //             auction: auctions
+    //         })
+    //         .from(userFavorites)
+    //         .innerJoin(auctions, eq(auctions.id, userFavorites.auctionId))
+    //         .where(eq(userFavorites.userId, userId));
+
+    //     return {
+    //         activeListings,
+    //         soldItems,
+    //         wonAuctions,
+    //         activeBids: activeBids.map(b => b.auction),
+    //         favoriteProducts,
+    //         // Counts for metadata
+    //         wonAuctionCount: wonAuctions.length,
+    //         activeAuctionCount: activeListings.length,
+    //     };
+    // },
+
+    getUserAuctions: async function(userId, tab, category) {
+        let baseQuery = db
+            .select({
+                ...auctions,
+                image_url: sql`(SELECT image_url FROM auction_images WHERE auction_images.auction_id = auctions.auction_id AND is_primary = true LIMIT 1)`,
+            })
+            .from(auctions);
+
+        let whereConditions = [];
+
+        switch (tab) {
+        case 'active-bids':
+            baseQuery.innerJoin(bids, eq(bids.auctionId, auctions.id));
+            whereConditions.push(and(eq(bids.bidderId, userId), eq(auctions.status, 'active')));
+            baseQuery.groupBy(auctions.id);
+            break;
+
+        case 'favorites':
+            baseQuery.innerJoin(userFavorites, eq(userFavorites.auctionId, auctions.id));
+            whereConditions.push(eq(userFavorites.userId, userId));
+            break;
+
+        case 'my-listings':
+            whereConditions.push(and(eq(auctions.sellerId, userId), eq(auctions.status, 'active')));
+            break;
+
+        case 'sold-items':
+            whereConditions.push(and(eq(auctions.sellerId, userId), eq(auctions.status, 'sold')));
+            break;
+
+        case 'won-auctions':
+            whereConditions.push(and(
+                eq(auctions.winnerId, userId),
+                or(eq(auctions.status, 'sold'), eq(auctions.status, 'ended'))
+            ));
+            break;
+
+        default:
+            return res.status(400).json({ error: "Invalid tab specified" });
         }
+
+        if (category && category !== 'All Categories') {
+            // whereConditions.push(eq(auctions.categoryId, parseInt(category)));
+            whereConditions.push(eq(auctions.name, category));
+        }
+
+        const whereClause = whereConditions.length > 0 ? and(...whereConditions) : undefined;
+
+        baseQuery.where(whereClause);
         
-        // Get sold items (for sellers)
-        const soldItems = await db
-            .select()
-            .from(auctions)
-            .where(and(eq(auctions.sellerId, userId), eq(auctions.status, 'sold')));
-        
-        // Get won auctions
-        const wonAuctions = await db
-            .select()
-            .from(auctions)
-            .where(eq(auctions.winnerId, userId));
+        // baseQuery.orderBy(desc(auctions.end_time));
 
-        // Get active bids (auctions where user has placed a bid and auction is still active)
-        const activeBids = await db
-            .select({
-                auction: auctions
-            })
-            .from(bids)
-            .innerJoin(auctions, eq(auctions.id, bids.auctionId))
-            .where(and(eq(bids.bidderId, userId), eq(auctions.status, 'active')))
-            .groupBy(auctions.id);
-
-        // TODO: Add favorites when user_favorites table is created
-        const favoriteProducts = await db
-            .select({
-                auction: auctions
-            })
-            .from(userFavorites)
-            .innerJoin(auctions, eq(auctions.id, userFavorites.auctionId))
-            .where(eq(userFavorites.userId, userId));
-
-        return {
-            activeListings,
-            soldItems,
-            wonAuctions,
-            activeBids: activeBids.map(b => b.auction),
-            favoriteProducts,
-            // Counts for metadata
-            wonAuctionCount: wonAuctions.length,
-            activeAuctionCount: activeListings.length,
-        };
+        return await baseQuery;
     }
-
 
 }
 

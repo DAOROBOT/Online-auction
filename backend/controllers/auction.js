@@ -3,7 +3,7 @@ import auctionService from "../services/auction.js";
 const controller = {
     
     // GET /auctions
-    listAuctions: async function(req, res, next) {
+    list: async function(req, res, next) {
         try {
             const auctions = await auctionService.findAll();
             res.json(auctions);
@@ -13,7 +13,7 @@ const controller = {
     },
 
     // GET /auctions/:id
-    getAuction: async function(req, res, next) {
+    get: async function(req, res, next) {
         try {
             const id = Number(req.params.id);
             const auction = await auctionService.findById(id);
@@ -30,17 +30,43 @@ const controller = {
     },
 
     // POST /auctions
-    createAuction: async function(req, res, next) {
+    create: async function(req, res, next) {
         try {
-            const auction = await auctionService.create(req.body);
-            res.status(201).json(auction);
+            const [newAuction] = auctionService.create(req.body);
+
+            if (!newAuction) {
+                throw new Error('Failed to insert auction record.');
+            }
+
+            // Extract Files
+            const files = req.files;
+
+            if (!files || files.length === 0) {
+                return res.status(400).json({ error: 'At least one image is required.' });
+            }
+
+            const images = files.map((file, index) => ({
+                auction_id: newAuction.auction_id,
+                image_url: file.path,
+                is_primary: index === 0
+            }));
+
+            const insertedImages = auctionService.upload(images);
+
+            return res.status(201).json({
+                message: 'Auction created successfully!',
+                auction: newAuction,
+                images: insertedImages
+            });
+
         } catch (error) {
-            next(error);
+            console.error('Create Auction Error:', error);
+            return res.status(500).json({ error: error.message });
         }
     },
 
     // PUT /auctions/:id
-    updateAuction: async function(req, res, next) {
+    update: async function(req, res, next) {
         try {
             const id = Number(req.params.id);
             
@@ -60,7 +86,7 @@ const controller = {
     },
 
     // DELETE /auctions/:id
-    deleteAuction: async function(req, res, next) {
+    delete: async function(req, res, next) {
         try {
             const id = Number(req.params.id);
 

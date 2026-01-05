@@ -1,13 +1,15 @@
 import { Router } from "express";
-import { upload } from '../config/cloudinary.js';
+import { uploadProductImage, uploadAvatar } from '../config/cloudinary.js';
+import { auctionController } from '../controllers/auction.js'
 import requireAuth from "../middleware/auth.js";
 
 const route = new Router();
 
+route.use(requireAuth);
+
 // POST /upload
 // Expects form-data with key 'image'
 route.post('/', requireAuth, upload.single('image'), (req, res) => {
-  console.log(req);
   if (!req.file) {
     return res.status(400).json({ message: 'No file uploaded' });
   }

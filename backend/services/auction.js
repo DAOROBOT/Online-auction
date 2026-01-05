@@ -1,5 +1,5 @@
 import db from "../db/index.js"
-import { auctions } from "../db/schema.js"
+import { auctions, auctionImages } from "../db/schema.js"
 import { eq } from "drizzle-orm";
 
 const service = {
@@ -15,6 +15,9 @@ const service = {
         auction.createdAt = auction.createdAt ? new Date(auction.createdAt) : new Date();
         auction.endTime = auction.endTime ? new Date(auction.endTime) : new Date(auction.createdAt.getTime() + 24*60*60*1000); // default to 24 hours later
         return await db.insert(auctions).values(auction).returning();
+    },
+    upload: async function(images){
+        return await db.insert(auctionImages).values(images).returning();
     },
     update: async function(id, auc){
         if(auc.createdAt) {
