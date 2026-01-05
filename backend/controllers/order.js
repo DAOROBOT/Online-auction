@@ -23,20 +23,19 @@ const controller = {
             }
 
             // Get the auction details
-            const auctionResult = await auctionService.findById(parseInt(auctionId));
-            if (!auctionResult || auctionResult.length === 0) {
+            const auction = await auctionService.findById(parseInt(auctionId));
+            if (!auction) {
                 return res.status(404).json({ message: 'Auction not found' });
             }
-            const auction = auctionResult[0];
 
             // Check if auction has ended
             const now = new Date();
-            if (new Date(auction.end_time) > now) {
+            if (new Date(auction.endTime) > now) {
                 return res.status(400).json({ message: 'Auction has not ended yet' });
             }
 
             // Check if user is the seller or winner
-            const isParticipant = auction.seller_id === userData.userId || auction.winner_id === userData.userId;
+            const isParticipant = auction.sellerId === userData.userId || auction.winnerId === userData.userId;
             if (!isParticipant) {
                 return res.status(403).json({ message: 'You are not a participant in this auction' });
             }
@@ -45,12 +44,12 @@ const controller = {
             let order = await orderService.getByAuctionId(parseInt(auctionId));
             
             // If no order and auction has a winner, create one
-            if (!order && auction.winner_id) {
+            if (!order && auction.winnerId) {
                 order = await orderService.create(
                     parseInt(auctionId),
-                    auction.winner_id,
-                    auction.seller_id,
-                    auction.current_price
+                    auction.winnerId,
+                    auction.sellerId,
+                    auction.currentPrice
                 );
             }
 

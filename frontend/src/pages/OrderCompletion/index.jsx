@@ -86,7 +86,7 @@ export default function OrderCompletion() {
     try {
       setLoading(true);
       const orderData = await orderService.getByAuctionId(auctionId);
-      
+      console.log('Order Data:', orderData);
       // orderData.order contains { order, auction, buyer, seller }
       const orderDetails = orderData.order;
       if (orderDetails) {

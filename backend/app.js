@@ -13,8 +13,7 @@ import uploadRoute from "./routes/upload.js";
 import userRoute from "./routes/user.js"
 import not_found from "./middleware/not_found.js";
 import error_handler from "./middleware/error_handler.js";
-import not_found from "./middleware/not_found.js";
-
+import orderService from "./routes/order.js"
 
 // import productRoute from "./routes/product.routes.js";
 
@@ -40,7 +39,6 @@ app.use(session({
 
 // Initialize Passport
 app.use(passport.initialize());
-// app.use(passport.session());
 
 // --- Routes ---
 app.use('/auction', auctionRoute);
@@ -49,9 +47,9 @@ app.use('/categories', categoryRoute);
 app.use('/search', searchRoute);
 app.use('/seller', sellerRequestRoute);
 app.use('/users', userRoute);
+app.use('/order', orderService);
 
 // --- Product route ---
-// app.use('/products', productRoute);
 app.get('/', (req, res) => {
     res.json({
         message: 'Hello World',
@@ -61,10 +59,6 @@ app.get('/', (req, res) => {
 // --- Middleware ---
 app.use(error_handler);
 app.use(not_found);
-
-
-
-// app.use('/api/products', productRoutes);
 
 
 export default app;

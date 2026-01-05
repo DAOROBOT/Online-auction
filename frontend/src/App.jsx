@@ -17,7 +17,6 @@ import NotFound from './pages/NotFound';
 import ForgetPassword from './pages/Auth/ForgetPassword';
 import BecomeSeller from './pages/BecomeSeller';
 import OrderCompletion from './pages/OrderCompletion';
-import { Verified } from 'lucide-react';
 
 function App() {
   return (

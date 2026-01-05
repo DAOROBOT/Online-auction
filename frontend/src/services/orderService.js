@@ -1,7 +1,7 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('authToken');
   return {
     'Content-Type': 'application/json',
     ...(token && { Authorization: `Bearer ${token}` }),
@@ -23,7 +23,7 @@ const orderService = {
    * @returns {Promise<Object>} Order object
    */
   getByAuctionId: async (auctionId) => {
-    const response = await fetch(`${API_BASE_URL}/orders/auction/${auctionId}`, {
+    const response = await fetch(`${API_BASE_URL}/order/auction/${auctionId}`, {
       headers: getAuthHeaders(),
     });
     return handleResponse(response);
