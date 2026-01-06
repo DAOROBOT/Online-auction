@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, text, decimal, timestamp, boolean, integer, pgEnum, date, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, text, decimal, timestamp, boolean, integer, pgEnum, date, primaryKey, unique } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 // --- ENUMS ---
@@ -77,7 +77,19 @@ export const bids = pgTable('bids', {
   bidTime: timestamp('bid_time', { withTimezone: true }).defaultNow(),
 });
 
-// --- 6. REVIEWS, SELLER REQUESTS, ORDERS, USER FAVORITES ---
+// --- 6. THÊM BẢNG AUTO BIDS ---
+export const autoBids = pgTable('auto_bids', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  auctionId: integer('auction_id').notNull().references(() => auctions.id, { onDelete: 'cascade' }),
+  maxAmount: decimal('max_amount', { precision: 15, scale: 0 }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (t) => ({
+  unq: unique().on(t.userId, t.auctionId), // Ràng buộc unique
+}));
+
+// --- 7. REVIEWS, SELLER REQUESTS, ORDERS, USER FAVORITES ---
 
 
 export const reviews = pgTable('reviews', {
@@ -193,6 +205,17 @@ export const auctionsRelations = relations(auctions, ({ one, many }) => ({
 export const auctionImagesRelations = relations(auctionImages, ({ one }) => ({
   auction: one(auctions, {
     fields: [auctionImages.auctionId],
+    references: [auctions.id],
+  }),
+}));
+
+export const autoBidsRelations = relations(autoBids, ({ one }) => ({
+  user: one(users, {
+    fields: [autoBids.userId],
+    references: [users.id],
+  }),
+  auction: one(auctions, {
+    fields: [autoBids.auctionId],
     references: [auctions.id],
   }),
 }));
