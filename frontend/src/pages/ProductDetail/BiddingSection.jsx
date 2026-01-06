@@ -1,553 +1,276 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Clock, MapPin, Gavel, Heart, Share2, ShieldCheck, User, TrendingUp, Trophy, Zap, AlertCircle, ChevronRight, Crown, Star, CheckCircle } from 'lucide-react';
+import { 
+  Clock, MapPin, Gavel, Heart, Share2, ShieldCheck, User, TrendingUp, 
+  Trophy, Zap, AlertCircle, ChevronRight, Crown, Star, CheckCircle 
+} from 'lucide-react';
 import { formatCurrency, formatTimeLeft } from '../../utils/format';
 import { useAuth } from '../../contexts/AuthContext';
 import { placeBidSchema } from '../../schemas/auction.schemas';
 import { validateForm } from '../../utils/validation';
+import { auctionService } from '../../services/auctionService'; // Đã import Service
 
-// Mock data for demonstration
-// const mockProduct = {
-//   title: "Vintage Rolex Submariner 1680",
-//   sellerName: "LuxuryTimepieces",
-//   currentPrice: 15750,
-//   startingPrice: 12000,
-//   buyNowPrice: 22000,
-//   biddingStep: 250,
-//   bidCount: 47,
-//   endTime: new Date(Date.now() + 3600000 * 5).toISOString(),
-//   status: 'active',
-//   autoExtend: true,
-//   category: "Luxury Watches"
-// };
+// Mock data for demonstration (giữ lại nếu bạn cần tham khảo, nhưng không dùng tới)
+// const mockProduct = { ... };
 
 export default function BiddingSection({ product }) {
-  // const [product] = useState(mockProduct);
   const { user } = useAuth();
-  const [bidAmount, setBidAmount] = useState(product.currentPrice + product.biddingStep);
+  
+  // --- TÍNH TOÁN GIÁ TRỊ BAN ĐẦU AN TOÀN ---
+  // Sử dụng Optional Chaining (?.) để tránh lỗi màn hình trắng nếu product chưa load xong
+  const currentPrice = Number(product?.currentPrice) || 0;
+  const stepPrice = Number(product?.biddingStep || product?.stepPrice) || 0;
+  const buyNowPrice = product?.buyNowPrice ? Number(product.buyNowPrice) : null;
+  const initialBid = currentPrice + stepPrice;
+  
+  const [bidAmount, setBidAmount] = useState(initialBid);
   const [isWatchlisted, setIsWatchlisted] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(formatTimeLeft(product.endTime));
+  
+  // [MỚI] State để hiển thị hiệu ứng Loading khi đang gửi bid
+  const [loading, setLoading] = useState(false); 
 
-  // Check if auction has ended
-  const isAuctionEnded = timeLeft.urgencyLevel === 'ended';
-  const isWinner = user?.id === product.winnerId;
-  const isSeller = user?.id === product.sellerId;
-  const isParticipant = isWinner || isSeller;
-
-  // Update timer every second
+  // [CẬP NHẬT] Tự động cập nhật giá gợi ý nếu có người khác vừa bid xong (Realtime-like)
   useEffect(() => {
-    const interval = setInterval(() => {
-      setTimeLeft(formatTimeLeft(product.endTime));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [product.endTime]);
+    if (product) {
+        const newCurrent = Number(product.currentPrice) || 0;
+        const newStep = Number(product.biddingStep || product.stepPrice) || 0;
+        // Chỉ cập nhật nếu user chưa nhập gì (đang ở giá mặc định) hoặc giá mới cao hơn
+        setBidAmount(prev => {
+            const newMin = newCurrent + newStep;
+            return prev < newMin ? newMin : prev;
+        });
+    }
+  }, [product]);
 
-  const incrementBid = (amount) => {
-    setBidAmount(prev => prev + amount);
+  const handleWatchlist = () => {
+    setIsWatchlisted(!isWatchlisted);
   };
 
-  const handleBid = async () => {
-    // Zod Validation
-    const validation = validateForm(placeBidSchema, { bidAmount: parseFloat(bidAmount) });
+  // --- [QUAN TRỌNG] HÀM XỬ LÝ ĐẤU GIÁ TỰ ĐỘNG ---
+  const handlePlaceBid = async (e) => {
+    e.preventDefault();
     
+    // 1. Kiểm tra đăng nhập
+    if (!user) {
+        // Chuyển hướng login (dùng window.location để đảm bảo redirect mượt mà)
+        window.location.href = '/login'; 
+        return;
+    }
+
+    // 2. Validate dữ liệu ở Client (dùng Zod schema có sẵn của bạn)
+    // Logic: Giá đặt phải >= Giá hiện tại + Bước giá
+    const validation = validateForm(placeBidSchema, { 
+      bidAmount: parseFloat(bidAmount),
+      currentPrice: currentPrice,
+      stepPrice: stepPrice 
+    });
+
     if (!validation.success) {
       alert(validation.message);
       return;
     }
-    
-    // Additional business logic validation
-    if (validation.data.bidAmount <= product.currentPrice) {
-      alert('Bid amount must be higher than current price');
-      return;
-    }
-    
-    if (validation.data.bidAmount < product.currentPrice + product.biddingStep) {
-      alert(`Bid must be at least ${formatCurrency(product.currentPrice + product.biddingStep)}`);
-      return;
-    }
-    
+
+    // 3. Gọi API Đấu giá tự động (Backend Service)
+    setLoading(true); // Bật trạng thái loading (nút mờ đi, hiện spinner)
     try {
-      const result = await productService.placeBid(product.id, validation.data.bidAmount);
-      if (result.success) {
-        alert(`Bid placed: ${formatCurrency(validation.data.bidAmount)}`);
-        const bidders = await productService.getTopBidders(product.id, 3);
-      }
-    } catch (error) {
-      alert('Failed to place bid. Please try again.');
+        // Gọi hàm placeBid trong auctionService (Hàm này gọi API POST /auction/:id/bid)
+        // Hệ thống backend sẽ tự động tính toán logic Auto-bid
+        await auctionService.placeBid(product.id, bidAmount);
+        
+        // Thông báo thành công
+        alert(`Thành công! Hệ thống đã ghi nhận mức giá tối đa ${formatCurrency(bidAmount)} của bạn. Chúng tôi sẽ tự động trả giá giúp bạn.`);
+        
+        // Tải lại trang để cập nhật giá mới nhất và lịch sử đấu giá
+        window.location.reload(); 
+    } catch (err) {
+        console.error(err);
+        alert(err.message || "Đấu giá thất bại. Vui lòng thử lại.");
+    } finally {
+        setLoading(false); // Tắt loading dù thành công hay thất bại
     }
   };
 
-  const priceIncrease = ((product.currentPrice - product.startingPrice) / product.startingPrice * 100).toFixed(1);
-
-  // Render auction ended state
-  if (isAuctionEnded) {
-    return (
-      <div className="min-h-screen bg-(--bg)">
-        <div className="max-w-lg mx-auto">
-          {/* Header */}
-          <div className="relative px-6 pt-6 pb-4">
-            {/* Seller Info */}
-            <div className="flex items-center justify-between mb-4">
-              <div className='flex gap-2'>
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border"
-                  style={{ 
-                    backgroundColor: 'var(--accent-soft)', 
-                    borderColor: 'var(--accent)',
-                    color: 'var(--accent)'
-                  }}>
-                  <User size={12} />
-                  {product.sellerName}
-                </div>
-                {product.sellerRating && (
-                  <div className="inline-flex items-center gap-1.5 text-xs text-(--text) font-bold transition-colors">
-                    <Star size={12} className="fill-amber-400 text-amber-400" />
-                    <span>{(product.sellerRating.positive / (product.sellerRating.positive + product.sellerRating.negative) || 0).toFixed(1)}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Title */}
-            <h1 className="text-2xl md:text-3xl font-black leading-tight mb-3" 
-                style={{ color: 'var(--text)' }}>
-              {product.title}
-            </h1>
-          </div>
-
-          {/* Auction Ended Card */}
-          <div className="mx-6 mb-6 rounded-2xl overflow-hidden border"
-            style={{ 
-              backgroundColor: 'var(--bg)',
-              borderColor: 'var(--border-strong)',
-              boxShadow: '0 8px 16px -4px rgba(0,0,0,0.1)'
-            }}>
-            
-            {/* Ended Status Banner */}
-            <div className="p-6 text-center relative bg-gradient-to-b from-gray-50 to-white dark:from-gray-800 dark:to-gray-900">
-              <div className="flex items-center justify-center gap-2 mb-4">
-                <CheckCircle size={24} className="text-green-500" />
-                <p className="text-lg font-bold text-green-600 dark:text-green-400">
-                  Auction Ended
-                </p>
-              </div>
-              
-              <p className="text-xs font-bold uppercase tracking-widest mb-2" 
-                  style={{ color: 'var(--text-muted)' }}>
-                Final Price
-              </p>
-              
-              <div className="text-4xl md:text-5xl font-black tracking-tight mb-4" 
-                    style={{ 
-                      color: 'var(--accent)',
-                      textShadow: '0 2px 20px var(--accent-soft)'
-                    }}>
-                {formatCurrency(product.currentPrice)}
-              </div>
-
-              {product.bidCount > 0 && (
-                <p className="text-sm text-(--text-muted)">
-                  Total bids: <span className="font-bold">{product.bidCount}</span>
-                </p>
-              )}
-            </div>
-
-            {/* Winner / No Bids Info */}
-            <div className="p-6 border-t" style={{ borderColor: 'var(--border)' }}>
-              {product.bidCount > 0 ? (
-                <div className="text-center">
-                  <div className="flex items-center justify-center gap-2 mb-3">
-                    <Trophy size={20} className="text-amber-500" />
-                    <p className="text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-                      Winner
-                    </p>
-                  </div>
-                  
-                  {isWinner ? (
-                    <div>
-                      <p className="text-xl font-bold text-green-600 dark:text-green-400 mb-3">
-                        🎉 Congratulations! You won!
-                      </p>
-                      <Link
-                        to={`/order/${product.id}`}
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all hover:scale-105"
-                      >
-                        Complete Order
-                        <ChevronRight size={18} />
-                      </Link>
-                    </div>
-                  ) : isSeller ? (
-                    <div>
-                      <p className="text-lg font-semibold text-(--text) mb-3">
-                        Your item has been sold!
-                      </p>
-                      <Link
-                        to={`/order/${product.id}`}
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-all hover:scale-105"
-                      >
-                        Manage Order
-                        <ChevronRight size={18} />
-                      </Link>
-                    </div>
-                  ) : (
-                    <div>
-                      <p className="text-lg font-semibold text-(--text)">
-                        {product.winnerName || 'Anonymous'}
-                      </p>
-                      <p className="text-sm text-(--text-muted) mt-1">
-                        won this auction
-                      </p>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="text-center">
-                  <p className="text-lg font-semibold text-(--text-muted)">
-                    No bids were placed
-                  </p>
-                  <p className="text-sm text-(--text-muted) mt-1">
-                    This auction ended without any bids
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Actions for non-participants */}
-          {!isParticipant && (
-            <div className="px-6 pb-6">
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => setIsWatchlisted(!isWatchlisted)}
-                  className={`flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-sm border-2 transition-all hover:scale-105 active:scale-95 ${
-                    isWatchlisted ? 'shadow-md' : ''
-                  }`}
-                  style={{ 
-                    backgroundColor: isWatchlisted ? 'var(--danger-soft)' : 'var(--bg-soft)',
-                    borderColor: isWatchlisted ? 'var(--danger)' : 'var(--border)',
-                    color: isWatchlisted ? 'var(--danger)' : 'var(--text)'
-                  }}>
-                  <Heart size={18} className={isWatchlisted ? 'fill-current' : ''} />
-                  {isWatchlisted ? 'Saved' : 'Save'}
-                </button>
-                
-                <button
-                  className="flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-sm border-2 transition-all hover:scale-105 active:scale-95"
-                  style={{ 
-                    backgroundColor: 'var(--bg-soft)',
-                    borderColor: 'var(--border)',
-                    color: 'var(--text)'
-                  }}>
-                  <Share2 size={18} />
-                  Share
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // Normal auction in progress
+  // Bảo vệ component không render nếu thiếu dữ liệu
+  if (!product) return null;
 
   return (
-    <div className="min-h-screen bg-(--bg)">
-      <div className="max-w-lg mx-auto">
+    <div className="rounded-3xl border overflow-hidden relative shadow-2xl backdrop-blur-sm transition-all duration-300"
+         style={{ 
+           backgroundColor: 'var(--bg-soft)',
+           borderColor: 'var(--border)'
+         }}>
+      
+      {/* Top Gradient Line - Tạo điểm nhấn thị giác sang trọng */}
+      <div className="h-1 w-full bg-gradient-to-r from-[var(--accent)] via-orange-500 to-[var(--accent)]"></div>
+
+      <div className="p-6 md:p-8">
         
-        {/* Header: Status Banner */}
-        <div className="relative px-6 pt-6 pb-4">
-
-          {/* Seller Info */}
-          <div className="flex items-center justify-between mb-4">
-            <div className='flex gap-2'>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border"
-                style={{ 
-                  backgroundColor: 'var(--accent-soft)', 
-                  borderColor: 'var(--accent)',
-                  color: 'var(--accent)'
-                }}>
-                <User size={12} />
-                {product.sellerName}
-                {/* <ShieldCheck size={12} className="text-(--success)" /> */}
-              </div>
-              <div className="inline-flex items-center gap-1.5 text-xs text-(--text) font-bold transition-colors">
-                <Star size={12} className="fill-amber-400 text-amber-400" />
-                <span>{(product.sellerRating.positive / (product.sellerRating.positive + product.sellerRating.negative)).toFixed(1)}</span>
-              </div>
-            </div>
-
-            {product.autoExtend && (
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
-                    style={{ backgroundColor: 'var(--info-soft)', color: 'var(--info)' }}>
-                <Zap size={12} />
-                Auto-Extend
-              </div>
-            )}
+        {/* --- HEADER: Trạng thái & Tiêu đề --- */}
+        <div className="mb-8">
+          <div className="flex justify-between items-start gap-4 mb-4">
+             {/* Trạng thái đấu giá (Active/Ended) */}
+             <div className="flex items-center gap-2 text-sm font-medium px-3 py-1 rounded-full border w-fit"
+                  style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg)' }}>
+                <span className={`w-2 h-2 rounded-full ${product.status === 'active' ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></span>
+                <span className="uppercase tracking-wider text-xs">{product.status}</span>
+             </div>
+             
+             {/* Nút Like & Share */}
+             <div className="flex gap-2">
+               <button 
+                 onClick={handleWatchlist}
+                 className="p-2.5 rounded-full border transition-all hover:scale-110 active:scale-95"
+                 style={{ 
+                   borderColor: 'var(--border)',
+                   backgroundColor: isWatchlisted ? 'var(--danger-soft)' : 'transparent',
+                   color: isWatchlisted ? 'var(--danger)' : 'var(--text-muted)'
+                 }}>
+                 <Heart size={20} className={isWatchlisted ? "fill-current" : ""} />
+               </button>
+               <button className="p-2.5 rounded-full border transition-all hover:bg-[var(--bg-hover)]"
+                 style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
+                 <Share2 size={20} />
+               </button>
+             </div>
           </div>
 
-          {/* Title */}
-          <h1 className="text-2xl md:text-3xl font-black leading-tight mb-3" 
-              style={{ color: 'var(--text)' }}>
+          <h1 className="text-2xl md:text-3xl font-bold leading-tight mb-4" style={{ color: 'var(--text)' }}>
             {product.title}
           </h1>
 
-          {/* Meta Info */}
-          <div className="flex items-center gap-4 text-sm font-medium" 
-                style={{ color: 'var(--text-muted)' }}>
-            <span className="flex items-center gap-1.5">
-              <MapPin size={14} /> Ho Chi Minh City
-            </span>
-            <span className="flex items-center gap-1.5">
-              <TrendingUp size={14} /> {product.bidCount} Bids
-            </span>
+          {/* Thông tin người bán */}
+          <div className="flex items-center gap-3 text-sm">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white font-bold">
+               {product.sellerName ? product.sellerName[0].toUpperCase() : 'S'}
+            </div>
+            <div>
+              <p className="text-[var(--text-muted)] text-xs">Seller</p>
+              <Link to={`/profile/${product.sellerName}`} className="font-bold hover:text-[var(--accent)] transition-colors" style={{ color: 'var(--text)' }}>
+                @{product.sellerName || 'Unknown'}
+              </Link>
+            </div>
+            <div className="ml-auto flex items-center gap-1 text-xs font-medium px-2 py-1 rounded bg-[var(--bg)] border border-[var(--border)]">
+               <Star size={12} className="text-[var(--accent)] fill-current" />
+               <span>4.9</span>
+               <span className="text-[var(--text-muted)]">(120)</span>
+            </div>
           </div>
         </div>
 
-        {/* Price Dashboard - Premium Design */}
-        <div className="mx-6 mb-6 rounded-2xl overflow-hidden border"
-          style={{ 
-            backgroundColor: 'var(--bg)',
-            borderColor: 'var(--border-strong)',
-            boxShadow: '0 8px 16px -4px rgba(0,0,0,0.1)'
-          }}>
-          
-          {/* Current Price - Hero Section */}
-          <div className="p-6 text-center relative">
-            {/* Accent Gradient Background */}
-            <div className="absolute inset-0 opacity-5" 
-              style={{ 
-                background: `radial-gradient(circle at center, var(--danger) 0%, transparent 70%)`
-              }}
-            >
-            </div>
-            
-            <div className="relative z-10">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <Crown size={16} style={{ color: 'var(--accent)' }} />
-                <p className="text-xs font-bold uppercase tracking-widest" 
-                    style={{ color: 'var(--text-muted)' }}>
-                  Current Bid
-                </p>
-              </div>
+        {/* --- PRICING CARD (Khu vực đấu giá chính) --- */}
+        <div className="p-6 rounded-2xl mb-8 relative overflow-hidden group"
+             style={{ backgroundColor: 'var(--bg)' }}>
+           
+           {/* Icon nền mờ trang trí (Gavel lớn) */}
+           <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
+              <Gavel size={80} />
+           </div>
+
+           <div className="relative z-10">
+              <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Current Bid</p>
               
-              <div className="text-5xl md:text-6xl font-black tracking-tight mb-2" 
-                    style={{ 
-                      color: 'var(--accent)',
-                      textShadow: '0 2px 20px var(--accent-soft)'
-                    }}>
-                {formatCurrency(product.currentPrice)}
+              {/* Giá hiện tại to rõ */}
+              <div className="flex items-baseline gap-2 mb-4">
+                <span className="text-4xl font-black tracking-tight" style={{ color: 'var(--text)' }}>
+                  {formatCurrency(currentPrice)}
+                </span>
+                <span className="text-sm font-medium text-[var(--text-muted)]">
+                  {product.bidCount || 0} bids
+                </span>
               </div>
 
-              {/* Price Change Indicator */}
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold"
-                    style={{ 
-                      backgroundColor: 'var(--success-soft)',
-                      color: 'var(--success)'
-                    }}>
-                <TrendingUp size={12} />
-                +{priceIncrease}% from start
-              </div>
-            </div>
-          </div>
-
-          {/* Time & Stats Grid */}
-          <div className="grid grid-cols-2 border-t" style={{ borderColor: 'var(--border)' }}>
-            
-            {/* Time Left */}
-            <div className="p-4 border-r" style={{ borderColor: 'var(--border)' }}>
-              <p className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5" 
-                  style={{ color: 'var(--text-muted)' }}>
-                <Clock size={12} />
-                Time Left
-              </p>
-              <div className={`text-xl font-black ${
-                timeLeft.urgencyLevel === 'critical' ? 'text-red-600 dark:text-red-400 animate-pulse' : 
-                timeLeft.urgencyLevel === 'warning' ? 'text-amber-600 dark:text-amber-400' : 
-                ''
-              }`} style={{ color: timeLeft.urgencyLevel === 'normal' ? 'var(--text)' : '' }}>
-                {timeLeft.timeLeft}
-              </div>
-            </div>
-
-            {/* Starting Price */}
-            <div className="p-4">
-              <p className="text-xs font-bold uppercase tracking-wider mb-2" 
-                  style={{ color: 'var(--text-muted)' }}>
-                Started At
-              </p>
-              <div className="text-xl font-black" style={{ color: 'var(--text)' }}>
-                {formatCurrency(product.startingPrice)}
-              </div>
-            </div>
-          </div>
-
-          {/* Buy Now Option (if available) */}
-          {product.buyNowPrice && (
-            <div className="p-4 border-t" style={{ borderColor: 'var(--border)' }}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-wider mb-1" 
-                      style={{ color: 'var(--text-muted)' }}>
-                    Buy It Now
-                  </p>
-                  <div className="text-2xl font-black" style={{ color: 'var(--theme-secondary)' }}>
-                    {formatCurrency(product.buyNowPrice)}
-                  </div>
+              {/* Giá mua ngay (nếu có) */}
+              {buyNowPrice && (
+                <div className="flex items-center gap-2 text-sm font-medium px-3 py-2 rounded-lg bg-green-500/10 text-green-600 w-fit mb-4">
+                   <Zap size={16} className="fill-current" />
+                   Buy Now: {formatCurrency(buyNowPrice)}
                 </div>
-                <button className="px-4 py-2 rounded-xl bg-(--theme-secondary) font-bold text-sm text-white flex items-center gap-2 transition-all hover:scale-105 active:scale-95">
-                  <Zap size={16} />
-                  Buy Now
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Bidding Interface */}
-        <div className="px-6 pb-6">
-          
-          {/* Quick Bid Buttons */}
-          <div className="mb-4">
-            <p className="text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2" 
-                style={{ color: 'var(--text-muted)' }}>
-              <Gavel size={12} />
-              Quick Bid
-            </p>
-            <div className="grid grid-cols-3 gap-2">
-              {[product.biddingStep, product.biddingStep * 2, product.biddingStep * 5].map((amount, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => incrementBid(product.currentPrice + amount)}
-                  className="py-3 px-4 rounded-xl bg-(--bg-soft) font-bold text-sm text-(--text) hover:text-(--accent) border-2 border-(--border) hover:border-(--accent) transition-all hover:scale-105 active:scale-95"
-                >
-                  +{formatCurrency(amount)}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Custom Bid Input */}
-          <div className="mb-4">
-            <label className="text-xs text-(--text-muted) font-bold uppercase tracking-wider mb-3 block">
-              Your Maximum Bid
-            </label>
-            
-            <div className="relative">
-              <span className="absolute left-5 top-1/2 -translate-y-1/2 text-2xl text-(--accent) font-black">
-                $
-              </span>
-              <input
-                type="number"
-                value={bidAmount}
-                onChange={(e) => setBidAmount(Number(e.target.value))}
-                min={product.currentPrice + product.biddingStep}
-                step={product.biddingStep}
-                className="w-full pl-12 pr-24 py-5 rounded-2xl bg-(input-bg) border-2 border-(--input-border) font-black text-2xl text-(--text) outline-none transition-all"
-                onFocus={(e) => e.target.style.borderColor = 'var(--input-border-focus)'}
-                onBlur={(e) => e.target.style.borderColor = 'var(--input-border)'}
-              />
+              )}
               
-              {/* Increment Buttons */}
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-1">
-                <button
-                  onClick={() => incrementBid(product.biddingStep)}
-                  className="px-2 py-1 rounded text-xs font-bold"
-                  style={{ backgroundColor: 'var(--bg-hover)', color: 'var(--text)' }}>
-                  +{product.biddingStep}
+              <div className="h-px w-full bg-[var(--border)] my-4"></div>
+
+              {/* --- [FORM NHẬP GIÁ] Đã tích hợp Auto Bid --- */}
+              <form onSubmit={handlePlaceBid} className="space-y-4 mb-6">
+                
+                {/* Label có Badge Auto-Bid để người dùng hiểu tính năng */}
+                <div className="flex justify-between items-center">
+                    <label className="text-sm font-bold text-[var(--text)]">Your Maximum Bid</label>
+                    <span className="text-[10px] bg-[var(--accent)] text-black px-2 py-0.5 rounded-full font-bold shadow-sm flex items-center gap-1 cursor-help" title="System will bid for you automatically up to this amount">
+                        <Zap size={10} fill="black" /> AUTO-BID
+                    </span>
+                </div>
+
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <span className="text-gray-500 font-bold">₫</span>
+                  </div>
+                  <input 
+                    type="number"
+                    value={bidAmount}
+                    onChange={(e) => setBidAmount(e.target.value)}
+                    className="block w-full pl-8 pr-4 py-4 rounded-xl font-bold text-lg focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent transition-all outline-none"
+                    style={{ backgroundColor: 'var(--input-bg)', color: 'var(--text)', border: '1px solid var(--border)' }}
+                    placeholder={`Min ${formatCurrency(initialBid)}`}
+                  />
+                </div>
+                
+                {/* Giải thích cơ chế tự động */}
+                <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>
+                  Enter {formatCurrency(initialBid)} or more. We'll bid automatically for you.
+                </p>
+
+                {/* Nút đặt giá (Có hiệu ứng Loading) */}
+                <button 
+                    type="submit" 
+                    disabled={loading || product.status !== 'active'}
+                    className="w-full py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: 'var(--accent)', color: '#1A1205' }}
+                >
+                    {loading ? (
+                        <>
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#1A1205]"></div>
+                            Processing...
+                        </>
+                    ) : (
+                        <>
+                            Place Bid
+                            <Gavel size={20} />
+                        </>
+                    )}
                 </button>
-                <button
-                  onClick={() => incrementBid(-product.biddingStep)}
-                  disabled={bidAmount <= product.currentPrice + product.biddingStep}
-                  className="px-2 py-1 rounded text-xs font-bold disabled:opacity-30"
-                  style={{ backgroundColor: 'var(--bg-hover)', color: 'var(--text)' }}>
-                  -{product.biddingStep}
-                </button>
-              </div>
-            </div>
-
-            {/* Validation Message */}
-            <div className="mt-2 flex items-start gap-2 text-xs font-medium" 
-                  style={{ color: 'var(--text-muted)' }}>
-              <AlertCircle size={14} className="mt-0.5 shrink-0 text-(--danger)" />
-              <p>
-                Minimum bid: <span className="font-bold" style={{ color: 'var(--accent)' }}>{formatCurrency(product.currentPrice + product.biddingStep)}</span>
-              </p>
-            </div>
-          </div>
-
-          {/* Primary Action Button */}
-          <button
-            className="w-full py-5 rounded-2xl font-black text-lg flex items-center justify-center gap-3 transition-all hover:scale-[1.02] hover:shadow-2xl active:scale-[0.98] mb-4"
-            style={{ 
-              backgroundColor: 'var(--accent)',
-              color: '#1A1205',
-              boxShadow: '0 10px 30px -10px var(--accent)'
-            }}>
-            <Trophy size={24} />
-            Place Bid
-            <ChevronRight size={24} />
-          </button>
-
-          {/* Secondary Actions */}
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => setIsWatchlisted(!isWatchlisted)}
-              className={`flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-sm border-2 transition-all hover:scale-105 active:scale-95 ${
-                isWatchlisted ? 'shadow-md' : ''
-              }`}
-              style={{ 
-                backgroundColor: isWatchlisted ? 'var(--danger-soft)' : 'var(--bg-soft)',
-                borderColor: isWatchlisted ? 'var(--danger)' : 'var(--border)',
-                color: isWatchlisted ? 'var(--danger)' : 'var(--text)'
-              }}>
-              <Heart size={18} className={isWatchlisted ? 'fill-current' : ''} />
-              {isWatchlisted ? 'Watching' : 'Watch'}
-            </button>
-            
-            <button
-              className="flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-sm border-2 transition-all hover:scale-105 active:scale-95"
-              style={{ 
-                backgroundColor: 'var(--bg-soft)',
-                borderColor: 'var(--border)',
-                color: 'var(--text)'
-              }}>
-              <Share2 size={18} />
-              Share
-            </button>
-          </div>
-
-          {/* Trust Indicators */}
-          <div className="mt-6 pt-6 border-t border-(--border) flex items-center justify-center gap-6 text-xs text-(--text-muted) font-semibold">
-            <div className="flex items-center gap-1.5">
-              <ShieldCheck size={14} style={{ color: 'var(--success)' }} />
-              Secure Bidding
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Star size={14} style={{ color: 'var(--accent)' }} />
-              Verified Item
-            </div>
-          </div>
+              </form>
+           </div>
         </div>
 
-        {/* Additional Info Card */}
-        {/* <div className="mt-6 p-4 rounded-2xl border"
-             style={{ 
-               backgroundColor: 'var(--bg-soft)',
-               borderColor: 'var(--border)'
-             }}>
-          <div className="flex items-start gap-3">
-            <AlertCircle size={18} style={{ color: 'var(--info)' }} className="flex-shrink-0 mt-0.5" />
-            <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
-              <p className="font-bold mb-1" style={{ color: 'var(--text)' }}>
-                Auction Rules
-              </p>
-              <p>
-                Your bid is a binding contract. The auction {product.autoExtend ? 'auto-extends by 5 minutes if bids are placed in the final moments' : 'ends at the scheduled time'}. All sales are final.
-              </p>
-            </div>
-          </div>
-        </div> */}
+        {/* --- FOOTER INFO (Thời gian & Bước giá) --- */}
+        <div className="grid grid-cols-2 gap-4 text-center">
+           <div className="p-3 rounded-xl border" style={{ borderColor: 'var(--border)' }}>
+              <p className="text-xs text-[var(--text-muted)] mb-1">Time Left</p>
+              <div className="font-bold flex items-center justify-center gap-1" style={{ color: 'var(--text)' }}>
+                 <Clock size={14} />
+                 {formatTimeLeft(product.endTime).timeLeft}
+              </div>
+           </div>
+           <div className="p-3 rounded-xl border" style={{ borderColor: 'var(--border)' }}>
+              <p className="text-xs text-[var(--text-muted)] mb-1">Step</p>
+              <div className="font-bold flex items-center justify-center gap-1" style={{ color: 'var(--text)' }}>
+                 <TrendingUp size={14} />
+                 {formatCurrency(stepPrice)}
+              </div>
+           </div>
+        </div>
 
+        {/* Trust Indicators */}
+        <div className="mt-6 pt-6 border-t border-[var(--border)] flex items-center justify-center gap-6 text-xs text-[var(--text-muted)] font-semibold">
+          <div className="flex items-center gap-1.5">
+            <ShieldCheck size={14} className="text-green-600" />
+            Secure Bidding
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Star size={14} style={{ color: 'var(--accent)' }} />
+            Verified Item
+          </div>
+        </div>
       </div>
     </div>
   );
