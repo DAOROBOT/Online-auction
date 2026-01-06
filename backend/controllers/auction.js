@@ -125,6 +125,24 @@ const controller = {
         } catch (error) {
             next(error);
         }
+    },
+
+    // POST /auctions/:id/bid
+    placeBid: async function(req, res, next) {
+        try {
+            const auctionId = Number(req.params.id);
+            const userId = req.user.id; // Lấy từ token
+            const { amount } = req.body; // Đây là "Max Bid" mà user nhập
+
+            if (!amount || Number(amount) <= 0) {
+                return res.status(400).json({ message: 'Invalid bid amount' });
+            }
+
+            const result = await auctionService.placeBid(auctionId, userId, amount);
+            res.status(200).json(result);
+        } catch (error) {
+            next(error);
+        }
     }
 }
 
