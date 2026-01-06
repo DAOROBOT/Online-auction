@@ -8,10 +8,7 @@ import { formatCurrency, formatTimeLeft } from '../../utils/format';
 import { useAuth } from '../../contexts/AuthContext';
 import { placeBidSchema } from '../../schemas/auction.schemas';
 import { validateForm } from '../../utils/validation';
-import { auctionService } from '../../services/auctionService'; // Đã import Service
-
-// Mock data for demonstration (giữ lại nếu bạn cần tham khảo, nhưng không dùng tới)
-// const mockProduct = { ... };
+import { auctionService } from '../../services/auctionService';
 
 export default function BiddingSection({ product }) {
   const { user } = useAuth();
@@ -26,10 +23,10 @@ export default function BiddingSection({ product }) {
   const [bidAmount, setBidAmount] = useState(initialBid);
   const [isWatchlisted, setIsWatchlisted] = useState(false);
   
-  // [MỚI] State để hiển thị hiệu ứng Loading khi đang gửi bid
+  //Trạng thái hiển thị hiệu ứng Loading khi đang gửi bid
   const [loading, setLoading] = useState(false); 
 
-  // [CẬP NHẬT] Tự động cập nhật giá gợi ý nếu có người khác vừa bid xong (Realtime-like)
+  // [CẬP NHẬT] Tự động cập nhật giá gợi ý nếu có người khác vừa bid xong \
   useEffect(() => {
     if (product) {
         const newCurrent = Number(product.currentPrice) || 0;
@@ -46,18 +43,18 @@ export default function BiddingSection({ product }) {
     setIsWatchlisted(!isWatchlisted);
   };
 
-  // --- [QUAN TRỌNG] HÀM XỬ LÝ ĐẤU GIÁ TỰ ĐỘNG ---
+  // --- HÀM XỬ LÝ ĐẤU GIÁ TỰ ĐỘNG ---
   const handlePlaceBid = async (e) => {
     e.preventDefault();
     
     // 1. Kiểm tra đăng nhập
     if (!user) {
-        // Chuyển hướng login (dùng window.location để đảm bảo redirect mượt mà)
+        // Chuyển hướng login (dùng window.location để đảm bảo redirect mượt)
         window.location.href = '/login'; 
         return;
     }
 
-    // 2. Validate dữ liệu ở Client (dùng Zod schema có sẵn của bạn)
+    // 2. Validate dữ liệu ở Client (dùng Zod schema)
     // Logic: Giá đặt phải >= Giá hiện tại + Bước giá
     const validation = validateForm(placeBidSchema, { 
       bidAmount: parseFloat(bidAmount),
@@ -71,7 +68,7 @@ export default function BiddingSection({ product }) {
     }
 
     // 3. Gọi API Đấu giá tự động (Backend Service)
-    setLoading(true); // Bật trạng thái loading (nút mờ đi, hiện spinner)
+    setLoading(true); // Bật trạng thái loading 
     try {
         // Gọi hàm placeBid trong auctionService (Hàm này gọi API POST /auction/:id/bid)
         // Hệ thống backend sẽ tự động tính toán logic Auto-bid
@@ -100,7 +97,7 @@ export default function BiddingSection({ product }) {
            borderColor: 'var(--border)'
          }}>
       
-      {/* Top Gradient Line - Tạo điểm nhấn thị giác sang trọng */}
+      {/* Top Gradient Line*/}
       <div className="h-1 w-full bg-gradient-to-r from-[var(--accent)] via-orange-500 to-[var(--accent)]"></div>
 
       <div className="p-6 md:p-8">
@@ -219,7 +216,7 @@ export default function BiddingSection({ product }) {
                   Enter {formatCurrency(initialBid)} or more. We'll bid automatically for you.
                 </p>
 
-                {/* Nút đặt giá (Có hiệu ứng Loading) */}
+                {/* Nút đặt giá */}
                 <button 
                     type="submit" 
                     disabled={loading || product.status !== 'active'}
