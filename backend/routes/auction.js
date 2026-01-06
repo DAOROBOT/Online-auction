@@ -22,4 +22,7 @@ route.put('/:id', requireSeller, auctionController.update);
 // DELETE: Remove Specific Auction
 route.delete('/:id', auctionController.delete);
 
+// POST: Place a bid (Auto Bidding supported)
+route.post('/:id/bid', requireAuth, auctionController.placeBid);
+
 export default route;
