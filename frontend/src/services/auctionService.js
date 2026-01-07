@@ -9,7 +9,7 @@ const auctionService = {
     return res.json();
   },
 
-  // --- CÁC HÀM MỚI ĐỂ COMPONENT CON TỰ GỌI ---
+  // --- CÁC HÀM MỚI---
   
   // 1. Lấy danh sách ảnh
   getImages: async (id) => {
