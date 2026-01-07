@@ -2,6 +2,8 @@ import { useState, useRef } from 'react';
 import { useNav } from '../../hooks/useNavigate';
 import { useAuth } from '../../contexts/AuthContext';
 import { ShieldCheck, Mail, ArrowRight } from 'lucide-react';
+import { validateForm } from '../../utils/validation';
+import { verificationCodeSchema } from '../../schemas/auth.schemas';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -136,9 +138,10 @@ export default function VerifyAccount() {
     };
 
     return (
-        <div className="w-full max-w-md">
-            {/* Icon */}
-            <div className="flex justify-center mb-6">
+        <div className="min-h-screen flex items-center justify-center px-4 py-12">
+            <div className="w-full max-w-md">
+                {/* Icon */}
+                <div className="flex justify-center mb-6">
                 <div className="w-16 h-16 rounded-full bg-[var(--accent-soft)] flex items-center justify-center">
                     <ShieldCheck size={32} className="text-[var(--accent)]" />
                 </div>
@@ -216,6 +219,7 @@ export default function VerifyAccount() {
                     </button>
                 </p>
             </div>
+        </div>
         </div>
     );
 }

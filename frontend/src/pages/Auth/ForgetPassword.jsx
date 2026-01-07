@@ -2,6 +2,9 @@ import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useNav } from '../../hooks/useNavigate';
 
+import {validateForm} from '../../utils/validation';
+import { forgotPasswordEmailSchema, forgotPasswordOtpSchema, resetPasswordSchema } from '../../schemas/auth.schemas';
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export default function ForgetPassword() {
