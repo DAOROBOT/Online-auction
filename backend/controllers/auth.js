@@ -51,6 +51,15 @@ const controller = {
                 console.log(`User ${found.id} seller status expired, reverted to buyer`);
             }
         }
+        // Check buyer status - if seller role is approved
+        if (found.role === 'buyer') {
+            const activationResult = await sellerRequestService.checkAndUpdateSellerStatus(found.id);
+            if (activationResult.status === 'active') {
+                await userService.update(found.id, { role: 'seller' });
+                found.role = 'seller';
+            }
+        }
+
         console.log('Generating token for user:', found.id);
         const token = await authService.generateToken({
             userId: found.id,
@@ -61,6 +70,7 @@ const controller = {
         res.status(200).json({
             token,
             user: {
+                imgUrl: found.avatarUrl,
                 userId: found.id,
                 username: found.username,
                 email: found.email,
@@ -75,7 +85,7 @@ const controller = {
     createUser: async function(req, res){
         console.log(req.body);
 
-        const { username, email, password, recaptchaToken } = req.body;
+        const { username, email, password} = req.body;
 
         if (!email || !username || !password) {
             return res.status(400).json({
@@ -83,37 +93,6 @@ const controller = {
             });
         }
 
-        // Verify reCAPTCHA token
-        if (recaptchaToken) {
-            try {
-                const verificationUrl = 'https://www.google.com/recaptcha/api/siteverify';
-                const response = await fetch(verificationUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${recaptchaToken}`
-                });
-
-                const data = await response.json();
-                console.log('reCAPTCHA verification:', data);
-
-                if (!data.success || data.score < 0.5) {
-                    return res.status(400).json({
-                        message: "reCAPTCHA verification failed"
-                    });
-                }
-            } catch (error) {
-                console.error('reCAPTCHA verification error:', error);
-                return res.status(500).json({
-                    message: "reCAPTCHA verification error"
-                });
-            }
-        } else {
-            return res.status(400).json({
-                message: "reCAPTCHA token is required"
-            });
-        }
 
         const found = await userService.getByEmail(email);
         const foundUsername = await userService.getByUsername(username);

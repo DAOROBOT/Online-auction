@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { useNav } from '../../hooks/useNavigate';
 import { useAuth } from '../../contexts/AuthContext';
-import ReCAPTCHA from 'react-google-recaptcha';
 import { registerSchema } from '../../schemas/auth.schemas';
 import { validateForm } from '../../utils/validation';
 
@@ -13,7 +12,6 @@ export default function Register() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    const [recaptchaToken, setRecaptchaToken] = useState(null);
     const [formData, setFormData] = useState({
         username: '',
         email: '',
@@ -28,7 +26,6 @@ export default function Register() {
         // Zod Validation
         const validation = validateForm(registerSchema, {
             ...formData,
-            recaptchaToken: recaptchaToken || ''
         });
 
         if (!validation.success) {
@@ -49,7 +46,6 @@ export default function Register() {
                     username: formData.username,
                     email: formData.email,
                     password: formData.password,
-                    recaptchaToken: recaptchaToken
                 }),
             });
 
@@ -189,17 +185,6 @@ export default function Register() {
                     </div>
                 </div>
 
-                {/* reCAPTCHA */}
-                <div className="space-y-2">
-                    <div className="flex justify-center">
-                        <ReCAPTCHA
-                            sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'}
-                            onChange={(token) => {setRecaptchaToken(token); console.log("reCAPTCHA token:", token);}}
-                            onExpired={() => setRecaptchaToken(null)}
-                            theme="light"
-                        />
-                    </div>
-                </div>
 
                 {/* Register Button */}
                 <button 
