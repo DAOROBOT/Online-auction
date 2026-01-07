@@ -2,72 +2,71 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useNav } from '../../hooks/useNavigate.js';
 import auctionService from '../../services/auctionService.js';
-import ImageGallery from './ImageGallery'
-import BiddingSection from './BiddingSection'
+
+// Import Components
+import ImageGallery from './ImageGallery';
+import BiddingSection from './BiddingSection';
 import Description from './Description';
-import CommentsSection from './CommentsSection'
-import BidHistory from './BidHistory';
+import CommentsSection from './CommentsSection';
+import BidHistory from './BidHistory'; // 
 
 export default function ProductDetail() {
   const { id } = useParams();
   const nav = useNav();
-  const [product, setProduct] = useState(null);
-  // const [isLiked, setIsLiked] = useState(false);
+  const [productCore, setProductCore] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadProductData = async () => {
+    const loadCoreData = async () => {
       setLoading(true);
       try {
-        const productData = await auctionService.getById(id);
-        if (productData) {
-          setProduct(productData);
-        }
+        const data = await auctionService.getById(id);
+        setProductCore(data);
       } catch (error) {
-        console.error('Error loading product data:', error);
+        console.error('Error loading product core:', error);
       } finally {
         setLoading(false);
       }
     };
-    loadProductData();
-  }, []);
+    if (id) loadCoreData();
+  }, [id]);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-  if (!product) return <div className="min-h-screen flex items-center justify-center">Product not found</div>;
+  if (!productCore) return <div className="min-h-screen flex items-center justify-center">Product not found</div>;
+
+  const categoryName = productCore.category?.name || productCore.categoryName || productCore.category || 'Category';
 
   return (
     <div className="min-h-screen py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Breadcrumb */}
-        <nav className="mb-6 flex items-center gap-2 text-sm text-(--text-muted)">
-          <button onClick={() => nav.home()} className="hover:text-(--text) transition">Auctions</button>
+        {/* Breadcrumb Navigation */}
+        <nav className="mb-6 flex items-center gap-2 text-sm text-[var(--text-muted)]">
+          <button onClick={() => nav.home()} className="hover:text-[var(--text)] transition">Auctions</button>
           <span>/</span>
-          <span className="truncate max-w-xs">{product.category}</span>
+          <span className="truncate max-w-xs">{categoryName}</span>
           <span>/</span>
-          <span className="font-medium text-(--text) truncate max-w-xs">{product.title}</span>
+          <span className="font-medium text-[var(--text)] truncate max-w-xs">{productCore.title}</span>
         </nav>
 
-        {/* GRID LAYOUT */}
+        {/* GRID LAYOUT CHÍNH */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
           
-          {/* LEFT COLUMN: Visuals & Deep Info */}
+          {/* --- CỘT TRÁI ---*/}
           <div className="lg:col-span-7 space-y-10">
-            <ImageGallery product={id} />
+            <ImageGallery productId={id} />
             
             <div className="space-y-8">
-              <Description />
-              <CommentsSection />
+              <Description productId={id} />
+              <CommentsSection productId={id} />
             </div>
           </div>
 
-          {/* RIGHT COLUMN: Sticky Action Dashboard (5 Cols) */}
+          {/* --- CỘT PHẢI  --- */}
           <div className="lg:col-span-5 relative">
-            <div className="top-24 space-y-6">
-                {/* Main Bidding Card */}
-                <BiddingSection product={id} />
-                
-                {/* Secondary Stats */}
+            <div className="sticky top-24 space-y-6">
+                {/* 1. Khu vực đặt giá*/}
+                <BiddingSection product={productCore} />
                 <BidHistory productId={id} />
             </div>
           </div>
