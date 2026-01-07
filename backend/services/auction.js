@@ -412,6 +412,32 @@ const service = {
             if (new Date(auction.endTime) < new Date()) throw new Error("Auction has ended");
             if (auction.sellerId === userId) throw new Error("Seller cannot bid on their own product");
 
+            //CHECK ĐIỂM TÍN NHIỆM (80% RULE)
+            // Lấy thông tin Bidder hiện tại (người đang ra giá)
+            const bidder = await tx.query.users.findFirst({
+                where: eq(users.id, userId)
+            });
+
+            if (!bidder) throw new Error("Bidder not found");
+
+            const totalRatings = bidder.ratingCount || 0; // Tổng số lần được đánh giá
+            const positiveRatings = bidder.positiveRatingCount || 0; // Số like (+)
+
+            if (totalRatings > 0) {
+                // TRƯỜNG HỢP 1: Đã từng được đánh giá
+                const scorePercentage = (positiveRatings / totalRatings) * 100;
+                if (scorePercentage < 80) {
+                    throw new Error(`Your rating score (${scorePercentage.toFixed(1)}%) is too low. Required: 80%`);
+                }
+            } else {
+                // TRƯỜNG HỢP 2: Chưa từng được đánh giá (Newbie)
+                // Kiểm tra xem người bán có cho phép không
+                if (auction.allowNewbies === false) {
+                    throw new Error("This seller does not accept bids from users with no rating history.");
+                }
+            }
+            // Kết thúc check điểm tín nhiệm
+
             const currentPrice = Number(auction.currentPrice);
             const stepPrice = Number(auction.stepPrice);
             const inputMax = Number(userMaxAmountInput); // Giá trần user vừa nhập
