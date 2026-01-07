@@ -556,6 +556,37 @@ export const sendAnswerToAllParticipants = async (recipients, auction, seller, q
 };
 
 /**
+ * Send change password OTP
+ * Sends a 6-digit OTP to the user's email for password change verification
+ */
+export const sendChangePasswordOTP = async (to, username, otp) => {
+  const htmlContent = `
+    <h2 style="color: #333; margin-bottom: 20px;">🔐 Password Change Request</h2>
+    <p style="color: #555;">Hello <strong>${username}</strong>,</p>
+    <p style="color: #555; line-height: 1.6;">You requested to change your password. Please use the following verification code:</p>
+    
+    <div style="background: linear-gradient(135deg, #E0B84C 0%, #d4a83a 100%); border-radius: 12px; padding: 30px; margin: 30px 0; text-align: center;">
+      <p style="margin: 0 0 10px 0; color: #1a1205; font-size: 14px; text-transform: uppercase; letter-spacing: 2px;">Verification Code</p>
+      <p style="margin: 0; color: #1a1205; font-size: 42px; font-weight: bold; letter-spacing: 8px; font-family: 'Courier New', monospace;">${otp}</p>
+    </div>
+    
+    <p style="color: #d9534f; font-weight: 600;">⏰ This code will expire in 10 minutes.</p>
+    
+    <p style="color: #555; line-height: 1.6;">
+      If you didn't request a password change, please ignore this email and ensure your account is secure.
+    </p>
+    
+    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;">
+      <p style="margin: 0; color: #856404; font-size: 13px;">
+        🔒 <strong>Security Tip:</strong> Never share this code with anyone. Our staff will never ask for your verification code.
+      </p>
+    </div>
+  `;
+
+  return sendEmailViaAPI(to, '🔐 Password Change Verification Code', htmlContent);
+};
+
+/**
  *  10. REJECTED REQUEST TO SELLER - SEND TO BUYER
  *  Notifies the buyer that their request to become a seller was rejected
  */
@@ -613,6 +644,7 @@ export default {
   sendPasswordResetOTP,
   sendPasswordResetEmail,
   sendEmailVerification,
+  sendChangePasswordOTP,
   
   // Bidding emails
   sendNewBidToSeller,

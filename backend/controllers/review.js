@@ -7,7 +7,13 @@ export const reviewController = {
    */
   async getReviews(req, res, next) {
     try {
-      const { reviewerId, targetId, auctionId, page = 1, limit = 20 } = req.query;
+      const { 
+        reviewerId, 
+        targetId,
+        auctionId, 
+        page = 1, 
+        limit = 20 
+      } = req.query;
 
       const filters = {};
       if (reviewerId) filters.reviewerId = parseInt(reviewerId);
