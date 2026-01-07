@@ -7,6 +7,12 @@ const auctionService = {
     if (!res.ok) throw new Error('Failed to fetch auction details');
     return res.json();
   },
+
+  getCategories: async () => {
+    const res = await fetch(`${API_URL}/categories`);
+    if (!res.ok) throw new Error('Failed to fetch categories');
+    return res.json();
+  },
   
   // 1. Lấy ảnh
   getImages: async (id) => {
