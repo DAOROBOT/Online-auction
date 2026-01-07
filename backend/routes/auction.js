@@ -45,6 +45,9 @@ route.delete('/:id', auctionController.delete);
 // POST: Place a bid (Auto Bidding supported)
 route.post('/:id/bid', requireAuth, auctionController.placeBid);
 
+//Route đăng comment
+route.post('/:id/comments', auctionController.postComment);
+
 // POST: Buy Now - End auction immediately at buyNowPrice
 route.post('/:id/buy-now', requireAuth, auctionController.buyNow);
 

@@ -720,8 +720,30 @@ const service = {
                 finalPrice: auction.buyNowPrice
             };
         });
+    },
+
+    createComment: async function(userId, auctionId, content, parentId = null) {
+        const result = await db.insert(comments).values({
+            userId,
+            auctionId,
+            content,
+            parentId: parentId || null, // Nếu là reply thì có parentId
+            createdAt: new Date()
+        }).returning();
+        
+        // Trả về kèm thông tin người comment để Frontend hiển thị ngay
+        const newComment = await db.query.comments.findFirst({
+            where: eq(comments.id, result[0].id),
+            with: {
+                user: {
+                    columns: { username: true, fullName: true, avatarUrl: true, role: true }
+                }
+            }
+        });
+        
+        return newComment;
     }
 
-}
+};
 
 export default service;

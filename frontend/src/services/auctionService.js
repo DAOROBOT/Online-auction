@@ -110,6 +110,22 @@ const auctionService = {
     return res.json();
   },
 
+  //Add comment
+  addComment: async (auctionId, content, parentId = null) => {
+    const token = localStorage.getItem('authToken');
+    const res = await fetch(`${API_URL}/auction/${auctionId}/comments`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ content, parentId })
+    });
+    
+    if (!res.ok) throw new Error('Failed to post comment');
+    return res.json();
+  },
+
   create: async (auctionData) => {
     const token = localStorage.getItem('authToken');
     const response = await fetch(`${API_URL}/auction`, {

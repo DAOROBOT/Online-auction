@@ -220,6 +220,24 @@ const controller = {
         }
     },
 
+    //POST /auctions/:id/comments
+    postComment: async function(req, res, next) {
+        try {
+            const auctionId = Number(req.params.id);
+            const userId = req.user.id; // Lấy từ token
+            const { content, parentId } = req.body;
+
+            if (!content || content.trim() === "") {
+                return res.status(400).json({ message: "Comment content is required" });
+            }
+
+            const comment = await auctionService.createComment(userId, auctionId, content, parentId);
+            res.status(201).json(comment);
+        } catch (error) {
+            next(error);
+        }
+    },
+
     // PUT /auctions/:id/description
     updateDescription: async function(req, res, next) {
         try {
