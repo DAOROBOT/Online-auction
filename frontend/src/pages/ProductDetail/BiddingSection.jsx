@@ -8,13 +8,12 @@ import { formatCurrency, formatTimeLeft } from '../../utils/format';
 import { useAuth } from '../../contexts/AuthContext';
 import { placeBidSchema } from '../../schemas/auction.schemas';
 import { validateForm } from '../../utils/validation';
-import { auctionService } from '../../services/auctionService';
+import auctionService from '../../services/auctionService';
 
 export default function BiddingSection({ product }) {
   const { user } = useAuth();
   
   // --- TÍNH TOÁN GIÁ TRỊ BAN ĐẦU AN TOÀN ---
-  // Sử dụng Optional Chaining (?.) để tránh lỗi màn hình trắng nếu product chưa load xong
   const currentPrice = Number(product?.currentPrice) || 0;
   const stepPrice = Number(product?.biddingStep || product?.stepPrice) || 0;
   const buyNowPrice = product?.buyNowPrice ? Number(product.buyNowPrice) : null;

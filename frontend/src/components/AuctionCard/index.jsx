@@ -41,7 +41,7 @@ export default function AuctionCard({ product }) {
     }
   };
 
-  const [timeLeft, setTimeLeft] = useState('');
+  // const [timeLeft, setTimeLeft] = useState('');
   const [urgencyLevel, setUrgencyLevel] = useState('normal');
 
   const isNew = (new Date() - new Date(product.createdAt) < 96 * 60 * 60 * 1000);
@@ -58,9 +58,9 @@ export default function AuctionCard({ product }) {
   // }, [product.endTime]);
 
   const handleCardClick = () => {
-    if (product.status == 'active')
+    // if (product.status == 'active')
       nav.auction(product.id);
-    nav.order(product.id);
+    // nav.order(product.id);
   };
 
   const timerStyles = {
