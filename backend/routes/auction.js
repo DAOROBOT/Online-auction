@@ -34,10 +34,16 @@ route.post('/', requireSeller, uploadProductImage.array('images', 10), auctionCo
 // PUT: Update Specific Auction
 route.put('/:id', requireSeller, auctionController.update);
 
+// PUT: Update Auction Description (seller only)
+route.put('/:id/description', requireSeller, auctionController.updateDescription);
+
 // DELETE: Remove Specific Auction
 route.delete('/:id', auctionController.delete);
 
 // POST: Place a bid (Auto Bidding supported)
 route.post('/:id/bid', requireAuth, auctionController.placeBid);
+
+// POST: Buy Now - End auction immediately at buyNowPrice
+route.post('/:id/buy-now', requireAuth, auctionController.buyNow);
 
 export default route;

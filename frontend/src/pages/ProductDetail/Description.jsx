@@ -1,18 +1,28 @@
 import { useState, useEffect } from 'react';
-import { FileText } from 'lucide-react';
+import { FileText, Pencil, Save, X } from 'lucide-react';
 import auctionService from '../../services/auctionService';
+import RichTextEditor from '../../components/RichTextEditor';
 
-export default function Description({ productId }) {
+export default function Description({ productId, isOwner = false }) {
   const [content, setContent] = useState("");
+  const [newContent, setNewContent] = useState(""); // Only for NEW additions
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Format date as D/M/YYYY
+  const formatDate = (date) => {
+    const d = new Date(date);
+    return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+  };
 
   // Fetch dữ liệu thật từ Backend
   useEffect(() => {
     const fetchDesc = async () => {
         try {
             const data = await auctionService.getDescription(productId);
-            // Backend trả về object { description: "HTML content..." }
-            setContent(data.description || "<p>No description provided for this item.</p>");
+            const desc = data.description || "<p>No description provided for this item.</p>";
+            setContent(desc);
         } catch (err) {
             console.error("Error fetching description:", err);
             setContent("<p>Failed to load description.</p>");
@@ -23,6 +33,40 @@ export default function Description({ productId }) {
     if (productId) fetchDesc();
   }, [productId]);
 
+  const handleEditButton = () => {
+    setNewContent(""); // Start with empty editor for new content
+    setIsEditing(true);
+  };
+
+  const handleCancel = () => {
+    setNewContent("");
+    setIsEditing(false);
+  };
+
+  const handleSave = async () => {
+    if (!newContent.trim() || newContent === "<p></p>") {
+      alert("Please enter some content before saving.");
+      return;
+    }
+    
+    setSaving(true);
+    try {
+      // Prepend new content with timestamp to existing content
+      const timestamp = `<p><strong> ${formatDate(new Date())}</strong></p>`;
+      const updatedContent = `${timestamp}${newContent}<hr style="margin: 1.5em 0; border-color: var(--border);" />${content}`;
+      
+      await auctionService.updateDescription(productId, updatedContent);
+      setContent(updatedContent);
+      setNewContent("");
+      setIsEditing(false);
+    } catch (err) {
+      console.error("Error saving description:", err);
+      alert("Failed to save description. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) return <div className="h-64 bg-gray-100 animate-pulse rounded-2xl"></div>;
 
   return (
@@ -32,14 +76,77 @@ export default function Description({ productId }) {
             <FileText className="text-[var(--accent)]" />
             Description
         </h2>
+        
+        {/* Edit Button - Only visible for auction owner */}
+        {isOwner && !isEditing && (
+          <button
+            onClick={handleEditButton}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-[var(--accent)] hover:bg-[var(--accent)]/10 rounded-lg transition-colors"
+          >
+            <Pencil size={16} />
+            Edit
+          </button>
+        )}
+        
+        {/* Save/Cancel Buttons - Only visible when editing */}
+        {isEditing && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleCancel}
+              disabled={saving}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            >
+              <X size={16} />
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-[var(--accent)] text-[var(--accent-text)] hover:opacity-90 rounded-lg transition-colors disabled:opacity-50"
+            >
+              <Save size={16} />
+              {saving ? 'Saving...' : 'Save'}
+            </button>
+          </div>
+        )}
       </div>
 
-      <div className="prose-custom">
-          <div 
-              className="text-[var(--text-muted)]"
-              dangerouslySetInnerHTML={{ __html: content }}
+      {/* Edit Mode - Add new content */}
+      {isEditing && (
+        <div className="space-y-4">
+          <div className="p-3 bg-[var(--accent)]/10 rounded-lg border border-[var(--accent)]/30">
+            <p className="text-sm text-[var(--accent)] font-medium">
+              ✏️ Adding new update for {formatDate(new Date())}
+            </p>
+            <p className="text-xs text-[var(--text-muted)] mt-1">
+              Write your new content below. Previous content will be preserved.
+            </p>
+          </div>
+          
+          <RichTextEditor
+            value={newContent}
+            onChange={setNewContent}
           />
-      </div>
+          
+          {/* Preview of existing content */}
+          <div className="mt-6 pt-4 border-t border-[var(--border)]">
+            <p className="text-sm font-medium text-[var(--text-muted)] mb-3">📜 Previous content (read-only):</p>
+            <div className="prose-custom opacity-60 max-h-48 overflow-y-auto p-4 bg-[var(--bg)] rounded-lg border border-[var(--border)]">
+              <div dangerouslySetInnerHTML={{ __html: content }} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Mode */}
+      {!isEditing && (
+        <div className="prose-custom">
+            <div 
+                className="text-[var(--text-muted)]"
+                dangerouslySetInnerHTML={{ __html: content }}
+            />
+        </div>
+      )}
 
       <style>{`
         .prose-custom {

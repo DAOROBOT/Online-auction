@@ -22,6 +22,21 @@ const auctionService = {
     return res.json();
   },
 
+  // 2b. Cập nhật mô tả (chỉ dành cho seller)
+  updateDescription: async (id, description) => {
+    const token = localStorage.getItem('authToken');
+    const res = await fetch(`${API_URL}/auction/${id}/description`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ description })
+    });
+    if (!res.ok) throw new Error('Failed to update description');
+    return res.json();
+  },
+
   // 3. Lấy comment
   getComments: async (id) => {
     const res = await fetch(`${API_URL}/auction/comments/${id}`);
@@ -95,6 +110,21 @@ const auctionService = {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || 'Failed to place bid');
+    return data;
+  },
+
+  // Buy Now - End auction immediately at buyNowPrice
+  buyNow: async (auctionId) => {
+    const token = localStorage.getItem('authToken');
+    const res = await fetch(`${API_URL}/auction/${auctionId}/buy-now`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Failed to buy now');
     return data;
   }
 };
