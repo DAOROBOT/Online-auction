@@ -4,6 +4,8 @@ import Hero from "./Hero";
 import ProductTabs from "./ProductTabs";
 import CTA from "./CTA";
 import './HomePage.css'
+import './LiveStatCard'
+import LiveStatCard from "./LiveStatCard";
 
 export default function HomePage() {
     return (
@@ -24,26 +26,7 @@ export default function HomePage() {
 
             {/* 2. LIVE STATS CARD */}
             <div className="max-w-7xl mx-auto rounded-3xl overflow-hidden mb-12 relative z-10 transition-all duration-300 home-glass-card">
-                <div className="container mx-auto px-4 py-8">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x" style={{ borderColor: 'var(--home-stats-divider)' }}>
-                        <div className="space-y-1">
-                            <p className="text-3xl font-bold" style={{ color: "var(--accent)" }}>$2.4M+</p>
-                            <p className="text-xs uppercase tracking-wider font-semibold" style={{ color: "var(--text-subtle)" }}>Volume Traded</p>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-3xl font-bold" style={{ color: "var(--info)" }}>12k+</p>
-                            <p className="text-xs uppercase tracking-wider font-semibold" style={{ color: "var(--text-subtle)" }}>Active Bidders</p>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-3xl font-bold" style={{ color: "var(--success)" }}>850+</p>
-                            <p className="text-xs uppercase tracking-wider font-semibold" style={{ color: "var(--text-subtle)" }}>Live Auctions</p>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-3xl font-bold" style={{ color: "var(--warning)" }}>99.9%</p>
-                            <p className="text-xs uppercase tracking-wider font-semibold" style={{ color: "var(--text-subtle)" }}>Verified Sellers</p>
-                        </div>
-                    </div>
-                </div>
+                <LiveStatCard />
             </div>
 
             {/* 3. PRODUCT TABS */}

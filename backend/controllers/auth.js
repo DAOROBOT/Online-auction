@@ -1,7 +1,7 @@
 import userService from "../services/user.js";
 import authService from "../services/auth.js";
 import sellerRequestService from "../services/sellerRequest.js";
-import { sendWelcomeEmail, sendEmailVerification, sendPasswordResetOTP } from "../utils/email.js";
+import { sendWelcomeEmail, sendEmailVerification, sendPasswordResetOTP, sendChangePasswordOTP } from "../utils/email.js";
 import crypto from 'crypto';
 import passport from "passport";
 
@@ -51,6 +51,15 @@ const controller = {
                 console.log(`User ${found.id} seller status expired, reverted to buyer`);
             }
         }
+        // Check buyer status - if seller role is approved
+        if (found.role === 'buyer') {
+            const activationResult = await sellerRequestService.checkAndUpdateSellerStatus(found.id);
+            if (activationResult.status === 'active') {
+                await userService.update(found.id, { role: 'seller' });
+                found.role = 'seller';
+            }
+        }
+
         console.log('Generating token for user:', found.id);
         const token = await authService.generateToken({
             userId: found.id,
@@ -61,6 +70,7 @@ const controller = {
         res.status(200).json({
             token,
             user: {
+                imgUrl: found.avatarUrl,
                 userId: found.id,
                 username: found.username,
                 email: found.email,
@@ -75,7 +85,7 @@ const controller = {
     createUser: async function(req, res){
         console.log(req.body);
 
-        const { username, email, password, recaptchaToken } = req.body;
+        const { username, email, password} = req.body;
 
         if (!email || !username || !password) {
             return res.status(400).json({
@@ -83,37 +93,6 @@ const controller = {
             });
         }
 
-        // Verify reCAPTCHA token
-        if (recaptchaToken) {
-            try {
-                const verificationUrl = 'https://www.google.com/recaptcha/api/siteverify';
-                const response = await fetch(verificationUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${recaptchaToken}`
-                });
-
-                const data = await response.json();
-                console.log('reCAPTCHA verification:', data);
-
-                if (!data.success || data.score < 0.5) {
-                    return res.status(400).json({
-                        message: "reCAPTCHA verification failed"
-                    });
-                }
-            } catch (error) {
-                console.error('reCAPTCHA verification error:', error);
-                return res.status(500).json({
-                    message: "reCAPTCHA verification error"
-                });
-            }
-        } else {
-            return res.status(400).json({
-                message: "reCAPTCHA token is required"
-            });
-        }
 
         const found = await userService.getByEmail(email);
         const foundUsername = await userService.getByUsername(username);
@@ -507,6 +486,106 @@ const controller = {
                 res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=auth_failed`);
             }
         })(req, res, next);
+    },
+
+    // Request OTP for password change
+    requestChangePasswordOTP: async function(req, res, next){
+        try {
+            const userId = req.user.id; // From requireAuth middleware
+            console.log('Requesting change password OTP for user ID:', userId);
+            const user = await userService.getById(userId);
+            if (!user) {
+                return res.status(404).json({
+                    message: "User not found"
+                });
+            }
+
+            // Generate 6-digit OTP
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+            // Store OTP in database
+            await userService.update(userId, { 
+                otp: otp
+            });
+
+            // Send OTP email
+            try {
+                await sendChangePasswordOTP(user.email, user.username, otp);
+                console.log(`Change password OTP sent to ${user.email}`);
+            } catch (error) {
+                console.error('Failed to send OTP email:', error);
+                return res.status(500).json({
+                    message: "Failed to send verification code"
+                });
+            }
+
+            return res.status(200).json({
+                message: "Verification code sent to your email"
+            });
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    // Verify OTP and change password
+    verifyOTPAndChangePassword: async function(req, res, next){
+        try {
+            const userId = req.user.id; // From requireAuth middleware
+            const { otp, newPassword } = req.body;
+
+            if (!otp || !newPassword) {
+                return res.status(400).json({
+                    message: "OTP and new password are required"
+                });
+            }req.user.userId; // From requireAuth middleware
+
+            // Validate password length
+            if (newPassword.length < 6) {
+                return res.status(400).json({
+                    message: "Password must be at least 6 characters long"
+                });
+            }
+
+            // Check OTP
+            const storedData = await userService.getById(userId);
+            if (!storedData || !storedData.otp) {
+                return res.status(400).json({
+                    message: "Invalid verification code"
+                });
+            }
+
+
+            // Verify OTP
+            if (storedData.otp !== otp) {
+                return res.status(400).json({
+                    message: "Invalid verification code"
+                });
+            }
+
+            // Get user
+            const user = await userService.getById(userId);
+            if (!user) {
+                return res.status(404).json({
+                    message: "User not found"
+                });
+            }
+
+            // Hash new password
+            const hashedPassword = await authService.hashPassword(newPassword);
+
+            // Update password
+            await userService.update(userId, { 
+                encryptedPassword: hashedPassword,
+                otp: null // Clear OTP after successful password change
+            });
+
+
+            return res.status(200).json({
+                message: "Password changed successfully"
+            });
+        } catch (error) {
+            next(error);
+        }
     }
 }
 

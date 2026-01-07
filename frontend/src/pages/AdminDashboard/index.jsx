@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import {
-  LayoutDashboard, Users, Settings, FolderTree, ShoppingBag, UserPlus, LogOut, Home
+  Users,  FolderTree, ShoppingBag, UserPlus, LogOut, Home
 } from 'lucide-react';
 import { useNav } from '../../hooks/useNavigate.js';
-import OverviewView from './Overview.jsx';
 import CategoryList from './CategoryList.jsx';
 import ProductList from './ProductList.jsx';
 import UserList from './UserList.jsx';
@@ -12,11 +11,10 @@ import './AdminDashboard.css'
 
 export default function AdminDashboard() {
   const nav = useNav();
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('categories');
   const [isSidebarOpen, setSidebarOpen] = useState(true);
 
   const navItems = [
-    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'categories', label: 'Categories', icon: FolderTree },
     { id: 'products', label: 'Products', icon: ShoppingBag },
     { id: 'users', label: 'Users', icon: Users },
@@ -70,14 +68,6 @@ export default function AdminDashboard() {
             >
               <item.icon size={20} />
               <span className={`font-medium ${!isSidebarOpen && 'hidden'}`}>{item.label}</span>
-              
-              {/* Badge
-              {item.badge && isSidebarOpen && (
-                <span className="absolute right-3 text-white text-xs font-bold px-2 py-0.5 rounded-full"
-                    style={{ backgroundColor: 'var(--danger)' }}>
-                  {item.badge}
-                </span>
-              )} */}
             </button>
           ))}
         </nav>
@@ -125,7 +115,6 @@ export default function AdminDashboard() {
       {/* Main Content Area */}
       <main className={`flex-1 transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-20'}`}>
         <div className="p-8">
-            {activeTab === 'overview' && <OverviewView />}
             {activeTab === 'categories' && <CategoryList />}
             {activeTab === 'products' && <ProductList />}
             {activeTab === 'users' && <UserList setActiveTab={setActiveTab} />}

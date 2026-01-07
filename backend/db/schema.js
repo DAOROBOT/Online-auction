@@ -31,7 +31,7 @@ export const users = pgTable('users', {
 
 // --- 2. CATEGORIES TABLE ---
 export const categories = pgTable('categories', {
-  id: serial('category_id').primaryKey(), // Map 'id' -> 'category_id'
+  id: serial('category_id').primaryKey(),
   name: varchar('name', { length: 100 }).notNull(),
   parentId: integer('parent_id'),
   description: text('description'),

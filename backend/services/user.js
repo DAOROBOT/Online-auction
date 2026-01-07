@@ -1,6 +1,6 @@
 import db from "../db/index.js"
 
-import { users, bids, auctions, userFavorites, categories } from "../db/schema.js"
+import { users, bids, auctions, userFavorites, categories, reviews } from "../db/schema.js"
 
 import { eq, or, ilike, and, sql, count, desc } from "drizzle-orm";
 
@@ -127,6 +127,33 @@ const service = {
             .innerJoin(auctions, eq(auctions.id, userFavorites.auctionId))
             .where(eq(userFavorites.userId, userId));
 
+        // Review statistics - reviews received by this user
+        const reviewsReceived = await db
+            .select({
+                totalReviews: sql`count(*)::int`,
+                positiveReviews: sql`count(case when ${reviews.isGoodRating} = true then 1 end)::int`,
+                negativeReviews: sql`count(case when ${reviews.isGoodRating} = false then 1 end)::int`,
+            })
+            .from(reviews)
+            .where(eq(reviews.targetId, userId));
+
+        // Review statistics - reviews given by this user
+        const reviewsGiven = await db
+            .select({
+                totalReviews: sql`count(*)::int`,
+                positiveReviews: sql`count(case when ${reviews.isGoodRating} = true then 1 end)::int`,
+                negativeReviews: sql`count(case when ${reviews.isGoodRating} = false then 1 end)::int`,
+            })
+            .from(reviews)
+            .where(eq(reviews.reviewerId, userId));
+
+        const receivedStats = reviewsReceived[0] || { totalReviews: 0, positiveReviews: 0, negativeReviews: 0 };
+        const givenStats = reviewsGiven[0] || { totalReviews: 0, positiveReviews: 0, negativeReviews: 0 };
+
+        const positiveRate = receivedStats.totalReviews > 0 
+            ? ((receivedStats.positiveReviews / receivedStats.totalReviews) * 100).toFixed(2)
+            : 0;
+
         return {
             totalBids: bidsResult[0]?.count || 0,
             totalAuctions: auctionsResult[0]?.count || 0,
@@ -135,6 +162,17 @@ const service = {
             totalWonAuctions: wonAuctions[0]?.count || 0,
             totalActiveBids: activeBids.length,
             totalFavoriteProducts: favoriteProducts[0]?.count || 0,
+            reviewsReceived: {
+                total: receivedStats.totalReviews,
+                positive: receivedStats.positiveReviews,
+                negative: receivedStats.negativeReviews,
+                positiveRate: parseFloat(positiveRate),
+            },
+            reviewsGiven: {
+                total: givenStats.totalReviews,
+                positive: givenStats.positiveReviews,
+                negative: givenStats.negativeReviews,
+            },
         };
     },
 

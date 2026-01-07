@@ -1,38 +1,53 @@
 import db from "../db/index.js"
-import { auctions, users, categories, auctionImages, bids } from "../db/schema.js"
-import { sql, eq, and, desc, asc, inArray, gte, lte } from "drizzle-orm";
+import { auctions, categories, auctionImages, bids } from "../db/schema.js"
+import { sql, eq, and, desc, asc, count, inArray, gte, lte } from "drizzle-orm";
 
 const service = {
     findAll: async function(){
         return db.select().from(auctions);
     },
-    findAuctions: async function({ q, category, minPrice, maxPrice, sortBy, limit, offset, status }){
-        console.log('=== Search Service Called ===');
-        console.log({ q, category, minPrice, maxPrice, sortBy, limit, offset, status });
+    findAuctions: async function({
+        q = '',
+        category = null,
+        minPrice = null,
+        maxPrice = null,
+        sortBy = 'relevance',
+        status = null,
+        limit = 20,
+        offset = 0,
+    }){
         
         // Build WHERE conditions
         const conditions = [];
-        
-        // Status filter - default to 'active' for public search, allow all for admin
-        if (status && status !== 'all') {
-            conditions.push(eq(auctions.status, status));
-        } else if (!status) {
-            // Default behavior: only show active auctions for public search
-            conditions.push(eq(auctions.status, 'active'));
-        }
-        // If status === 'all', don't add any status condition (admin view)
 
-        // Full-text search condition
+        // Full-text search condition - MUST MATCH INDEX EXACTLY
         if (q && q.trim()) {
-            console.log('Adding full-text search for:', q);
-            conditions.push(
-                sql`to_tsvector('english', ${auctions.title} || ' ' || ${auctions.description}) @@ plainto_tsquery('english', ${q})`
-            );
+            const searchQuery = q.trim();
+            conditions.push(sql`(
+                to_tsvector('english'::regconfig, 
+                    (COALESCE(${auctions.title}, ''::character varying))::text || ' '::text || 
+                    COALESCE(${auctions.description}, ''::text)
+                ) @@ websearch_to_tsquery('english', ${searchQuery})
+                OR
+                ${auctions.categoryId} IN (
+                    SELECT ${categories.id}
+                    FROM ${categories}
+                    WHERE to_tsvector('english'::regconfig, 
+                        (COALESCE(${categories.name}, ''::character varying))::text
+                    ) @@ websearch_to_tsquery('english', ${searchQuery})
+                )
+            )`)
         }
 
+        // Category filter
         if (category && category !== 'All') {
-            console.log('Filtering by category:', category);
-            conditions.push(eq(categories.name, category));
+            conditions.push(
+                sql`${auctions.categoryId} IN (
+                    SELECT ${categories.id}
+                    FROM ${categories}
+                    WHERE ${categories.name} = ${category}
+                )`
+            );
         }
 
         if (minPrice) {
@@ -41,6 +56,11 @@ const service = {
 
         if (maxPrice) {
             conditions.push(lte(auctions.currentPrice, maxPrice.toString()));
+        }
+
+        // Status filter
+        if (status && status !== 'all') {
+            conditions.push(eq(auctions.status, status));
         }
 
         // Build ORDER BY
@@ -67,114 +87,58 @@ const service = {
             case 'zToA':
                 orderBy = desc(auctions.title);
                 break;
+            case 'relevance':
             default:
-                // Default to newest
-                orderBy = desc(auctions.createdAt);
+                // Sort by relevance when searching, otherwise newest
+                if (q && q.trim()) {
+                    orderBy = sql`ts_rank(
+                        to_tsvector('english'::regconfig, 
+                            (COALESCE(${auctions.title}, ''::character varying))::text || ' '::text || 
+                            COALESCE(${auctions.description}, ''::text)
+                        ),
+                        websearch_to_tsquery('english', ${q.trim()})
+                    ) DESC`;
+                } else {
+                    orderBy = desc(auctions.createdAt);
+                }
+                break;
         }
-        console.log('Order by:', sortBy, orderBy);
         
-        // Build where clause - handle empty conditions
-        const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+        // Build where clause
+        const whereClause = conditions.length > 0 ? and(...conditions) : null;
         
         // Main query
-        const results = await db
-            .select({
-                id: auctions.id,
-                title: auctions.title,
-                currentPrice: auctions.currentPrice,
-                startingPrice: auctions.startingPrice,
-                buyNowPrice: auctions.buyNowPrice,
-                endTime: auctions.endTime,
-                createdAt: auctions.createdAt,
-                bidCount: auctions.bidCount,
-                status: auctions.status,
-                sellerName: users.fullName,
-                sellerId: users.id,
-                categoryName: categories.name,
-                primaryImage: auctionImages.imageUrl
-            })
-            .from(auctions)
-            .innerJoin(users, eq(auctions.sellerId, users.id))
-            .innerJoin(categories, eq(auctions.categoryId, categories.id))
-            .leftJoin(auctionImages, and(
-                eq(auctions.id, auctionImages.auctionId),
-                eq(auctionImages.isPrimary, true)
-            ))
-            .where(whereClause)
-            .orderBy(orderBy)
-            .limit(limit)
-            .offset(offset);
-        
-        console.log('Results found:', results.length);
-        if (results.length > 0) {
-            console.log('First result:', results[0]);
-        }
-
-        // Fetch highest bids per auction (no raw SQL, query builder only)
-        const auctionIds = results.map(r => r.id);
-        let highestBidsByAuction = {};
-        if (auctionIds.length > 0) {
-            const topBids = await db
-                .select({
-                    auctionId: bids.auctionId,
-                    bidderId: bids.bidderId,
-                    bidderName: users.fullName,
-                    amount: bids.amount
-                })
-                .from(bids)
-                .innerJoin(users, eq(bids.bidderId, users.id))
-                .where(inArray(bids.auctionId, auctionIds))
-                .orderBy(bids.auctionId, desc(bids.amount));
-
-            // Reduce to highest per auction
-            for (const bid of topBids) {
-                if (!highestBidsByAuction[bid.auctionId]) {
-                    highestBidsByAuction[bid.auctionId] = bid;
+        const results = await db.query.auctions.findMany({
+            where: whereClause,
+            limit: limit,
+            offset: offset,
+            orderBy: orderBy,
+            with: {
+                seller: true,
+                category: true,
+                images: true,
+                // Fetch only the highest bid
+                bids: {
+                    orderBy: [desc(bids.amount)],
+                    limit: 1,
+                    with: {
+                        bidder: true // Fetch the bidder details
+                    }
                 }
             }
-        }
+        });
 
-        // Get total count
-        const countResult = await db
-            .select({ count: sql`count(*)`.as('count') })
-            .from(auctions)
-            .innerJoin(users, eq(auctions.sellerId, users.id))
-            .innerJoin(categories, eq(auctions.categoryId, categories.id))
-            .where(whereClause);
+        // const countResult = await db
+        //     .select({ count: count() })
+        //     .from(auctions)
+        //     .where(whereClause);
 
-        const totalItems = countResult.length > 0 ? parseInt(countResult[0].count) : 0;
-        console.log('Total items matching filters:', totalItems);
-        console.log('=== End Search Service ===\n');
-        
+        // const totalItems = countResult.length > 0 ? parseInt(countResult[0].count) : 0;
+
+        // Fetch highest bids per auction
         return {
-            data: results.map(row => ({
-                id: row.id,
-                title: row.title,
-                currentPrice: parseFloat(row.currentPrice),
-                startingPrice: row.startingPrice ? parseFloat(row.startingPrice) : null,
-                buyNowPrice: row.buyNowPrice ? parseFloat(row.buyNowPrice) : null,
-                endTime: row.endTime,
-                createdAt: row.createdAt,
-                bidCount: parseInt(row.bidCount || 0),
-                status: row.status,
-                primaryImage: row.primaryImage || 'https://via.placeholder.com/300',
-                image: row.primaryImage || 'https://via.placeholder.com/300',
-                category: row.categoryName,
-                categoryName: row.categoryName,
-                sellerName: row.sellerName,
-                sellerId: row.sellerId,
-                highestBidder: highestBidsByAuction[row.id]
-                    ? {
-                        id: highestBidsByAuction[row.id].bidderId,
-                        name: highestBidsByAuction[row.id].bidderName,
-                        amount: highestBidsByAuction[row.id].amount ? parseFloat(highestBidsByAuction[row.id].amount) : null
-                    }
-                    : null,
-                seller: {
-                    name: row.sellerName
-                }
-            })),
-            total: totalItems
+            data: results,
+            // total: totalItems
         };
     },
 }
