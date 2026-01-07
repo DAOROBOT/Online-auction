@@ -32,7 +32,14 @@ const auctionService = {
   // 4. Lấy lịch sử đấu giá
   getBidHistory: async (id, filter) => {
     try {
-        const res = await fetch(`${API_URL}/auction/bids/${id}?f=${filter}`);
+        const token = localStorage.getItem('authToken');
+        
+        const res = await fetch(`${API_URL}/auction/bids/${id}?f=${filter}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
         if (!res.ok) return [];
         return res.json();
     } catch (error) {
@@ -58,6 +65,14 @@ const auctionService = {
       const response = await fetch(`${API_URL}/auction/profile?${queryParams.toString()}`, { headers });
       if (!response.ok) throw new Error('Failed to fetch tab data');
       return response.json();
+  },
+
+  rejectBid: async (productId, bidId) => {
+    const token = localStorage.getItem('authToken');
+    const res = await fetch(`${API_URL}/auction/reject?auctionId=${productId}&bidId=${bidId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
   },
 
   uploadImage: async (file) => {

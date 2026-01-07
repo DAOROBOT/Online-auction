@@ -59,8 +59,10 @@ const controller = {
 
     getBidHistory: async function(req, res, next) {
         try {
-            const id = Number(req.params.id);
-            const bidHistory = await auctionService.findBidHistory(id);
+            const userId = req.user?.id || null;
+            const auctionId = Number(req.params.id);
+            const filter = req.query.f || "all";
+            const bidHistory = await auctionService.findBidHistory(auctionId, userId, filter);
             
             if (!bidHistory) {
                 return res.status(404).json({ message: 'Auction Not Found' });
@@ -115,6 +117,27 @@ const controller = {
             }
             
             res.json(comments);
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    rejectBid: async (req, res, next) => {
+        try {
+            const auctionId = Number(req.query.auctionId);
+            const bidId = Number(req.query.bidId);
+            const sellerId = req.user?.id;
+
+            console.log(req.user);
+
+            console.log(auctionId, bidId, sellerId);
+
+            await auctionService.rejectBid(auctionId, bidId, sellerId);
+
+            res.status(200).json({ 
+                message: "Bid rejected successfully",
+                bidId: bidId 
+            });
         } catch (error) {
             next(error);
         }

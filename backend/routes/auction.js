@@ -31,6 +31,8 @@ route.use(requireAuth);
 // POST: Create New Auction
 route.post('/', requireSeller, uploadProductImage.array('images', 10), auctionController.create);
 
+route.delete('/reject', auctionController.rejectBid);
+
 // PUT: Update Specific Auction
 route.put('/:id', requireSeller, auctionController.update);
 

@@ -1,6 +1,6 @@
 import db from "../db/index.js"
 import { categories, auctions, auctionImages, users, userFavorites, bids, descriptionLogs, comments } from "../db/schema.js"
-import { and, or, eq, asc, desc, inArray } from "drizzle-orm";
+import { sql, and, or, eq, gte, asc, desc, inArray } from "drizzle-orm";
 
 const service = {
     // Lấy danh sách top các sản phẩm ứng của mục tương ứng (Homepage)
@@ -218,8 +218,38 @@ const service = {
         return await db.select().from(auctionImages).where(eq(auctionImages.auctionId, id));
     },
 
-    findBidHistory: async function(id) {
-        return await db.select().from(bids).where(eq(bids.auctionId, id)).orderBy(desc(bids.amount));
+    findBidHistory: async function (auctionId, userId = null, filter = "all", ) {
+    const conditions = [eq(bids.auctionId, auctionId)];
+
+    if (filter === "mine") {
+        if (!userId) {
+            throw new Error("Not Authorization");
+        }
+        conditions.push(eq(bids.bidderId, userId));
+    }
+
+    if (filter === "recent") {
+        const recentTime = new Date(Date.now() - 60 * 60 * 1000);
+        conditions.push(
+            gte(bids.bidTime, recentTime)
+        );
+    }
+
+    return await db.query.bids.findMany({
+            where: and(...conditions),
+            orderBy: [desc(bids.amount)],
+            
+            with: {
+                bidder: { 
+                    columns: {
+                        id: true,
+                        username: true,
+                        fullName: true,
+                        avatarUrl: true,
+                    }
+                }
+            }
+        });
     },
 
     findDescription: async function(id) {
@@ -293,6 +323,53 @@ const service = {
 
     upload: async function(images) {
         return await db.insert(auctionImages).values(images).returning();
+    },
+
+    rejectBid: async function (auctionId, bidId, sellerId) {
+        return await db.transaction(async (tx) => {
+        const auction = await tx.query.auctions.findFirst({
+            where: eq(auctions.id, auctionId),
+            columns: {
+                sellerId: true,
+                startingPrice: true,
+                status: true
+            }
+        });
+
+        if (!auction) throw new Error("Auction not found");
+        if (auction.sellerId !== sellerId) throw new Error("Unauthorized: Only the seller can reject bids");
+        if (auction.status !== 'active') throw new Error("Cannot reject bids on finished auctions");
+
+        const deletedBid = await tx
+            .delete(bids)
+            .where(and(
+                eq(bids.id, bidId),
+                eq(bids.auctionId, auctionId)
+            ))
+            .returning();
+
+        if (deletedBid.length === 0) {
+            throw new Error("Bid not found");
+        }
+
+        // Recalculate State (Find the NEW highest bid)
+        const newHighestBid = await tx.query.bids.findFirst({
+            where: eq(bids.auctionId, auctionId),
+            orderBy: [desc(bids.amount)],
+        });
+
+        // Update Auction (Price reverts to next bid OR starting price if there is no bids)
+        const newPrice = newHighestBid ? newHighestBid.amount : auction.startingPrice;
+
+        await tx.update(auctions)
+            .set({
+                currentPrice: newPrice,
+                bidCount: sql`${auctions.bidCount} - 1` // Decrement count safely
+            })
+            .where(eq(auctions.id, auctionId));
+
+        return { success: true, newPrice };
+        });
     },
     
     update: async function(id, auc) {

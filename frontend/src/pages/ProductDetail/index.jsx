@@ -64,10 +64,10 @@ export default function ProductDetail() {
 
           {/* --- CỘT PHẢI  --- */}
           <div className="lg:col-span-5 relative">
-            <div className="sticky top-24 space-y-6">
+            <div className="top-24 space-y-6">
                 {/* 1. Khu vực đặt giá*/}
                 <BiddingSection product={productCore} />
-                <BidHistory productId={id} />
+                <BidHistory productId={id} sellerId={productCore.sellerId} />
             </div>
           </div>
 
