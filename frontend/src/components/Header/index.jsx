@@ -17,7 +17,6 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 
 export default function Header() {
-  const inputRef = useRef(null);
   const mobileSearchRef = useRef(null);
   const nav = useNav();
   const { user, logout } = useAuth(); // Assuming logout function exists
@@ -50,7 +49,6 @@ export default function Header() {
   }, [searchParams]);
 
   const handleSearch = () => {
-    inputRef.current.foccus();
     const trimmed = searchQuery.trim();
     if (trimmed) {
       nav.search(trimmed);
@@ -105,7 +103,7 @@ export default function Header() {
                   type="text" 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)} 
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()} 
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                   placeholder="Search for items, artists, or brands..." 
                   className="w-full bg-transparent outline-none text-sm transition-colors"
                   style={{ 

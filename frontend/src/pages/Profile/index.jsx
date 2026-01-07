@@ -5,6 +5,8 @@ import { useAuth } from "../../contexts/AuthContext";
 import ProfileSidebar from "./ProfileSidebar";
 import ProductGrid from "../../components/ProductGrid"; 
 import FilterBar from "../../components/Filter/FilterBar";
+import userService from "../../services/userService";
+import auctionService  from "../../services/auctionService";
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -27,7 +29,7 @@ export default function Profile() {
     const fetchProfile = async () => {
       setLoadingProfile(true);
       try {
-        let response = await fetch(`${API_URL}/user/profile/${username}`);
+        let response = await fetch(`${API_URL}/users/profile?username=${username}`);
 
         if (response) {
           if (response.ok) {
@@ -52,19 +54,20 @@ export default function Profile() {
 
   useEffect(() => {
     if (!userData || !userData.id) return;
-    console.log(userData);
 
     const fetchTabData = async () => {
       setLoadingTab(true);
       try {
-        const token = localStorage.getItem('authToken');
-        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-        const endpoint = `/user/${userData.id}/${activeTab}?category=${category}`;
-
-        const response = await fetch(`${API_URL}${endpoint}`, { headers });
+        
+        const response = await auctionService.getTabAuctions({
+          username,
+          status: activeTab,
+          category,
+        });
         
         if (response.ok) {
             const data = await response.json();
+            console.log("Tab data: ", data);
             setTabData(Array.isArray(data) ? data : (data.data || []));
         } else {
             console.error(`Failed to fetch data for tab: ${activeTab}`);

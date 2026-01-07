@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { UploadCloud, X, Check, Loader2 } from 'lucide-react';
-import { auctionService } from '../services/auctionService';
+import auctionService from '../services/auctionService';
 
 export default function ImageUploadModal({ isOpen, onClose, onUpload, title = "Upload Image" }) {
   const [dragActive, setDragActive] = useState(false);

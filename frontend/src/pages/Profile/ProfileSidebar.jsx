@@ -33,7 +33,7 @@ export default function ProfileSidebar({ userData, isOwnProfile }) {
 
             const token = localStorage.getItem('authToken');
 
-            const response = await fetch(`${API_URL}/user/avatar`, {
+            const response = await fetch(`${API_URL}/users/avatar`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}` 
@@ -78,7 +78,7 @@ export default function ProfileSidebar({ userData, isOwnProfile }) {
                 birthday: formData.birthday == "unknown" ? undefined : new Date(formData.birthday),
             };
 
-            const response = await fetch(`${API_URL}/user/info`, {
+            const response = await fetch(`${API_URL}/users/info`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,

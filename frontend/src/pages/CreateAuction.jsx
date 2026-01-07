@@ -4,7 +4,7 @@ import { useNav } from "../hooks/useNavigate";
 import { useAuth } from "../contexts/AuthContext";
 import ImageUploadModal from '../components/ImageUploadModal';
 import RichTextEditor from "../components/RichTextEditor";
-import { auctionService } from "../services/auctionService"; // Sử dụng Service
+import auctionService from "../services/auctionService";
 
 export default function CreateAuction() {
   const nav = useNav();

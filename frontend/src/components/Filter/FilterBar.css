@@ -1,20 +1,20 @@
 /* --- FILTER BAR THEME (Glassmorphism) --- */
 .filter-bar-glass {
-  background-color: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
+  background-color: rgba(245, 245, 245, 0.8);
+  backdrop-filter: blur(15px);
   border: 1px solid var(--border);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
 .dark .filter-bar-glass {
-  background-color: rgba(15, 23, 42, 0.85); 
+  background-color: rgba(20, 20, 60, 0.8); 
   border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
 /* --- DROPDOWN PANEL DESIGN --- */
 .filter-dropdown-panel {
-  background-color: var(--card-bg); /* Solid bg for readability */
+  background-color: var(--card-bg);
   border: 1px solid var(--border);
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); /* Deep Shadow */
   color: var(--text);
@@ -75,7 +75,7 @@ input[type=number]::-webkit-outer-spin-button {
 /* Select dropdown styling */
 
 select {
-    background-color: var(--card-bg);
+    /* background-color: var(--card-bg); */
     color: var(--text);
     border: 1px solid var(--border);
     border-radius: 6px;
@@ -99,7 +99,7 @@ select:focus {
 
 /* Option styling */
 option {
-    background-color: var(--bg-secondary);
+    background-color: var(--card-bg);
     color: var(--text);
     padding: 8px 12px;
     font-size: 0.875rem;
