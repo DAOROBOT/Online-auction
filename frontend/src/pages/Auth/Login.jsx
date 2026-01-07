@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useLocation, Link, useSearchParams } from 'react-router-dom';
 import { useNav } from '../../hooks/useNavigate';
 import { useAuth } from '../../contexts/AuthContext';
+import { loginSchema } from '../../schemas/auth.schemas';
+import { validateForm } from '../../utils/validation';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -35,6 +37,15 @@ export default function Login() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        // Zod Validation
+        const validation = validateForm(loginSchema, { identifier, password });
+        
+        if (!validation.success) {
+            setError(validation.message);
+            return;
+        }
+
         setError('');
         setSuccessMessage('');
         setLoading(true);

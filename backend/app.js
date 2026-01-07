@@ -5,11 +5,12 @@ import cors from "cors";
 import session from "express-session";
 import passport from "./config/passport.js";
 import auctionRoute from "./routes/auction.js";
-import authRoute from "./routes/auth.js"
-import categoryRoute from "./routes/category.js"
+import authRoute from "./routes/auth.js";
+import categoryRoute from "./routes/category.js";
 import searchRoute from "./routes/search.js";
-import sellerRequestRoute from "./routes/sellerRequest.js"
-import userRoute from "./routes/user.js"
+import sellerRequestRoute from "./routes/sellerRequest.js";
+import userRoute from "./routes/user.js";
+import orderService from "./routes/order.js";
 import authenticate from "./middleware/auth.js";
 import not_found from "./middleware/not_found.js";
 import error_handler from "./middleware/error_handler.js";
@@ -48,14 +49,11 @@ app.use('/categories', categoryRoute);
 app.use('/search', searchRoute);
 app.use('/seller', sellerRequestRoute);
 app.use('/users', userRoute);
+app.use('/order', orderService);
 
 // --- Middleware ---
 app.use(error_handler);
 app.use(not_found);
-
-
-
-// app.use('/api/products', productRoutes);
 
 
 export default app;

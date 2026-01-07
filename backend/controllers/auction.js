@@ -42,16 +42,64 @@ const controller = {
     },
 
     // GET /auctions/:id
-    get: async function(req, res, next) {
+    getById: async function(req, res, next) {
         try {
             const id = Number(req.params.id);
-            const auction = await auctionService.findById(id);
+            const [auction] = await auctionService.findById(id);
             
             if (!auction) {
                 return res.status(404).json({ message: 'Auction Not Found' });
             }
             
             res.json(auction);
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    // GET /auctions/images/:id
+    getImages: async function(req, res, next) {
+        try {
+            const id = Number(req.params.id);
+            const images = await auctionService.findImages(id);
+            
+            if (!images) {
+                return res.status(404).json({ message: 'Auction Not Found' });
+            }
+            
+            res.json(images);
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    // GET /auctions/description/:id
+    getDescription: async function(req, res, next) {
+        try {
+            const id = Number(req.params.id);
+            const logs = await auctionService.findDescription(id);
+            
+            if (!logs) {
+                return res.status(404).json({ message: 'Auction Not Found' });
+            }
+            
+            res.json(logs);
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    // GET /auctions/comments/:id
+    getComments: async function(req, res, next) {
+        try {
+            const id = Number(req.params.id);
+            const comments = await auctionService.findComments(id);
+            
+            if (!comments) {
+                return res.status(404).json({ message: 'Auction Not Found' });
+            }
+            
+            res.json(comments);
         } catch (error) {
             next(error);
         }
@@ -151,6 +199,24 @@ const controller = {
 
             await auctionService.delete(id);
             res.json({ message: 'Deleted successfully' });
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    // POST /auctions/:id/bid
+    placeBid: async function(req, res, next) {
+        try {
+            const auctionId = Number(req.params.id);
+            const userId = req.user.id; // Lấy từ token
+            const { amount } = req.body; // Đây là "Max Bid" mà user nhập
+
+            if (!amount || Number(amount) <= 0) {
+                return res.status(400).json({ message: 'Invalid bid amount' });
+            }
+
+            const result = await auctionService.placeBid(auctionId, userId, amount);
+            res.status(200).json(result);
         } catch (error) {
             next(error);
         }

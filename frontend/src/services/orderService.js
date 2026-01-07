@@ -1,7 +1,7 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('authToken');
   return {
     'Content-Type': 'application/json',
     ...(token && { Authorization: `Bearer ${token}` }),
@@ -23,7 +23,7 @@ const orderService = {
    * @returns {Promise<Object>} Order object
    */
   getByAuctionId: async (auctionId) => {
-    const response = await fetch(`${API_BASE_URL}/orders/auction/${auctionId}`, {
+    const response = await fetch(`${API_BASE_URL}/order/${auctionId}`, {
       headers: getAuthHeaders(),
     });
     return handleResponse(response);
@@ -35,7 +35,7 @@ const orderService = {
    * @returns {Promise<Object>} Order object
    */
   getById: async (orderId) => {
-    const response = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
+    const response = await fetch(`${API_BASE_URL}/order/${orderId}`, {
       headers: getAuthHeaders(),
     });
     return handleResponse(response);
@@ -46,7 +46,7 @@ const orderService = {
    * @returns {Promise<Array>} Array of orders
    */
   getMyOrders: async () => {
-    const response = await fetch(`${API_BASE_URL}/orders/my`, {
+    const response = await fetch(`${API_BASE_URL}/order/my`, {
       headers: getAuthHeaders(),
     });
     return handleResponse(response);
@@ -59,7 +59,7 @@ const orderService = {
    * @returns {Promise<Object>} Updated order
    */
   submitPayment: async (orderId, paymentData) => {
-    const response = await fetch(`${API_BASE_URL}/orders/${orderId}/payment`, {
+    const response = await fetch(`${API_BASE_URL}/order/${orderId}/payment`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(paymentData),
@@ -74,7 +74,7 @@ const orderService = {
    * @returns {Promise<Object>} Updated order
    */
   confirmPayment: async (orderId, confirmData) => {
-    const response = await fetch(`${API_BASE_URL}/orders/${orderId}/confirm`, {
+    const response = await fetch(`${API_BASE_URL}/order/${orderId}/confirm`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(confirmData),
@@ -88,7 +88,7 @@ const orderService = {
    * @returns {Promise<Object>} Updated order
    */
   confirmReceipt: async (orderId) => {
-    const response = await fetch(`${API_BASE_URL}/orders/${orderId}/receipt`, {
+    const response = await fetch(`${API_BASE_URL}/order/${orderId}/receipt`, {
       method: 'POST',
       headers: getAuthHeaders(),
     });
@@ -108,7 +108,7 @@ const orderService = {
       comment: reviewData.comment,
     };
     
-    const response = await fetch(`${API_BASE_URL}/orders/${orderId}/review`, {
+    const response = await fetch(`${API_BASE_URL}/order/${orderId}/review`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(transformedData),
@@ -123,7 +123,7 @@ const orderService = {
    * @returns {Promise<Object>} Updated order
    */
   cancelOrder: async (orderId, cancelData) => {
-    const response = await fetch(`${API_BASE_URL}/orders/${orderId}/cancel`, {
+    const response = await fetch(`${API_BASE_URL}/order/${orderId}/cancel`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(cancelData),
@@ -137,7 +137,7 @@ const orderService = {
    * @returns {Promise<Array>} Array of messages
    */
   getMessages: async (orderId) => {
-    const response = await fetch(`${API_BASE_URL}/orders/${orderId}/messages`, {
+    const response = await fetch(`${API_BASE_URL}/order/${orderId}/messages`, {
       headers: getAuthHeaders(),
     });
     return handleResponse(response);
@@ -150,7 +150,7 @@ const orderService = {
    * @returns {Promise<Object>} Created message
    */
   sendMessage: async (orderId, message) => {
-    const response = await fetch(`${API_BASE_URL}/orders/${orderId}/messages`, {
+    const response = await fetch(`${API_BASE_URL}/order/${orderId}/messages`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify({ message }),

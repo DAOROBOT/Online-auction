@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useNav } from '../hooks/useNavigate';
 import { Store, CheckCircle, Clock, XCircle, Star, TrendingUp, Users, ShieldCheck } from 'lucide-react';
+import { becomeSellerSchema } from '../schemas/user.schemas';
+import { validateForm } from '../utils/validation';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -53,6 +55,14 @@ export default function BecomeSeller() {
         e.preventDefault();
         setError('');
         setSuccessMessage('');
+
+        // Zod Validation
+        const validation = validateForm(becomeSellerSchema, { reason });
+        if (!validation.success) {
+            setError(validation.message);
+            return;
+        }
+
         setLoading(true);
 
         try {

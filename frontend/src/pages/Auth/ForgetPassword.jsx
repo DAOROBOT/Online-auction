@@ -29,6 +29,14 @@ export default function ForgetPassword() {
         e.preventDefault();
         setError('');
         setSuccessMessage('');
+        
+        // Zod Validation
+        const validation = validateForm(forgotPasswordEmailSchema, { email });
+        if (!validation.success) {
+            setError(validation.message);
+            return;
+        }
+        
         setLoading(true);
 
         try {
@@ -105,8 +113,11 @@ export default function ForgetPassword() {
         setSuccessMessage('');
 
         const otpCode = otp.join('');
-        if (otpCode.length !== 6) {
-            setError('Please enter the complete 6-digit OTP');
+        
+        // Zod Validation
+        const validation = validateForm(forgotPasswordOtpSchema, { otp: otpCode });
+        if (!validation.success) {
+            setError(validation.message);
             return;
         }
 
@@ -142,14 +153,10 @@ export default function ForgetPassword() {
         setError('');
         setSuccessMessage('');
 
-        // Validate passwords
-        if (newPassword.length < 6) {
-            setError('Password must be at least 6 characters long');
-            return;
-        }
-
-        if (newPassword !== confirmPassword) {
-            setError('Passwords do not match');
+        // Zod Validation
+        const validation = validateForm(resetPasswordSchema, { newPassword, confirmPassword });
+        if (!validation.success) {
+            setError(validation.message);
             return;
         }
 

@@ -5,6 +5,8 @@ import { useAuth } from "../contexts/AuthContext";
 import ImageUploadModal from '../components/ImageUploadModal';
 import RichTextEditor from "../components/RichTextEditor";
 import auctionService from "../services/auctionService";
+import { createAuctionSchema } from "../schemas/auction.schemas";
+import { validateForm } from "../utils/validation";
 
 export default function CreateAuction() {
   const nav = useNav();
@@ -65,30 +67,20 @@ export default function CreateAuction() {
     e.preventDefault();
     setError(null);
 
-    // --- Validation Client-side ---
-    if (formData.images.length < 3) {
-        setError("Requirements not met: Please upload at least 3 images.");
-        window.scrollTo(0,0);
-        return;
-    }
-    if (!formData.description || formData.description === '<p></p>') {
-        setError("Description is required.");
-        window.scrollTo(0,0);
-        return;
-    }
-    if (new Date(formData.endTime) <= new Date()) {
-        setError("End time must be in the future.");
-        window.scrollTo(0,0);
-        return;
-    }
-    if (Number(formData.stepPrice) <= 0) {
-        setError("Step price must be greater than 0.");
-        return;
-    }
-    if (formData.buyNowPrice && Number(formData.buyNowPrice) <= Number(formData.startingPrice)) {
-        setError("Buy Now price must be greater than Starting price.");
-        window.scrollTo(0,0);
-        return;
+    // Convert string prices to numbers for validation
+    const validationData = {
+      ...formData,
+      startingPrice: Number(formData.startingPrice),
+      stepPrice: Number(formData.stepPrice),
+      buyNowPrice: formData.buyNowPrice ? Number(formData.buyNowPrice) : null,
+    };
+
+    // Zod Validation
+    const validation = validateForm(createAuctionSchema, validationData);
+    if (!validation.success) {
+      setError(validation.message);
+      window.scrollTo(0, 0);
+      return;
     }
 
     setLoading(true);

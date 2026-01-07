@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, text, decimal, timestamp, boolean, integer, pgEnum, date, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, text, decimal, timestamp, boolean, integer, pgEnum, date, primaryKey, foreignKey, unique } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 // --- ENUMS ---
@@ -45,7 +45,6 @@ export const auctions = pgTable('auctions', {
   title: varchar('title', { length: 255 }).notNull(),
   description: text('description').notNull(),
   
-  // Giá tiền
   startingPrice: decimal('starting_price', { precision: 15, scale: 0 }).notNull(),
   currentPrice: decimal('current_price', { precision: 15, scale: 0 }).notNull(),
   stepPrice: decimal('step_price', { precision: 15, scale: 0 }).default('0'),
@@ -68,6 +67,29 @@ export const auctionImages = pgTable('auction_images', {
   isPrimary: boolean('is_primary').default(false),
 });
 
+export const comments = pgTable('comments', {
+  commentId: serial('comment_id').primaryKey(),
+  auctionId: integer('auction_id').notNull().references(() => auctions.id),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  parentId: integer('parent_id'),
+  content: text('content').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+    // Explicit foreign key definition for parent_id to itself
+    parentFk: foreignKey({
+        columns: [table.parentId],
+        foreignColumns: [table.commentId],
+        name: 'comments_parent_id_fkey'
+    }).onDelete('cascade')
+}));
+
+export const descriptionLogs = pgTable('description_logs', {
+  logId: serial('log_id').primaryKey(),
+  auctionId: integer('auction_id'), // Assuming this links to auctions
+  contentSnapshot: text('content_snapshot').notNull(),
+  editedAt: timestamp('edited_at').defaultNow(),
+});
+
 // --- 5. BIDS TABLE ---
 export const bids = pgTable('bids', {
   id: serial('bid_id').primaryKey(),
@@ -77,8 +99,17 @@ export const bids = pgTable('bids', {
   bidTime: timestamp('bid_time', { withTimezone: true }).defaultNow(),
 });
 
-// --- 6. REVIEWS, SELLER REQUESTS, ORDERS, USER FAVORITES ---
-
+// --- 6. AUTO BIDS ---
+export const autoBids = pgTable('auto_bids', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  auctionId: integer('auction_id').notNull().references(() => auctions.id, { onDelete: 'cascade' }),
+  maxAmount: decimal('max_amount', { precision: 15, scale: 0 }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (t) => ({
+  unq: unique().on(t.userId, t.auctionId), // Ràng buộc unique
+}));
 
 export const reviews = pgTable('reviews', {
   id: serial('review_id').primaryKey(),
@@ -103,15 +134,40 @@ export const sellerRequests = pgTable('seller_requests', {
 
 export const orders = pgTable('orders', {
   id: serial('order_id').primaryKey(),
-  auctionId: integer('auction_id'),
-  buyerId: integer('buyer_id'),
-  sellerId: integer('seller_id'),
-  finalPrice: decimal('final_price'),
+  auctionId: integer('auction_id').notNull().references(() => auctions.id, { onDelete: 'cascade' }).unique(),
+  buyerId: integer('buyer_id').notNull().references(() => users.id),
+  sellerId: integer('seller_id').notNull().references(() => users.id),
+  
+  // Final price
+  finalPrice: decimal('final_price', { precision: 10, scale: 2 }).notNull(),
+  
+  // Status tracking
   status: orderStatusEnum('status').default('pending_payment'),
+  
+  // Step 1: Buyer payment info
+  paymentProofUrl: text('payment_proof_url'),      // Payment screenshot/invoice
+  shippingAddress: text('shipping_address'),
+  buyerPhone: varchar('buyer_phone', { length: 20 }),
+  paymentSubmittedAt: timestamp('payment_submitted_at'),
+  
+  // Step 2: Seller confirmation
+  paymentConfirmedAt: timestamp('payment_confirmed_at'),
+  shippingProofUrl: text('shipping_proof_url'),    // Shipping invoice/tracking
+  trackingNumber: varchar('tracking_number', { length: 100 }),
+  shippingSubmittedAt: timestamp('shipping_submitted_at'),
+  
+  // Step 3: Buyer confirms receipt
+  receiptConfirmedAt: timestamp('receipt_confirmed_at'),
+  
+  // Cancellation
+  cancelledAt: timestamp('cancelled_at'),
+  cancelledBy: integer('cancelled_by').references(() => users.id),
+  cancelReason: text('cancel_reason'),
+  
+  // Timestamps
   createdAt: timestamp('created_at').defaultNow(),
-
+  updatedAt: timestamp('updated_at').defaultNow(),
 });
-
 export const userFavorites = pgTable('user_favorites', {
   userId: integer('user_id'),
   auctionId: integer('auction_id'),
@@ -120,6 +176,15 @@ export const userFavorites = pgTable('user_favorites', {
   pk: primaryKey({ columns: [table.userId, table.auctionId] }),
 }));
 
+export const orderMessages = pgTable('order_messages', {
+  id: serial('message_id').primaryKey(),
+  orderId: integer('order_id').notNull().references(() => orders.id, { onDelete: 'cascade' }),
+  senderId: integer('sender_id').notNull().references(() => users.id),
+  message: text('message').notNull(),
+  imageUrl: text('image_url'),  // Optional image attachment
+  isRead: boolean('is_read').default(false),
+  createdAt: timestamp('created_at').defaultNow(),
+});
 
 // --- RELATIONS ---
 
@@ -163,6 +228,35 @@ export const auctionImagesRelations = relations(auctionImages, ({ one }) => ({
   }),
 }));
 
+export const commentsRelations = relations(comments, ({ one, many }) => ({
+  user: one(users, {
+    fields: [comments.userId],
+    references: [users.id],
+  }),
+
+  auction: one(auctions, {
+    fields: [comments.auctionId],
+    references: [auctions.id],
+  }),
+  // For nested comments (Replies)
+  parent: one(comments, {
+    fields: [comments.parentId],
+    references: [comments.commentId],
+    relationName: 'replies',
+  }),
+
+  children: many(comments, {
+    relationName: 'replies',
+  }),
+}));
+
+export const descriptionLogsRelations = relations(descriptionLogs, ({ one }) => ({
+  auction: one(auctions, {
+    fields: [descriptionLogs.auctionId],
+    references: [auctions.id],
+  }),
+}));
+
 export const bidsRelations = relations(bids, ({ one }) => ({
   auction: one(auctions, {
     fields: [bids.auctionId],
@@ -171,5 +265,16 @@ export const bidsRelations = relations(bids, ({ one }) => ({
   bidder: one(users, {
     fields: [bids.bidderId],
     references: [users.id],
+  }),
+}));
+
+export const autoBidsRelations = relations(autoBids, ({ one }) => ({
+  user: one(users, {
+    fields: [autoBids.userId],
+    references: [users.id],
+  }),
+  auction: one(auctions, {
+    fields: [autoBids.auctionId],
+    references: [auctions.id],
   }),
 }));
