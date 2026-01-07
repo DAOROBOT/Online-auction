@@ -53,6 +53,7 @@ export const auctions = pgTable('auctions', {
   status: auctionStatusEnum('status').default('active'),
   endTime: timestamp('end_time', { withTimezone: true }).notNull(),
   
+  allowNewbies: boolean('allow_newbies').default(true),
   winnerId: integer('winner_id').references(() => users.id),
   autoExtend: boolean('auto_extend').default(false),
   bidCount: integer('bid_count').default(0),
