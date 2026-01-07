@@ -1,6 +1,6 @@
 import db from "../db/index.js"
 import { categories, auctions, auctionImages, users, userFavorites, bids, descriptionLogs, comments } from "../db/schema.js"
-import { and, or, eq, asc, desc, count, inArray } from "drizzle-orm";
+import { and, or, eq, asc, desc, inArray } from "drizzle-orm";
 
 const service = {
     // Lấy danh sách top các sản phẩm ứng của mục tương ứng (Homepage)
@@ -173,7 +173,6 @@ const service = {
                     with: { bidder: true }
                 }
             },
-            // orderBy: [desc(auctions.createdAt)]
         });
 
         let favoriteAuctions = new Set();
@@ -217,6 +216,10 @@ const service = {
 
     findImages: async function(id) {
         return await db.select().from(auctionImages).where(eq(auctionImages.auctionId, id));
+    },
+
+    findBidHistory: async function(id) {
+        return await db.select().from(bids).where(eq(bids.auctionId, id)).orderBy(desc(bids.amount));
     },
 
     findDescription: async function(id) {

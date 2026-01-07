@@ -45,13 +45,28 @@ const controller = {
     getById: async function(req, res, next) {
         try {
             const id = Number(req.params.id);
-            const [auction] = await auctionService.findById(id);
+            const auction = await auctionService.findById(id);
             
             if (!auction) {
                 return res.status(404).json({ message: 'Auction Not Found' });
             }
             
             res.json(auction);
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    getBidHistory: async function(req, res, next) {
+        try {
+            const id = Number(req.params.id);
+            const bidHistory = await auctionService.findBidHistory(id);
+            
+            if (!bidHistory) {
+                return res.status(404).json({ message: 'Auction Not Found' });
+            }
+            
+            res.json(bidHistory);
         } catch (error) {
             next(error);
         }

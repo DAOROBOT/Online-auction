@@ -9,6 +9,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { placeBidSchema } from '../../schemas/auction.schemas';
 import { validateForm } from '../../utils/validation';
 import auctionService from '../../services/auctionService';
+import userService from '../../services/userService'
 
 export default function BiddingSection({ product }) {
   const { user } = useAuth();

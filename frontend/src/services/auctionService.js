@@ -7,8 +7,6 @@ const auctionService = {
     if (!res.ok) throw new Error('Failed to fetch auction details');
     return res.json();
   },
-
-  // --- CÁC HÀM MỚI ---
   
   // 1. Lấy ảnh
   getImages: async (id) => {
@@ -32,14 +30,11 @@ const auctionService = {
   },
 
   // 4. Lấy lịch sử đấu giá
-  getBidHistory: async (id) => {
+  getBidHistory: async (id, filter) => {
     try {
-        // Mẹo: Gọi API chi tiết sản phẩm (getById) vì route /bids chưa có
-        const res = await fetch(`${API_URL}/auction/${id}`);
+        const res = await fetch(`${API_URL}/auction/bids/${id}?f=${filter}`);
         if (!res.ok) return [];
-        const data = await res.json();
-        // Trả về mảng bids nếu backend có gửi kèm, nếu không thì trả về mảng rỗng
-        return data.bids || []; 
+        return res.json();
     } catch (error) {
         return [];
     }
