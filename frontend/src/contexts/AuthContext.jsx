@@ -22,6 +22,7 @@ export const AuthProvider = ({ children }) => {
           
           if (response.ok) {
             const userData = await response.json();
+            console.log("Logged in user:", userData);
             setUser(userData);
           } else {
             localStorage.removeItem('authToken');

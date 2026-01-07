@@ -93,7 +93,7 @@ const controller = {
         try {
             const id = Number(req.params.id);
             const logs = await auctionService.findDescription(id);
-            
+            console.log("Description: ", logs);
             if (!logs) {
                 return res.status(404).json({ message: 'Auction Not Found' });
             }
@@ -197,6 +197,31 @@ const controller = {
         }
     },
 
+    // PUT /auctions/:id/description
+    updateDescription: async function(req, res, next) {
+        try {
+            const id = Number(req.params.id);
+            const { description } = req.body;
+            
+            // Check if auction exists
+            const existingAuction = await auctionService.findById(id);
+            if (!existingAuction) {
+                return res.status(404).json({ message: 'Auction Not Found' });
+            }
+            
+            // Check ownership (only seller can update)
+            if (existingAuction.sellerId !== req.user.id) {
+                return res.status(403).json({ message: 'Unauthorized to update this auction' });
+            }
+
+            // Update description
+            const updatedAuction = await auctionService.updateDescription(id, description);
+            res.json({ message: 'Description updated successfully', description: updatedAuction.description });
+        } catch (error) {
+            next(error);
+        }
+    },
+
     // DELETE /auctions/:id
     delete: async function(req, res, next) {
         try {
@@ -233,6 +258,26 @@ const controller = {
             const result = await auctionService.placeBid(auctionId, userId, amount);
             res.status(200).json(result);
         } catch (error) {
+            next(error);
+        }
+    },
+
+    // POST /auctions/:id/buy-now
+    buyNow: async function(req, res, next) {
+        try {
+            const auctionId = Number(req.params.id);
+            const buyerId = req.user.id;
+
+            console.log(`Buy Now request - Auction: ${auctionId}, Buyer: ${buyerId}`);
+
+            const result = await auctionService.buyNow(auctionId, buyerId);
+            res.status(200).json(result);
+        } catch (error) {
+            console.error("Buy Now Error:", error.message, error.stack);
+            // Pass specific error messages to client
+            if (error.message) {
+                return res.status(400).json({ message: error.message });
+            }
             next(error);
         }
     }

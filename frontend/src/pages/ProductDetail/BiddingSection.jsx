@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   Clock, MapPin, Gavel, Heart, Share2, ShieldCheck, User, TrendingUp, 
-  Trophy, Zap, AlertCircle, ChevronRight, Crown, Star, CheckCircle, Lock 
+  Trophy, Zap, AlertCircle, ChevronRight, Crown, Star, CheckCircle, Lock,
+  ShoppingCart
 } from 'lucide-react';
 import { formatCurrency, formatTimeLeft } from '../../utils/format';
 import { useAuth } from '../../contexts/AuthContext';
@@ -13,6 +14,7 @@ import userService from '../../services/userService'
 
 export default function BiddingSection({ product, ended = false }) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   
   // --- TÍNH TOÁN GIÁ TRỊ BAN ĐẦU AN TOÀN ---
   const currentPrice = Number(product?.currentPrice) || 0;
@@ -25,6 +27,7 @@ export default function BiddingSection({ product, ended = false }) {
   
   //Trạng thái hiển thị hiệu ứng Loading khi đang gửi bid
   const [loading, setLoading] = useState(false); 
+  const [buyNowLoading, setBuyNowLoading] = useState(false); 
 
   // [CẬP NHẬT] Tự động cập nhật giá gợi ý nếu có người khác vừa bid xong \
   useEffect(() => {
@@ -92,6 +95,38 @@ export default function BiddingSection({ product, ended = false }) {
         alert(err.message || "Đấu giá thất bại. Vui lòng thử lại.");
     } finally {
         setLoading(false); // Tắt loading dù thành công hay thất bại
+    }
+  };
+
+  // --- HÀM XỬ LÝ MUA NGAY ---
+  const handleBuyNow = async () => {
+    // 1. Kiểm tra đăng nhập
+    if (!user) {
+      window.location.href = '/login';
+      return;
+    }
+
+    // 2. Xác nhận mua
+    const confirmed = window.confirm(
+      `Are you sure you want to buy this item now for ${formatCurrency(buyNowPrice)}?\n\nThis will end the auction immediately.`
+    );
+    
+    if (!confirmed) return;
+
+    // 3. Gọi API Buy Now
+    setBuyNowLoading(true);
+    try {
+      const result = await auctionService.buyNow(product.id);
+      
+      alert('Purchase successful! Redirecting to payment...');
+      
+      // Redirect to order/payment page
+      navigate(`/order/${result.orderId}`);
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Buy Now failed. Please try again.");
+    } finally {
+      setBuyNowLoading(false);
     }
   };
 
@@ -203,11 +238,32 @@ export default function BiddingSection({ product, ended = false }) {
                 </span>
               </div>
 
-              {/* Giá mua ngay (nếu có) */}
-              {buyNowPrice && (
-                <div className="flex items-center gap-2 text-sm font-medium px-3 py-2 rounded-lg bg-green-500/10 text-green-600 w-fit mb-4">
-                   <Zap size={16} className="fill-current" />
-                   Buy Now: {formatCurrency(buyNowPrice)}
+              {/* Giá mua ngay (nếu có) - Now a clickable button */}
+              {buyNowPrice && !ended && (
+                <button
+                  onClick={handleBuyNow}
+                  disabled={buyNowLoading || product.sellerId === user?.id}
+                  className="flex items-center gap-2 text-sm font-bold px-4 py-3 rounded-lg bg-green-500 hover:bg-green-600 text-white w-full justify-center transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed mb-4"
+                >
+                  {buyNowLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingCart size={18} />
+                      Buy Now for {formatCurrency(buyNowPrice)}
+                    </>
+                  )}
+                </button>
+              )}
+              
+              {/* Show Buy Now price as info when auction ended */}
+              {buyNowPrice && ended && (
+                <div className="flex items-center gap-2 text-sm font-medium px-3 py-2 rounded-lg bg-gray-500/10 text-gray-500 w-fit mb-4">
+                   <Zap size={16} />
+                   Buy Now was: {formatCurrency(buyNowPrice)}
                 </div>
               )}
               

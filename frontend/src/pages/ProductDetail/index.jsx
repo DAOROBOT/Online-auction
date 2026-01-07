@@ -9,8 +9,11 @@ import BiddingSection from './BiddingSection';
 import Description from './Description';
 import CommentsSection from './CommentsSection';
 import BidHistory from './BidHistory'; // 
+import { useAuth } from '../../contexts/AuthContext.jsx';
+
 
 export default function ProductDetail() {
+  const { user } = useAuth();
   const { id } = useParams();
   const nav = useNav();
   const [productCore, setProductCore] = useState(null);
@@ -29,7 +32,7 @@ export default function ProductDetail() {
       }
     };
     if (id) loadCoreData();
-  }, [id]);
+  }, [id, user]);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   if (!productCore) return <div className="min-h-screen flex items-center justify-center">Product not found</div>;
@@ -60,7 +63,7 @@ export default function ProductDetail() {
             <ImageGallery productId={id} />
             
             <div className="space-y-8">
-              <Description productId={id} />
+              <Description productId={id} isOwner={user?.userId === productCore.sellerId} />
               <CommentsSection productId={id} />
             </div>
           </div>

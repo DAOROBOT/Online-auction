@@ -1,5 +1,5 @@
 import db from "../db/index.js"
-import { categories, auctions, auctionImages, users, userFavorites, bids, descriptionLogs, comments } from "../db/schema.js"
+import { categories, auctions, auctionImages, users, userFavorites, bids, descriptionLogs, comments, orders } from "../db/schema.js"
 import { and, or, eq, asc, desc, inArray } from "drizzle-orm";
 
 const service = {
@@ -311,15 +311,22 @@ const service = {
     },
 
     findDescription: async function(id) {
-        return await db.query.descriptionLogs.findMany({
+        // Get current description from auctions table
+        const auction = await db.query.auctions.findFirst({
+            where: eq(auctions.id, id),
+            columns: { description: true }
+        });
+
+        // Get history from descriptionLogs
+        const logs = await db.query.descriptionLogs.findMany({
             where: eq(descriptionLogs.auctionId, id),
             orderBy: [desc(descriptionLogs.editedAt)]
         });
 
-        // return {
-        //     current: logs.length > 0 ? logs[0].contentSnapshot : null,
-        //     history: logs
-        // };
+        return {
+            description: auction?.description || "",
+            history: logs
+        };
     },
 
     findComments: async function(id) {
@@ -386,6 +393,31 @@ const service = {
     update: async function(id, auc) {
         if(auc.endTime) auc.endTime = new Date(auc.endTime);
         await db.update(auctions).set(auc).where(eq(auctions.id, id));
+    },
+
+    updateDescription: async function(id, description) {
+        // Get current description to log history
+        const auction = await db.query.auctions.findFirst({
+            where: eq(auctions.id, id),
+            columns: { description: true }
+        });
+
+        // Log current description to history before updating
+        if (auction?.description) {
+            await db.insert(descriptionLogs).values({
+                auctionId: id,
+                contentSnapshot: auction.description,
+                editedAt: new Date()
+            });
+        }
+
+        // Update to new description
+        const [updated] = await db.update(auctions)
+            .set({ description })
+            .where(eq(auctions.id, id))
+            .returning({ description: auctions.description });
+
+        return updated;
     },
 
     delete: async function(id){
@@ -553,6 +585,66 @@ const service = {
         });
     },
 
+    // Buy Now - End auction immediately and create order
+    buyNow: async function(auctionId, buyerId) {
+        return await db.transaction(async (tx) => {
+            // 1. Get auction details
+            const auction = await tx.query.auctions.findFirst({
+                where: eq(auctions.id, auctionId)
+            });
+
+            console.log("Found auction:", auction);
+
+            if (!auction) {
+                throw new Error('Auction not found');
+            }
+
+            // 2. Validate auction state
+            if (auction.status !== 'active') {
+                throw new Error('Auction is not active');
+            }
+
+            if (!auction.buyNowPrice) {
+                throw new Error('This auction does not have a Buy Now option');
+            }
+
+            // 3. Prevent seller from buying their own item
+            if (auction.sellerId === buyerId) {
+                throw new Error('You cannot buy your own auction');
+            }
+
+            // 4. End the auction immediately
+            await tx.update(auctions).set({
+                status: 'ended',
+                currentPrice: auction.buyNowPrice,
+                winnerId: buyerId,
+                endTime: new Date() // End now
+            }).where(eq(auctions.id, auctionId));
+
+            console.log("Auction updated, creating order...");
+
+            // 5. Create order for payment
+            const [newOrder] = await tx.insert(orders).values({
+                auctionId: auctionId,
+                buyerId: buyerId,
+                sellerId: auction.sellerId,
+                finalPrice: String(auction.buyNowPrice), // Convert to string for decimal
+                status: 'pending_payment',
+                createdAt: new Date(),
+                updatedAt: new Date()
+            }).returning();
+
+            console.log("Order created:", newOrder);
+
+            return {
+                status: 'success',
+                message: 'Purchase successful! Redirecting to payment...',
+                orderId: newOrder.id,
+                finalPrice: auction.buyNowPrice
+            };
+        });
+    },
+
     createComment: async function(userId, auctionId, content, parentId = null) {
         const result = await db.insert(comments).values({
             userId,
@@ -575,6 +667,6 @@ const service = {
         return newComment;
     }
 
-}
+};
 
 export default service;
