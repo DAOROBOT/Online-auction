@@ -31,9 +31,8 @@ function maskBidderName(username, isCurrentUser) {
 export default function BidHistory({ productId }) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [bids, setBids] = useState([]);
+  const [bids, setBids] = useState();
   const [filter, setFilter] = useState('all'); 
-  const [displayLimit, setDisplayLimit] = useState(10);
 
   useEffect(() => {
     const fetchBids = async () => {
@@ -69,7 +68,7 @@ export default function BidHistory({ productId }) {
     if (filter === 'mine') return bid.isCurrentUser;
     if (filter === 'recent') return Date.now() - new Date(bid.bidTime) < 3600000;
     return true;
-  }).slice(0, displayLimit);
+  });
 
   // Logic to separate the leading bid
   const showLeadingBid = filter === 'all' && filteredBids?.length > 0;

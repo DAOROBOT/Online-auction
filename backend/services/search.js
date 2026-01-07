@@ -1,6 +1,6 @@
 import db from "../db/index.js"
 import { auctions, categories, auctionImages, bids } from "../db/schema.js"
-import { sql, eq, and, desc, asc, count, inArray, gte, lte } from "drizzle-orm";
+import { sql, eq, or, and, desc, asc, count, inArray, gte, lte } from "drizzle-orm";
 
 const service = {
     findAll: async function(){
@@ -20,34 +20,52 @@ const service = {
         // Build WHERE conditions
         const conditions = [];
 
+        let matchedCategoryIds = [];
+
         // Full-text search condition - MUST MATCH INDEX EXACTLY
         if (q && q.trim()) {
             const searchQuery = q.trim();
-            conditions.push(sql`(
-                to_tsvector('english'::regconfig, 
+
+            const rows = await db
+                .select({ id: categories.id })
+                .from(categories)
+                .where(
+                    sql`to_tsvector('english'::regconfig, 
+                        (COALESCE(${categories.name}, ''::character varying))::text
+                    ) @@ websearch_to_tsquery('english', ${searchQuery})`
+                );
+
+            matchedCategoryIds = rows.map(r => r.id);
+
+
+            const ftsConditions = [
+                sql`to_tsvector('english'::regconfig, 
                     (COALESCE(${auctions.title}, ''::character varying))::text || ' '::text || 
                     COALESCE(${auctions.description}, ''::text)
-                ) @@ websearch_to_tsquery('english', ${searchQuery})
-                OR
-                ${auctions.categoryId} IN (
-                    SELECT ${categories.id}
-                    FROM ${categories}
-                    WHERE to_tsvector('english'::regconfig, 
-                        (COALESCE(${categories.name}, ''::character varying))::text
-                    ) @@ websearch_to_tsquery('english', ${searchQuery})
-                )
-            )`)
+                ) @@ websearch_to_tsquery('english', ${searchQuery})`
+            ];
+
+            if (matchedCategoryIds.length > 0) {
+                ftsConditions.push(inArray(auctions.categoryId, matchedCategoryIds));
+            }
+
+            conditions.push(sql`(${or(...ftsConditions)})`);
         }
 
         // Category filter
+        let resolvedCategoryId = null;
+
         if (category && category !== 'All') {
-            conditions.push(
-                sql`${auctions.categoryId} IN (
-                    SELECT ${categories.id}
-                    FROM ${categories}
-                    WHERE ${categories.name} = ${category}
-                )`
-            );
+            const cat = await db
+                .select({ id: categories.id })
+                .from(categories)
+                .where(eq(categories.name, category))
+                .limit(1);
+
+            if (cat.length) {
+                resolvedCategoryId = cat[0].id;
+                conditions.push(eq(auctions.categoryId, resolvedCategoryId));
+            }
         }
 
         if (minPrice) {
@@ -135,9 +153,41 @@ const service = {
 
         const totalItems = countResult.length > 0 ? parseInt(countResult[0].count) : 0;
 
-        // Fetch highest bids per auction
         return {
-            data: results,
+            data: results.map(row => {
+                const highestBid = row.bids[0]; // Logic handled by 'limit: 1' in query
+                const primaryImg = row.images[0]?.imageUrl || 'https://via.placeholder.com/300';
+
+                return {
+                    id: row.id,
+                    title: row.title,
+                    currentPrice: parseFloat(row.currentPrice),
+                    startingPrice: row.startingPrice ? parseFloat(row.startingPrice) : null,
+                    buyNowPrice: row.buyNowPrice ? parseFloat(row.buyNowPrice) : null,
+                    endTime: row.endTime,
+                    createdAt: row.createdAt,
+                    bidCount: parseInt(row.bidCount || 0),
+                    status: row.status,
+                    
+                    // Mapped Relations
+                    category: row.category?.name,
+                    categoryName: row.category?.name,
+                    sellerName: row.seller?.fullName,
+                    sellerId: row.sellerId,
+                    primaryImage: primaryImg,
+                    image: primaryImg,
+                    
+                    seller: {
+                        name: row.seller?.fullName
+                    },
+
+                    highestBidder: highestBid ? {
+                        id: highestBid.bidderId,
+                        name: highestBid.bidder?.fullName,
+                        amount: parseFloat(highestBid.amount)
+                    } : null
+                };
+            }),
             total: totalItems
         };
     },

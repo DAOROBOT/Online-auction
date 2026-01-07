@@ -57,6 +57,21 @@ const controller = {
         }
     },
 
+    getBidHistory: async function(req, res, next) {
+        try {
+            const id = Number(req.params.id);
+            const bidHistory = await auctionService.findBidHistory(id);
+            
+            if (!bidHistory) {
+                return res.status(404).json({ message: 'Auction Not Found' });
+            }
+            
+            res.json(bidHistory);
+        } catch (error) {
+            next(error);
+        }
+    },
+
     // GET /auctions/images/:id
     getImages: async function(req, res, next) {
         try {

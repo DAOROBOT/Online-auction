@@ -14,6 +14,9 @@ route.get('/profile', auctionController.listProfile);
 // GET: Auction Images
 route.get('/images/:id', auctionController.getImages);
 
+// GET: Auction Bids
+route.get('/bids/:id', auctionController.getBidHistory);
+
 // GET: Auction Description
 route.get('/description/:id', auctionController.getDescription);
 

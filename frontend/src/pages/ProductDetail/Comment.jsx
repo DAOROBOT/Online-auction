@@ -33,11 +33,12 @@ export default function Comment({ comment, onReplySubmit }) {
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
             {/* <span className="font-bold text-sm text-(--text)">
-              {comment.user}
+              {comment?.user}
             </span>
             <span className="text-xs text-(--text-muted)">
               {comment.time}
-            </span> */}
+            </span> 
+            */}
           </div>
           <p className="text-sm text-(--text-muted) leading-relaxed mb-2">
             {comment.text}
