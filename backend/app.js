@@ -22,7 +22,12 @@ import systemRoute from "./routes/system.js";
 const app = express();
 
 // --- Dependencies ---
-app.use(cors());
+app.use(cors({
+    // Khi deploy xong Frontend, bạn sẽ thay dấu '*' bằng domain thật của Frontend
+    // Ví dụ: origin: 'https://aurum-auction.vercel.app'
+    origin: process.env.FRONTEND_URL || '*', 
+    credentials: true
+}));
 
 app.use(morgan('dev'));
 
