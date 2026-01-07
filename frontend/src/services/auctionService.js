@@ -1,6 +1,43 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
-export const auctionService = {
+const auctionService = {
+  getTopAuctions: async ({ id = null, status = 'active', sortBy = 'newest', page = 1, limit = 5 } = {}) => {
+    const queryParams = new URLSearchParams({ status, sortBy, page, limit });
+
+    if (id) {
+      queryParams.append("userId", id);
+    }
+
+    const token = localStorage.getItem('authToken');
+    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+    
+    const res = await fetch(`${API_URL}/auction/top?${queryParams.toString()}`, { headers });
+    
+    if (!res.ok) throw new Error('Failed to fetch auctions');
+    console.log("Received:", res);
+    
+    return res.json();
+  },
+
+  getTabAuctions: async ({ username = '', status = 'active-bid', category = null }) => {
+      const queryParams = new URLSearchParams({ username, status });
+
+      if (category) {
+        queryParams.append("category", category);
+      }
+
+      const token = localStorage.getItem('authToken');
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      
+      const response = await fetch(`${API_URL}/auction/profile?${queryParams.toString()}`, { headers });
+
+      if (!response.ok) {
+          throw new Error('Failed to fetch tab data');
+      }
+
+      return response;
+  },
+
   // Lấy danh mục (để đổ vào dropdown)
   getCategories: async () => {
     const res = await fetch(`${API_URL}/categories`);
@@ -48,3 +85,5 @@ export const auctionService = {
     return response.json();
   }
 };
+
+export default auctionService;

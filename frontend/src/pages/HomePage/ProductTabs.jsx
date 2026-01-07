@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Clock, Gavel, Star, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import AuctionCard from '../../components/AuctionCard';
-import { products } from '../../data/index.js';
+import auctionService from '../../services/auctionService';
 
 export default function ProductTabs() {
   const [activeTab, setActiveTab] = useState('endingSoon');
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const tabs = [
     { id: 'endingSoon', label: 'Ending Soon', icon: Clock, color: 'var(--danger)' },
@@ -15,16 +17,25 @@ export default function ProductTabs() {
 
   const activeTabData = tabs.find(t => t.id === activeTab);
 
-  const getFilteredProducts = () => {
-    if (!products.length) return [];
-    switch (activeTab) {
-      case 'endingSoon': return products.filter(p => p.status === 'active').slice(0, 5);
-      case 'mostBids': return products.filter(p => p.status === 'active').slice(0, 5);
-      case 'highestPrice': return [...products].sort((a, b) => parseFloat(b.price) - parseFloat(a.price)).slice(0, 5);
-      default: return products.slice(0, 5);
-    }
-  };
-  const displayProducts = getFilteredProducts();
+  useEffect(() => {
+    const fetchTabContent = async () => {
+        setLoading(true);
+        try {
+            const data = await auctionService.getTopAuctions({ 
+                sortBy: activeTab, 
+                limit: 5
+            });
+            console.log('HOMEPAGE: ', data);
+            setProducts(data);
+        } catch (error) {
+            console.error("Failed to load tab data", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    fetchTabContent();
+  }, [activeTab]);
 
   return (
     <section className="container mx-auto px-10">
@@ -52,10 +63,10 @@ export default function ProductTabs() {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5 animate-fade-in">
-        {displayProducts.length > 0 ? (
-          displayProducts.map((item) => (
+        {products.length > 0 ? (
+          products.map((item) => (
             <div key={item.id} className='flex justify-center'>
-              <AuctionCard product={item} variant="default"/>
+              <AuctionCard product={item} />
             </div>
           ))
         ) : (
