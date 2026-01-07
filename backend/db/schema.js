@@ -60,7 +60,7 @@ export const auctions = pgTable('auctions', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 }); 
 
-// --- 4. AUCTION IMAGES TABLE (Đã sửa theo CSV) ---
+// --- 4. AUCTION IMAGES TABLE ---
 export const auctionImages = pgTable('auction_images', {
   id: serial('image_id').primaryKey(), // Map 'id' -> 'image_id'
   auctionId: integer('auction_id').notNull().references(() => auctions.id, { onDelete: 'cascade' }),
@@ -83,7 +83,7 @@ export const bids = pgTable('bids', {
 export const reviews = pgTable('reviews', {
   id: serial('review_id').primaryKey(),
   reviewerId: integer('reviewer_id'),
-  targetId: integer('target_user_id'), // CSV ghi là target_user_id
+  targetId: integer('target_user_id'),
   auctionId: integer('auction_id'),
   isGoodRating: boolean('is_good_rating'),
   comment: text('comment'),
@@ -160,5 +160,16 @@ export const auctionImagesRelations = relations(auctionImages, ({ one }) => ({
   auction: one(auctions, {
     fields: [auctionImages.auctionId],
     references: [auctions.id],
+  }),
+}));
+
+export const bidsRelations = relations(bids, ({ one }) => ({
+  auction: one(auctions, {
+    fields: [bids.auctionId],
+    references: [auctions.id],
+  }),
+  bidder: one(users, {
+    fields: [bids.bidderId],
+    references: [users.id],
   }),
 }));
