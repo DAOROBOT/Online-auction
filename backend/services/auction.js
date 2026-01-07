@@ -302,12 +302,18 @@ const service = {
         await db.delete(auctions).where(eq(auctions.id, id));
     },
 
-    placeBid: async function(auctionId, userId, userMaxAmount) {
+    placeBid: async function(auctionId, userId, userMaxAmountInput) {
         return await db.transaction(async (tx) => {
-            // 1. Lấy thông tin đấu giá hiện tại (Lock row để tránh race condition nếu cần, ở đây làm đơn giản)
+            // 1. Lấy thông tin đấu giá và Bid cao nhất hiện tại (để biết ai đang thắng)
             const auction = await tx.query.auctions.findFirst({
                 where: eq(auctions.id, auctionId),
-                with: { bids: { orderBy: [desc(bids.amount)], limit: 1 } } // Lấy bid cao nhất hiện tại
+                with: { 
+                    bids: { 
+                        orderBy: [desc(bids.amount)], 
+                        limit: 1, // Lấy bid có amount cao nhất (người thắng hiện tại)
+                        with: { bidder: true }
+                    } 
+                } 
             });
 
             if (!auction) throw new Error("Auction not found");
@@ -317,106 +323,77 @@ const service = {
 
             const currentPrice = Number(auction.currentPrice);
             const stepPrice = Number(auction.stepPrice);
-            const userBidAmount = Number(userMaxAmount); // Số tiền tối đa user muốn trả
+            const inputMax = Number(userMaxAmountInput); // Giá trần user vừa nhập
 
-            // Giá thấp nhất hợp lệ để bid lần này
+            // Giá sàn hợp lệ cho lần bid này
             const minValidBid = currentPrice + (auction.bidCount === 0 ? 0 : stepPrice);
 
-            if (userBidAmount < minValidBid) {
-                throw new Error(`Bid amount must be at least ${minValidBid}`);
+            if (inputMax < minValidBid) {
+                throw new Error(`Bid amount must be at least ${new Intl.NumberFormat('vi-VN').format(minValidBid)}`);
             }
 
-            // 2. Tìm người đang giữ Auto Bid cao nhất hiện tại (nếu có)
-            const existingAutoBid = await tx.query.autoBids.findFirst({
-                where: eq(autoBids.auctionId, auctionId),
-                orderBy: [desc(autoBids.maxAmount)]
-            });
-
-            // --- Logic đấu giá ---
+            // 2. Xác định đối thủ hiện tại (Current Winner)
+            // Lấy bid cao nhất hiện tại từ DB
+            const currentWinnerBid = auction.bids[0]; 
             
-            // Xóa auto-bid cũ của chính user này (để cập nhật cái mới)
-            await tx.delete(autoBids).where(and(eq(autoBids.auctionId, auctionId), eq(autoBids.userId, userId)));
+            // Lấy 'max_amount' (số tiền đặt cược) bí mật của người đang thắng (nếu có)
+            const currentWinnerMaxSecret = currentWinnerBid ? Number(currentWinnerBid.maxAmount || currentWinnerBid.amount) : 0;
+            const currentWinnerId = currentWinnerBid ? currentWinnerBid.bidderId : null;
 
-            // Trường hợp 1: Chưa có ai đặt Auto Bid, hoặc Auto Bid cao nhất hiện tại thấp hơn User mới
-            if (!existingAutoBid || Number(existingAutoBid.maxAmount) < userBidAmount) {
-                
-                // Mức giá mới để thắng người cũ (nếu có người cũ)
-                let newCurrentPrice = minValidBid;
-                
-                // Nếu có người cũ đang giữ Auto Bid, ta chỉ cần trả: Max của họ + Bước giá (hoặc bằng chính mức Max của ta nếu sát quá)
-                if (existingAutoBid && existingAutoBid.userId !== userId) {
-                    const priceToBeatCompetitor = Number(existingAutoBid.maxAmount) + stepPrice;
-                    newCurrentPrice = Math.min(userBidAmount, priceToBeatCompetitor);
-                }
+            // --- AUTO BIDDING LOGIC---
 
-                // Lưu Bid mới vào bảng bids (Lịch sử)
+            // Trường hợp A: Người dùng tự bid đè lên chính mình (để tăng giá trần)
+            if (currentWinnerId === userId) {
+                // Chỉ cần tạo một bid mới với amount giữ nguyên (hoặc tăng nhẹ nếu muốn) nhưng maxAmount mới
+                // Ở đây ta giữ nguyên giá hiện tại, chỉ cập nhật Max Amount
                 await tx.insert(bids).values({
                     auctionId,
                     bidderId: userId,
-                    amount: newCurrentPrice,
+                    amount: currentPrice, // Giá không đổi
+                    maxAmount: inputMax,  // Cập nhật giá trần mới
                     bidTime: new Date()
                 });
+                return { status: "updated", message: "Your max bid has been updated!", currentPrice };
+            }
 
-                // Cập nhật giá hiện tại cho sản phẩm
-                await tx.update(auctions).set({
-                    currentPrice: newCurrentPrice,
-                    bidCount: (auction.bidCount || 0) + 1,
-                    winnerId: userId, // Người mới đang thắng
-                    // Auto extend logic
-                    endTime: (auction.autoExtend && (new Date(auction.endTime) - new Date() < 5 * 60 * 1000)) 
-                        ? new Date(new Date(auction.endTime).getTime() + 5 * 60 * 1000) 
-                        : auction.endTime
-                }).where(eq(auctions.id, auctionId));
+            // TRƯỜNG HỢP B: Đấu với người khác
+            // So sánh Max của User mới (inputMax) vs Max của User cũ (currentWinnerMaxSecret)
 
-                // Lưu mức giá trần mới của User này vào bảng auto_bids
-                await tx.insert(autoBids).values({
-                    userId,
-                    auctionId,
-                    maxAmount: userBidAmount
-                });
-
-                return { status: "success", message: "You are the highest bidder!", currentPrice: newCurrentPrice };
-            } 
-            
-            // Trường hợp 2: User mới trả thấp hơn hoặc bằng Auto Bid của người đang giữ đỉnh (User cũ Defend thành công)
-            else {
-                // Người cũ (existingAutoBid.userId) sẽ tự động bid đè lên người mới
-                const competitorMax = Number(existingAutoBid.maxAmount);
-                
-                // Hệ thống tự động trả giá giúp người cũ: Bằng giá User mới + bước giá (nhưng ko quá Max của người cũ)
-                let autoBidAmount = Math.min(competitorMax, userBidAmount + stepPrice);
-
-                // 2.1: Ghi nhận bid của User mới (dù thua nhưng vẫn phải ghi nhận là đã tham gia)
+            // B1. Nếu User mới bids ít hơn User cũ
+            if (currentWinnerBid && inputMax <= currentWinnerMaxSecret) {
+                // 1. User mới đặt 1 bid (nhưng sẽ thua)
                 await tx.insert(bids).values({
                     auctionId,
                     bidderId: userId,
-                    amount: userBidAmount,
+                    amount: inputMax, // Bid đúng bằng số tiền họ nhập
+                    maxAmount: inputMax,
                     bidTime: new Date()
                 });
 
-                // 2.2: Ghi nhận bid tự động của Hệ thống (đại diện cho người cũ)
-                // Chỉ bid nếu giá user mới chưa đẩy giá lên tới đỉnh của người cũ
-                if (userBidAmount < competitorMax) {
-                     await tx.insert(bids).values({
-                        auctionId,
-                        bidderId: existingAutoBid.userId,
-                        amount: autoBidAmount,
-                        bidTime: new Date(new Date().getTime() + 100) // Thêm 100ms để nó nằm sau
-                    });
-                } else {
-                    // Nếu user mới trả BẰNG user cũ -> Người cũ vẫn thắng do đến trước, giá giữ nguyên mức Max
-                    autoBidAmount = competitorMax;
+                // 2. Hệ thống tự động đặt bid cho User cũ để thắng lại
+                // Giá mới = Giá User mới + Bước giá (nhưng không vượt quá Max của User cũ)
+                let autoBidAmount = Math.min(currentWinnerMaxSecret, inputMax + stepPrice);
+                
+                // Nếu User mới trả bằng đúng Max của User cũ -> User cũ vẫn thắng do đến trước (giữ nguyên giá đó)
+                if (inputMax === currentWinnerMaxSecret) {
+                    autoBidAmount = currentWinnerMaxSecret;
                 }
 
-                // Cập nhật sản phẩm
+                await tx.insert(bids).values({
+                    auctionId,
+                    bidderId: currentWinnerId, // Người cũ
+                    amount: autoBidAmount,
+                    maxAmount: currentWinnerMaxSecret, // Giữ nguyên max bí mật
+                    bidTime: new Date(new Date().getTime() + 100) // +100ms
+                });
+
+                // Cập nhật giá sản phẩm
                 await tx.update(auctions).set({
                     currentPrice: autoBidAmount,
-                    bidCount: (auction.bidCount || 0) + 2, // +2 vì có bid của user mới và bid tự động
-                    winnerId: existingAutoBid.userId, // Người cũ vẫn thắng
-                     // Auto extend logic
-                     endTime: (auction.autoExtend && (new Date(auction.endTime) - new Date() < 5 * 60 * 1000)) 
-                        ? new Date(new Date(auction.endTime).getTime() + 5 * 60 * 1000) 
-                        : auction.endTime
+                    bidCount: (auction.bidCount || 0) + 2,
+                    winnerId: currentWinnerId,
+                    endTime: (auction.autoExtend && (new Date(auction.endTime) - new Date() < 5 * 60 * 1000)) 
+                        ? new Date(new Date(auction.endTime).getTime() + 5 * 60 * 1000) : auction.endTime
                 }).where(eq(auctions.id, auctionId));
 
                 return { 
@@ -424,6 +401,37 @@ const service = {
                     message: "You have been outbid immediately by an automatic bid!", 
                     currentPrice: autoBidAmount 
                 };
+            }
+
+            // B2. Nếu User mới bids nhiều hơn User cũ (Thắng)
+            else {
+                // Giá để thắng người cũ = Max của người cũ + Bước giá
+                // Nhưng không được thấp hơn giá sàn (minValidBid)
+                let priceToWin = minValidBid;
+                
+                if (currentWinnerBid) {
+                    priceToWin = Math.min(inputMax, currentWinnerMaxSecret + stepPrice);
+                }
+
+                // Tạo bid thắng cho User mới
+                await tx.insert(bids).values({
+                    auctionId,
+                    bidderId: userId,
+                    amount: priceToWin,
+                    maxAmount: inputMax, // Lưu giá trần mới
+                    bidTime: new Date()
+                });
+
+                // Cập nhật sản phẩm
+                await tx.update(auctions).set({
+                    currentPrice: priceToWin,
+                    bidCount: (auction.bidCount || 0) + 1,
+                    winnerId: userId,
+                    endTime: (auction.autoExtend && (new Date(auction.endTime) - new Date() < 5 * 60 * 1000)) 
+                        ? new Date(new Date(auction.endTime).getTime() + 5 * 60 * 1000) : auction.endTime
+                }).where(eq(auctions.id, auctionId));
+
+                return { status: "success", message: "You are the highest bidder!", currentPrice: priceToWin };
             }
         });
     }
