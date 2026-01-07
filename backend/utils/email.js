@@ -155,24 +155,24 @@ export const sendWelcomeEmail = async (to, username, verificationCode) => {
 };
 
 // Send login notification
-export const sendLoginNotification = async (to, username, loginDetails) => {
-  const htmlContent = `
-    <h2 style="color: #333; margin-bottom: 20px;">🔐 New Login Detected</h2>
-    <p style="color: #555;">Hello <strong>${username}</strong>,</p>
-    <p style="color: #555; line-height: 1.6;">We detected a new login to your account:</p>
+// export const sendLoginNotification = async (to, username, loginDetails) => {
+//   const htmlContent = `
+//     <h2 style="color: #333; margin-bottom: 20px;">🔐 New Login Detected</h2>
+//     <p style="color: #555;">Hello <strong>${username}</strong>,</p>
+//     <p style="color: #555; line-height: 1.6;">We detected a new login to your account:</p>
     
-    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-      <p style="margin: 5px 0;"><strong>Time:</strong> ${formatDate(new Date())}</p>
-      <p style="margin: 5px 0;"><strong>IP Address:</strong> ${loginDetails.ip || 'Unknown'}</p>
-      <p style="margin: 5px 0;"><strong>Device:</strong> ${loginDetails.device || 'Unknown'}</p>
-    </div>
+//     <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+//       <p style="margin: 5px 0;"><strong>Time:</strong> ${formatDate(new Date())}</p>
+//       <p style="margin: 5px 0;"><strong>IP Address:</strong> ${loginDetails.ip || 'Unknown'}</p>
+//       <p style="margin: 5px 0;"><strong>Device:</strong> ${loginDetails.device || 'Unknown'}</p>
+//     </div>
     
-    <p style="color: #555;">If this was you, you can safely ignore this email.</p>
-    <p style="color: #d9534f;"><strong>If you didn't log in, please secure your account immediately by changing your password.</strong></p>
-  `;
+//     <p style="color: #555;">If this was you, you can safely ignore this email.</p>
+//     <p style="color: #d9534f;"><strong>If you didn't log in, please secure your account immediately by changing your password.</strong></p>
+//   `;
 
-  return sendEmailViaAPI(to, '🔐 New Login to Your Account', htmlContent);
-};
+//   return sendEmailViaAPI(to, '🔐 New Login to Your Account', htmlContent);
+// };
 
 // Send password reset OTP
 export const sendPasswordResetOTP = async (to, username, otp) => {
@@ -194,25 +194,25 @@ export const sendPasswordResetOTP = async (to, username, otp) => {
 };
 
 // Send password reset email with link
-export const sendPasswordResetEmail = async (to, username, resetToken) => {
-  const resetUrl = `${FRONTEND_URL}/reset-password?token=${resetToken}`;
+// export const sendPasswordResetEmail = async (to, username, resetToken) => {
+//   const resetUrl = `${FRONTEND_URL}/reset-password?token=${resetToken}`;
 
-  const htmlContent = `
-    <h2 style="color: #333; margin-bottom: 20px;">🔑 Password Reset Request</h2>
-    <p style="color: #555;">Hello <strong>${username}</strong>,</p>
-    <p style="color: #555; line-height: 1.6;">We received a request to reset your password. Click the button below to reset it:</p>
+//   const htmlContent = `
+//     <h2 style="color: #333; margin-bottom: 20px;">🔑 Password Reset Request</h2>
+//     <p style="color: #555;">Hello <strong>${username}</strong>,</p>
+//     <p style="color: #555; line-height: 1.6;">We received a request to reset your password. Click the button below to reset it:</p>
     
-    ${ctaButton('Reset Password', resetUrl, '#007bff')}
+//     ${ctaButton('Reset Password', resetUrl, '#007bff')}
     
-    <p style="color: #888; font-size: 13px;">Or copy and paste this link into your browser:</p>
-    <p style="color: #007bff; word-break: break-all; font-size: 12px;">${resetUrl}</p>
+//     <p style="color: #888; font-size: 13px;">Or copy and paste this link into your browser:</p>
+//     <p style="color: #007bff; word-break: break-all; font-size: 12px;">${resetUrl}</p>
     
-    <p style="color: #d9534f;"><strong>This link will expire in 1 hour.</strong></p>
-    <p style="color: #888; font-size: 13px;">If you didn't request this, please ignore this email.</p>
-  `;
+//     <p style="color: #d9534f;"><strong>This link will expire in 1 hour.</strong></p>
+//     <p style="color: #888; font-size: 13px;">If you didn't request this, please ignore this email.</p>
+//   `;
 
-  return sendEmailViaAPI(to, '🔑 Password Reset Request - Online Auction', htmlContent);
-};
+//   return sendEmailViaAPI(to, '🔑 Password Reset Request - Online Auction', htmlContent);
+// };
 
 // Send email verification
 export const sendEmailVerification = async (to, username, verificationToken) => {
@@ -640,9 +640,7 @@ export const sendEmail = async (to, subject, html) => {
 export default {
   // Auth emails
   sendWelcomeEmail,
-  sendLoginNotification,
   sendPasswordResetOTP,
-  sendPasswordResetEmail,
   sendEmailVerification,
   sendChangePasswordOTP,
   
