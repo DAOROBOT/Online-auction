@@ -5,15 +5,16 @@ import cors from "cors";
 import session from "express-session";
 import passport from "./config/passport.js";
 import auctionRoute from "./routes/auction.js";
-import authRoute from "./routes/auth.js"
-import categoryRoute from "./routes/category.js"
+import authRoute from "./routes/auth.js";
+import categoryRoute from "./routes/category.js";
 import searchRoute from "./routes/search.js";
 import sellerRequestRoute from "./routes/sellerRequest.js"
 import userRoute from "./routes/user.js"
-import reviewRoute from "./routes/review.js"
 import not_found from "./middleware/not_found.js";
 import error_handler from "./middleware/error_handler.js";
-import orderService from "./routes/order.js"
+import reviewRoute from "./routes/review.js"
+import orderService from "./routes/order.js";
+import authenticate from "./middleware/auth.js";
 
 // import productRoute from "./routes/product.routes.js";
 
@@ -39,6 +40,8 @@ app.use(session({
 
 // Initialize Passport
 app.use(passport.initialize());
+
+app.use(authenticate);
 
 // --- Routes ---
 app.use('/auction', auctionRoute);

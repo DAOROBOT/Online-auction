@@ -4,7 +4,23 @@
  * @returns {string} Formatted currency string
  */
 export const formatCurrency = (amount) => {
-  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+  // If amount > 1 billion, show in billions with "B"
+  if (amount >= 1000000000) {
+    const billions = amount / 1000000000;
+    return `${billions.toFixed(1)}B ₫`;
+  }
+  // If amount > 1000000, show in millions with "M"
+  if (amount >= 1000000) {
+    const millions = amount / 1000000;
+    return `${millions.toFixed(1)}M ₫`;
+  }
+  // If amount > 1000, show in thousands with "K"
+  if (amount >= 1000) {
+    const thousands = amount / 1000;
+    return `${thousands.toFixed(1)}K ₫`;
+  }
+  const formattedAmount = amount / 1;
+  return `${formattedAmount.toFixed(1)} ₫`;
 };
 
 /**
@@ -36,7 +52,7 @@ export const formatTimeLeft = (endTime) => {
   const now = new Date();
   const difference = end - now;
 
-  // 1. Check if Ended
+  // Check if Ended
   if (difference <= 0) {
     return { 
       timeLeft: 'Ended', 
@@ -48,15 +64,8 @@ export const formatTimeLeft = (endTime) => {
   const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
   const minutes = Math.floor((difference / 1000 / 60) % 60);
 
-  // 2. If > 3 Days: Return specific Date (dd/mm/yyyy)
+  // If > 3 Days: Return specific Date (dd/mm/yyyy)
   if (days > 3) {
-    // const d = String(end.getDate()).padStart(2, '0');
-    // const m = String(end.getMonth() + 1).padStart(2, '0');
-    // const y = end.getFullYear();
-    // return {
-    //   timeLeft: `${d}/${m}/${y}`,
-    //   urgencyLevel: 'normal' // Not urgent yet
-    // };
     return {
       timeLeft: formatDate(end), 
       urgencyLevel: 'normal'
@@ -97,4 +106,18 @@ export function formatTimeAgo(timestamp) {
   if (hours > 0) return `${hours}h ago`;
   if (minutes > 0) return `${minutes}m ago`;
   return 'Just now';
+};
+
+export function formatBidderName(username, isCurrentUser) {
+  if (isCurrentUser) return "You";
+  if (!username) return "Unknown";
+  
+  if (username.length <= 3) return username[0] + "**";
+  
+  const firstChar = username[0];
+  const lastChar = username[username.length - 1];
+  const maskedLength = Math.min(username.length - 2, 5);
+  const masked = '*'.repeat(maskedLength);
+  
+  return `${firstChar}${masked}${lastChar}`;
 }

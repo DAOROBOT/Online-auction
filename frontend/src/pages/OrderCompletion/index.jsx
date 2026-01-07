@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import orderService from '../../services/orderService';
 import { formatCurrency, formatDate, formatTimeAgo } from '../../utils/format';
 import ImageUploadModal from '../../components/ImageUploadModal';
-import { auctionService } from '../../services/auctionService';
+import auctionService from '../../services/auctionService';
 import { paymentFormSchema, confirmPaymentSchema, reviewFormSchema, cancelOrderSchema, chatMessageSchema } from '../../schemas/order.schemas';
 import { validateForm } from '../../utils/validation';
 

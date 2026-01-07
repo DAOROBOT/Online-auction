@@ -1,15 +1,11 @@
-import {useState, useEffect} from "react";
+import { useState, useEffect, useRef } from "react";
+import { Filter } from "lucide-react";
+import './FilterBar.css';
+
 import CategoryDropdown from "./Modal/CategoryDropdown";
 import PriceDropdown from "./Modal/PriceDropdown";
 import SortSelection from "./Modal/SortSelection";
 import ChoiceSelected from "./ChoiceSelected";
-
-import './FilterBar.css';
-import {categories} from "../../data";
-import { Filter } from "lucide-react";
-import { useRef } from "react";
-// import FilterButton from "./FilterButton";
-
 
 export default function FilterBar({ setSearchParams }) {
   const [activeDropdown, setActiveDropdown] = useState(null);
@@ -17,7 +13,6 @@ export default function FilterBar({ setSearchParams }) {
   const [priceRange, setPriceRange] = useState({ min: "", max: "" });
   const [orderBy, setOrderBy] = useState("default");
   const barRef = useRef(null);
-
 
   useEffect(() => {
     const params = {};

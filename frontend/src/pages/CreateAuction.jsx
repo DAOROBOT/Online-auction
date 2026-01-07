@@ -4,7 +4,7 @@ import { useNav } from "../hooks/useNavigate";
 import { useAuth } from "../contexts/AuthContext";
 import ImageUploadModal from '../components/ImageUploadModal';
 import RichTextEditor from "../components/RichTextEditor";
-import { auctionService } from "../services/auctionService";
+import auctionService from "../services/auctionService";
 import { createAuctionSchema } from "../schemas/auction.schemas";
 import { validateForm } from "../utils/validation";
 

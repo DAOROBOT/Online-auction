@@ -3,13 +3,13 @@ import userService from "../services/user.js";
 import sellerRequestService from "../services/sellerRequest.js";
 
 // Verify token and attach user to request
-export const requireAuth = async (req, res, next) => {
+export const authenticate = async (req, res, next) => {
     try {
         const authorization = req.header('Authorization');
 
-        if (!authorization) {
-            return res.status(401).json({ message: 'Authorization required' });
-        }
+        // if (!authorization) {
+        //     return res.status(401).json({ message: 'Authorization required' });
+        // }
 
         // Authorization: Bearer ey...
         const token = authorization?.replace('Bearer ', '').trim();
@@ -20,42 +20,43 @@ export const requireAuth = async (req, res, next) => {
             
             // Fetch fresh user data from database
             const user = await userService.getById(tokenData.userId);
-            if (!user) {
-                return res.status(404).json({
-                    message: 'User not found',
-                });
-            }
 
-            // Check seller status - if seller role has expired, revert to buyer
-            if (user.role === 'seller') {
-                const statusCheck = await sellerRequestService.checkAndUpdateSellerStatus(user.id);
-                if (statusCheck.status === 'expired' && statusCheck.reverted) {
-                    user.role = 'buyer';
-                    console.log(`User ${user.id} seller status expired, reverted to buyer`);
+            // if (!user) {
+            //     return res.status(404).json({
+            //         message: 'User not found',
+            //     });
+            // }
+
+            if (user) {
+                // Check seller status - if seller role has expired, revert to buyer
+                if (user.role === 'seller') {
+                    const statusCheck = await sellerRequestService.checkAndUpdateSellerStatus(user.id);
+                    if (statusCheck.status === 'expired' && statusCheck.reverted) {
+                        user.role = 'buyer';
+                        console.log(`User ${user.id} seller status expired, reverted to buyer`);
+                    }
                 }
-            }
 
-            // Attach user to request object
-            req.user = user;
-            console.log('User verified successfully:', user.id);
+                // Attach user to request object
+                req.user = user;
+            }
         }
         
         next();
     } catch (error) {
-        return res.status(401).json({
-            message: 'Invalid or expired token',
-        });
+        next();
     }
 };
 
-// export const requireAuth = (req, res, next) => {
-//     if (!req.user) {
-//         return res.status(401).json({
-//             message: 'User not authenticated',
-//         });
-//     }
-//     next();
-// };
+export const requireAuth = (req, res, next) => {
+    if (!req.user) {
+        return res.status(401).json({
+            message: 'User not authenticated',
+        });
+    }
+
+    next();
+};
 
 // Check if user has required role(s)
 // export const requireRole = (...allowedRoles) => {
@@ -127,4 +128,4 @@ export const requireAdmin = (req, res, next) => {
     next();
 };
 
-export default requireAuth;
+export default authenticate;

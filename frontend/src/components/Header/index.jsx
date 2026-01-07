@@ -15,7 +15,6 @@ import './Header.css'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
-
 export default function Header() {
   const mobileSearchRef = useRef(null);
   const nav = useNav();
@@ -103,7 +102,7 @@ export default function Header() {
                   type="text" 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)} 
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()} 
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                   placeholder="Search for items, artists, or brands..." 
                   className="w-full bg-transparent outline-none text-sm transition-colors"
                   style={{ 

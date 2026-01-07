@@ -100,7 +100,7 @@ export default function BecomeSeller() {
         switch (status) {
             case 'pending':
                 return {
-                    icon: <Clock className="w-12 h-12 text-[var(--warning)]" />,
+                    icon: <Clock className="w-12 h-12 text-(--warning)" />,
                     title: 'Request Pending',
                     description: 'Your seller upgrade request is being reviewed by our admin team.',
                     color: 'var(--warning)',
@@ -110,7 +110,7 @@ export default function BecomeSeller() {
                 // Check if seller status is still active
                 if (statusInfo?.isActive) {
                     return {
-                        icon: <CheckCircle className="w-12 h-12 text-[var(--success)]" />,
+                        icon: <CheckCircle className="w-12 h-12 text-(--success)" />,
                         title: 'You are a Seller! 🎉',
                         description: `Your seller status is active for ${statusInfo.daysRemaining} more day${statusInfo.daysRemaining > 1 ? 's' : ''}.`,
                         color: 'var(--success)',
@@ -123,7 +123,7 @@ export default function BecomeSeller() {
                 // Seller status expired - can reapply
                 if (statusInfo?.expired) {
                     return {
-                        icon: <Clock className="w-12 h-12 text-[var(--warning)]" />,
+                        icon: <Clock className="w-12 h-12 text-(--warning)" />,
                         title: 'Seller Status Expired',
                         description: 'Your seller period has ended. You can submit a new request to become a seller again.',
                         color: 'var(--warning)',
@@ -132,7 +132,7 @@ export default function BecomeSeller() {
                     };
                 }
                 return {
-                    icon: <CheckCircle className="w-12 h-12 text-[var(--success)]" />,
+                    icon: <CheckCircle className="w-12 h-12 text-(--success)" />,
                     title: 'Congratulations! 🎉',
                     description: 'Your request has been approved! You are now a seller.',
                     color: 'var(--success)',
@@ -141,7 +141,7 @@ export default function BecomeSeller() {
             case 'rejected':
                 if (statusInfo && !statusInfo.canReapply) {
                     return {
-                        icon: <XCircle className="w-12 h-12 text-[var(--danger)]" />,
+                        icon: <XCircle className="w-12 h-12 text-(--danger)" />,
                         title: 'Request Rejected',
                         description: 'Unfortunately, your request was not approved at this time.',
                         color: 'var(--danger)',
@@ -151,7 +151,7 @@ export default function BecomeSeller() {
                     };
                 }
                 return {
-                    icon: <XCircle className="w-12 h-12 text-[var(--danger)]" />,
+                    icon: <XCircle className="w-12 h-12 text-(--danger)" />,
                     title: 'Request Rejected',
                     description: 'Unfortunately, your request was not approved. You can now submit a new request.',
                     color: 'var(--danger)',
@@ -168,16 +168,16 @@ export default function BecomeSeller() {
         return (
             <div className="max-w-2xl mx-auto px-4 py-16">
                 <div className="text-center">
-                    <div className="w-20 h-20 rounded-full bg-[var(--success-soft)] flex items-center justify-center mx-auto mb-6">
-                        <CheckCircle className="w-10 h-10 text-[var(--success)]" />
+                    <div className="w-20 h-20 rounded-full bg-(--success-soft) flex items-center justify-center mx-auto mb-6">
+                        <CheckCircle className="w-10 h-10 text-(--success)" />
                     </div>
-                    <h1 className="text-3xl font-bold text-[var(--text)] mb-4">You're Already a Seller!</h1>
-                    <p className="text-[var(--text-muted)] mb-8">
+                    <h1 className="text-3xl font-bold text-(--text) mb-4">You're Already a Seller!</h1>
+                    <p className="text-(--text-muted) mb-8">
                         You already have seller privileges. Start creating auctions and selling your items!
                     </p>
                     <Link
                         to="/create-auction"
-                        className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[var(--accent)] text-white font-semibold hover:opacity-90 transition-all"
+                        className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-(--accent) text-white font-semibold hover:opacity-90 transition-all"
                     >
                         <Store size={20} />
                         Create Your First Auction
@@ -192,8 +192,8 @@ export default function BecomeSeller() {
         return (
             <div className="max-w-2xl mx-auto px-4 py-16">
                 <div className="text-center">
-                    <div className="w-12 h-12 border-4 border-[var(--accent)] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-[var(--text-muted)]">Checking your request status...</p>
+                    <div className="w-12 h-12 border-4 border-(--accent) border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-(--text-muted)">Checking your request status...</p>
                 </div>
             </div>
         );
@@ -210,7 +210,7 @@ export default function BecomeSeller() {
         } else {
             return (
                 <div className="max-w-2xl mx-auto px-4 py-16">
-                    <div className="bg-[var(--bg-soft)] rounded-2xl p-8 border border-[var(--border)]">
+                    <div className="bg-(--bg-soft) rounded-2xl p-8 border border-(--border)">
                         <div className="text-center">
                             <div 
                                 className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6"
@@ -218,20 +218,20 @@ export default function BecomeSeller() {
                             >
                                 {displayInfo.icon}
                             </div>
-                            <h1 className="text-3xl font-bold text-[var(--text)] mb-4">{displayInfo.title}</h1>
-                            <p className="text-[var(--text-muted)] mb-6">{displayInfo.description}</p>
+                            <h1 className="text-3xl font-bold text-(--text) mb-4">{displayInfo.title}</h1>
+                            <p className="text-(--text-muted) mb-6">{displayInfo.description}</p>
                             
                             {/* Show expiry countdown for active sellers */}
                             {existingRequest.status === 'approved' && displayInfo.isActive && displayInfo.expiryDate && (
-                                <div className="bg-[var(--success-soft)] rounded-lg p-4 mb-6 border border-[var(--success)]">
-                                    <p className="text-sm font-medium text-[var(--success)]">
+                                <div className="bg-(--success-soft) rounded-lg p-4 mb-6 border border-(--success)">
+                                    <p className="text-sm font-medium text-(--success)">
                                         ⏳ Seller status expires on: {new Date(displayInfo.expiryDate).toLocaleDateString('en-US', {
                                             year: 'numeric',
                                             month: 'long',
                                             day: 'numeric',
                                         })}
                                     </p>
-                                    <p className="text-xs text-[var(--text-muted)] mt-1">
+                                    <p className="text-xs text-(--text-muted) mt-1">
                                         {displayInfo.daysRemaining} day{displayInfo.daysRemaining > 1 ? 's' : ''} remaining
                                     </p>
                                 </div>
@@ -239,11 +239,11 @@ export default function BecomeSeller() {
 
                             {/* Show reapply date for rejected requests */}
                             {existingRequest.status === 'rejected' && displayInfo.canReapplyDate && (
-                                <div className="bg-[var(--warning-soft)] rounded-lg p-4 mb-6 border border-[var(--warning)]">
-                                    <p className="text-sm font-medium text-[var(--warning)]">
+                                <div className="bg-(--warning-soft) rounded-lg p-4 mb-6 border border-(--warning)">
+                                    <p className="text-sm font-medium text-(--warning)">
                                         ⏳ You can submit a new request in {displayInfo.daysRemaining} day{displayInfo.daysRemaining > 1 ? 's' : ''}
                                     </p>
-                                    <p className="text-xs text-[var(--text-muted)] mt-1">
+                                    <p className="text-xs text-(--text-muted) mt-1">
                                         Available on: {new Date(displayInfo.canReapplyDate).toLocaleDateString('en-US', {
                                             year: 'numeric',
                                             month: 'long',
@@ -254,13 +254,13 @@ export default function BecomeSeller() {
                             )}
                             
                             {existingRequest.adminNote && (
-                                <div className="bg-[var(--bg)] rounded-lg p-4 mb-6 text-left border border-[var(--border)]">
-                                    <p className="text-sm font-medium text-[var(--text-muted)] mb-1">Admin Note:</p>
-                                    <p className="text-[var(--text)]">{existingRequest.adminNote}</p>
+                                <div className="bg-(--bg) rounded-lg p-4 mb-6 text-left border border-(--border)">
+                                    <p className="text-sm font-medium text-(--text-muted) mb-1">Admin Note:</p>
+                                    <p className="text-(--text)">{existingRequest.adminNote}</p>
                                 </div>
                             )}
 
-                            <div className="text-sm text-[var(--text-muted)]">
+                            <div className="text-sm text-(--text-muted)">
                                 Submitted on: {new Date(existingRequest.createdAt).toLocaleDateString('en-US', {
                                     year: 'numeric',
                                     month: 'long',
@@ -271,7 +271,7 @@ export default function BecomeSeller() {
                             {existingRequest.status === 'approved' && !displayInfo.effectiveDate && (
                                 <Link
                                     to="/create-auction"
-                                    className="inline-flex items-center gap-2 px-6 py-3 mt-6 rounded-full bg-[var(--accent)] text-white font-semibold hover:opacity-90 transition-all"
+                                    className="inline-flex items-center gap-2 px-6 py-3 mt-6 rounded-full bg-(--accent) text-white font-semibold hover:opacity-90 transition-all"
                                 >
                                     <Store size={20} />
                                     Start Selling Now
@@ -288,86 +288,86 @@ export default function BecomeSeller() {
         <div className="max-w-4xl mx-auto px-4 py-12">
             {/* Header */}
             <div className="text-center mb-12">
-                <div className="w-20 h-20 rounded-full bg-[var(--accent-soft)] flex items-center justify-center mx-auto mb-6">
-                    <Store className="w-10 h-10 text-[var(--accent)]" />
+                <div className="w-20 h-20 rounded-full bg-(--accent-soft) flex items-center justify-center mx-auto mb-6">
+                    <Store className="w-10 h-10 text-(--accent)" />
                 </div>
-                <h1 className="text-4xl font-bold text-[var(--text)] mb-4">Become a Seller</h1>
-                <p className="text-lg text-[var(--text-muted)] max-w-2xl mx-auto">
+                <h1 className="text-4xl font-bold text-(--text) mb-4">Become a Seller</h1>
+                <p className="text-lg text-(--text-muted) max-w-2xl mx-auto">
                     Ready to start selling? Apply to become a seller and unlock the ability to create auctions.
                 </p>
             </div>
 
             {/* Benefits Section */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                <div className="bg-[var(--bg-soft)] rounded-xl p-6 border border-[var(--border)] text-center">
-                    <div className="w-12 h-12 rounded-full bg-[var(--success-soft)] flex items-center justify-center mx-auto mb-4">
-                        <TrendingUp className="w-6 h-6 text-[var(--success)]" />
+                <div className="bg-(--bg-soft) rounded-xl p-6 border border-(--border) text-center">
+                    <div className="w-12 h-12 rounded-full bg-(--success-soft) flex items-center justify-center mx-auto mb-4">
+                        <TrendingUp className="w-6 h-6 text-(--success)" />
                     </div>
-                    <h3 className="font-bold text-[var(--text)] mb-2">Reach Buyers</h3>
-                    <p className="text-sm text-[var(--text-muted)]">
+                    <h3 className="font-bold text-(--text) mb-2">Reach Buyers</h3>
+                    <p className="text-sm text-(--text-muted)">
                         Access thousands of active buyers looking for items like yours.
                     </p>
                 </div>
 
-                <div className="bg-[var(--bg-soft)] rounded-xl p-6 border border-[var(--border)] text-center">
-                    <div className="w-12 h-12 rounded-full bg-[var(--accent-soft)] flex items-center justify-center mx-auto mb-4">
-                        <Users className="w-6 h-6 text-[var(--accent)]" />
+                <div className="bg-(--bg-soft) rounded-xl p-6 border border-(--border) text-center">
+                    <div className="w-12 h-12 rounded-full bg-(--accent-soft) flex items-center justify-center mx-auto mb-4">
+                        <Users className="w-6 h-6 text-(--accent)" />
                     </div>
-                    <h3 className="font-bold text-[var(--text)] mb-2">Build Reputation</h3>
-                    <p className="text-sm text-[var(--text-muted)]">
+                    <h3 className="font-bold text-(--text) mb-2">Build Reputation</h3>
+                    <p className="text-sm text-(--text-muted)">
                         Grow your seller profile and earn positive reviews from buyers.
                     </p>
                 </div>
 
-                <div className="bg-[var(--bg-soft)] rounded-xl p-6 border border-[var(--border)] text-center">
-                    <div className="w-12 h-12 rounded-full bg-[var(--warning-soft)] flex items-center justify-center mx-auto mb-4">
-                        <ShieldCheck className="w-6 h-6 text-[var(--warning)]" />
+                <div className="bg-(--bg-soft) rounded-xl p-6 border border-(--border) text-center">
+                    <div className="w-12 h-12 rounded-full bg-(--warning-soft) flex items-center justify-center mx-auto mb-4">
+                        <ShieldCheck className="w-6 h-6 text-(--warning)" />
                     </div>
-                    <h3 className="font-bold text-[var(--text)] mb-2">Secure Platform</h3>
-                    <p className="text-sm text-[var(--text-muted)]">
+                    <h3 className="font-bold text-(--text) mb-2">Secure Platform</h3>
+                    <p className="text-sm text-(--text-muted)">
                         Our platform ensures safe transactions for both buyers and sellers.
                     </p>
                 </div>
             </div>
 
             {/* Requirements Section */}
-            <div className="bg-[var(--bg-soft)] rounded-2xl p-8 border border-[var(--border)] mb-8">
-                <h2 className="text-xl font-bold text-[var(--text)] mb-4">Requirements</h2>
+            <div className="bg-(--bg-soft) rounded-2xl p-8 border border-(--border) mb-8">
+                <h2 className="text-xl font-bold text-(--text) mb-4">Requirements</h2>
                 <ul className="space-y-3">
                     <li className="flex items-start gap-3">
-                        <CheckCircle className="w-5 h-5 text-[var(--success)] mt-0.5 shrink-0" />
-                        <span className="text-[var(--text-muted)]">Verified email address</span>
+                        <CheckCircle className="w-5 h-5 text-(--success) mt-0.5 shrink-0" />
+                        <span className="text-(--text-muted)">Verified email address</span>
                     </li>
                     <li className="flex items-start gap-3">
-                        <CheckCircle className="w-5 h-5 text-[var(--success)] mt-0.5 shrink-0" />
-                        <span className="text-[var(--text-muted)]">Active account with good standing</span>
+                        <CheckCircle className="w-5 h-5 text-(--success) mt-0.5 shrink-0" />
+                        <span className="text-(--text-muted)">Active account with good standing</span>
                     </li>
                     <li className="flex items-start gap-3">
-                        <CheckCircle className="w-5 h-5 text-[var(--success)] mt-0.5 shrink-0" />
-                        <span className="text-[var(--text-muted)]">Agree to seller terms and conditions</span>
+                        <CheckCircle className="w-5 h-5 text-(--success) mt-0.5 shrink-0" />
+                        <span className="text-(--text-muted)">Agree to seller terms and conditions</span>
                     </li>
                 </ul>
             </div>
 
             {/* Application Form */}
-            <div className="bg-[var(--bg-soft)] rounded-2xl p-8 border border-[var(--border)]">
-                <h2 className="text-xl font-bold text-[var(--text)] mb-6">Submit Your Application</h2>
+            <div className="bg-(--bg-soft) rounded-2xl p-8 border border-(--border)">
+                <h2 className="text-xl font-bold text-(--text) mb-6">Submit Your Application</h2>
 
                 {successMessage && (
-                    <div className="mb-6 p-4 rounded-lg bg-[var(--success-soft)] border border-[var(--success)] text-[var(--success)]">
+                    <div className="mb-6 p-4 rounded-lg bg-(--success-soft) border border-(--success) text-(--success)">
                         {successMessage}
                     </div>
                 )}
 
                 {error && (
-                    <div className="mb-6 p-4 rounded-lg bg-[var(--danger-soft)] border border-[var(--danger)] text-[var(--danger)]">
+                    <div className="mb-6 p-4 rounded-lg bg-(--danger-soft) border border-(--danger) text-(--danger)">
                         {error}
                     </div>
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
-                        <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
+                        <label className="block text-sm font-medium text-(--text-muted) mb-2">
                             Why do you want to become a seller? (Optional)
                         </label>
                         <textarea
@@ -375,7 +375,7 @@ export default function BecomeSeller() {
                             onChange={(e) => setReason(e.target.value)}
                             rows={4}
                             placeholder="Tell us about yourself and what you plan to sell..."
-                            className="w-full px-4 py-3 rounded-lg border border-[var(--input-border)] bg-[var(--input-bg)] text-[var(--text)] placeholder:text-[var(--text-subtle)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent transition-all resize-none"
+                            className="w-full px-4 py-3 rounded-lg border border-(--input-border) bg-(--input-bg) text-(--text) placeholder:text-(--text-subtle) focus:outline-none focus:ring-2 focus:ring-(--accent) focus:border-transparent transition-all resize-none"
                         />
                     </div>
 
@@ -384,11 +384,11 @@ export default function BecomeSeller() {
                             type="checkbox"
                             id="terms"
                             required
-                            className="mt-1 w-4 h-4 rounded border-[var(--input-border)] text-[var(--accent)] focus:ring-[var(--accent)]"
+                            className="mt-1 w-4 h-4 rounded border-(--input-border) text-(--accent) focus:ring-(--accent)"
                         />
-                        <label htmlFor="terms" className="text-sm text-[var(--text-muted)]">
+                        <label htmlFor="terms" className="text-sm text-(--text-muted)">
                             I agree to the{' '}
-                            <a href="#" className="text-[var(--accent)] hover:underline">seller terms and conditions</a>
+                            <a href="#" className="text-(--accent) hover:underline">seller terms and conditions</a>
                             {' '}and understand that my application will be reviewed by the admin team.
                         </label>
                     </div>
@@ -396,7 +396,7 @@ export default function BecomeSeller() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full py-3 rounded-full bg-[var(--accent)] text-white font-semibold hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="w-full py-3 rounded-full bg-(--accent) text-white font-semibold hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                         {loading ? (
                             <>
@@ -413,9 +413,9 @@ export default function BecomeSeller() {
                 </form>
 
                 {!user && (
-                    <p className="text-center text-sm text-[var(--text-muted)] mt-6">
+                    <p className="text-center text-sm text-(--text-muted) mt-6">
                         Already have an account?{' '}
-                        <Link to="/login" state={{ from: { pathname: '/become-seller' } }} className="text-[var(--accent)] hover:underline font-medium">
+                        <Link to="/login" state={{ from: { pathname: '/become-seller' } }} className="text-(--accent) hover:underline font-medium">
                             Sign in
                         </Link>
                         {' '}to submit your application.

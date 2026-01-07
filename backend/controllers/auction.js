@@ -2,27 +2,104 @@ import auctionService from "../services/auction.js";
 
 const controller = {
     
-    // GET /auctions
-    list: async function(req, res, next) {
+    // GET /auctions/top
+    listTop: async function(req, res, next) {
         try {
-            const auctions = await auctionService.findAll();
+            const { userId, status, sortBy, page, limit } = req.query;
+            const viewId = req.user ? req.user.id : null;
+            
+            const auctions = await auctionService.findByOrder({ 
+                userId: userId ? parseInt(userId) : null,
+                viewId: viewId ? parseInt(viewId) : null,
+                status: status || 'active',
+                sortBy: sortBy || 'newest',
+                page: page ? parseInt(page) : 1,
+                limit: limit ? parseInt(limit) : 5,
+            });
+
             res.json(auctions);
         } catch (error) {
             next(error);
         }
     },
 
+    listProfile: async function(req, res, next) {
+        try {
+            const { username, status, category } = req.query;
+
+            if (!username || !status) {
+                return res.status(400).json({ error: "Missing Required Fields" });
+            }
+
+            const results = await auctionService.findByStatus(username, status, category);
+
+            return res.status(200).json(results);
+
+        } catch (error) {
+            console.error("Tab Query Error:", error);
+            return res.status(500).json({ error: "Internal Server Error" });
+        }
+    },
+
     // GET /auctions/:id
-    get: async function(req, res, next) {
+    getById: async function(req, res, next) {
         try {
             const id = Number(req.params.id);
-            const auction = await auctionService.findById(id);
+            const [auction] = await auctionService.findById(id);
             
             if (!auction) {
                 return res.status(404).json({ message: 'Auction Not Found' });
             }
             
             res.json(auction);
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    // GET /auctions/images/:id
+    getImages: async function(req, res, next) {
+        try {
+            const id = Number(req.params.id);
+            const images = await auctionService.findImages(id);
+            
+            if (!images) {
+                return res.status(404).json({ message: 'Auction Not Found' });
+            }
+            
+            res.json(images);
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    // GET /auctions/description/:id
+    getDescription: async function(req, res, next) {
+        try {
+            const id = Number(req.params.id);
+            const logs = await auctionService.findDescription(id);
+            
+            if (!logs) {
+                return res.status(404).json({ message: 'Auction Not Found' });
+            }
+            
+            res.json(logs);
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    // GET /auctions/comments/:id
+    getComments: async function(req, res, next) {
+        try {
+            const id = Number(req.params.id);
+            const comments = await auctionService.findComments(id);
+            
+            if (!comments) {
+                return res.status(404).json({ message: 'Auction Not Found' });
+            }
+            
+            res.json(comments);
         } catch (error) {
             next(error);
         }
@@ -122,6 +199,24 @@ const controller = {
 
             await auctionService.delete(id);
             res.json({ message: 'Deleted successfully' });
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    // POST /auctions/:id/bid
+    placeBid: async function(req, res, next) {
+        try {
+            const auctionId = Number(req.params.id);
+            const userId = req.user.id; // Lấy từ token
+            const { amount } = req.body; // Đây là "Max Bid" mà user nhập
+
+            if (!amount || Number(amount) <= 0) {
+                return res.status(400).json({ message: 'Invalid bid amount' });
+            }
+
+            const result = await auctionService.placeBid(auctionId, userId, amount);
+            res.status(200).json(result);
         } catch (error) {
             next(error);
         }

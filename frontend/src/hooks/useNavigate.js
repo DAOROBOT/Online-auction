@@ -38,6 +38,7 @@ export function useNav() {
     // Actions
     create: () => n("/create-auction"),
     auction: (id) => n(`/auction/${id}`),
+    order: (id) => n(`/order/${id}`),
     
     // System
     notFound: () => n('/404', { replace: true }),

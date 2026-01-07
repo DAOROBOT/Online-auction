@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { TrendingUp, Gavel, Activity, Filter, Eye, EyeOff, Flame, Zap, Trophy, Clock, User, DollarSign } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { products as productService} from '../../data/index';
-import { formatCurrency, formatTimeAgo } from '../../utils/format';
+import { formatBidderName, formatCurrency, formatTimeAgo } from '../../utils/format';
 
 function formatFullTime(timestamp) {
   const date = new Date(timestamp);
@@ -30,7 +30,6 @@ function maskBidderName(username, isCurrentUser) {
 
 export default function BidHistory({ productId }) {
   const { user } = useAuth();
-  const [bids, setBids] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showMasked, setShowMasked] = useState(true);
   const [filter, setFilter] = useState('all'); 
@@ -163,7 +162,7 @@ export default function BidHistory({ productId }) {
               <div className="w-10 h-10 rounded-full border-2 border-[#1A1205]/20 flex items-center justify-center font-black bg-[#1A1205] text-(--accent)">
                 {leadingBid.isCurrentUser ? 'Y' : leadingBid.bidderUsername[0]}
               </div>
-              <div className='font-black text-base'>{maskBidderName(leadingBid.bidderUsername, leadingBid.isCurrentUser)}</div>
+              <div className='font-black text-base'>{formatBidderName(leadingBid.bidderUsername, leadingBid.isCurrentUser)}</div>
             </div>
 
             {/* Amount */}
@@ -207,7 +206,7 @@ export default function BidHistory({ productId }) {
                                         {bid.isCurrentUser ? 'Y' : bid.bidderUsername[0]}
                                     </div>
                                     <span className="font-bold text-sm" style={{ color: 'var(--text)' }}>
-                                        {maskBidderName(bid.bidderUsername, bid.isCurrentUser)}
+                                        {formatBidderName(bid.bidderUsername, bid.isCurrentUser)}
                                     </span>
                                 </div>
 
