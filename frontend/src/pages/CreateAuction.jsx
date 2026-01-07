@@ -29,6 +29,7 @@ export default function CreateAuction() {
     categoryId: "", 
     endTime: "",
     autoExtend: true,
+    allowNewbies: true,
     images: [],
   });
 
