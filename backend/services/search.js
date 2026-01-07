@@ -128,17 +128,17 @@ const service = {
             }
         });
 
-        // const countResult = await db
-        //     .select({ count: count() })
-        //     .from(auctions)
-        //     .where(whereClause);
+        const countResult = await db
+            .select({ count: count() })
+            .from(auctions)
+            .where(whereClause);
 
-        // const totalItems = countResult.length > 0 ? parseInt(countResult[0].count) : 0;
+        const totalItems = countResult.length > 0 ? parseInt(countResult[0].count) : 0;
 
         // Fetch highest bids per auction
         return {
             data: results,
-            // total: totalItems
+            total: totalItems
         };
     },
 }

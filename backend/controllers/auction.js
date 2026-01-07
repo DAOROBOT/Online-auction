@@ -45,7 +45,7 @@ const controller = {
     getById: async function(req, res, next) {
         try {
             const id = Number(req.params.id);
-            const [auction] = await auctionService.findById(id);
+            const auction = await auctionService.findById(id);
             
             if (!auction) {
                 return res.status(404).json({ message: 'Auction Not Found' });
