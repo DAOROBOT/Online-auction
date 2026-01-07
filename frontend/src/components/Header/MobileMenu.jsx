@@ -24,7 +24,7 @@ export default function MobileMenu({ user, setIsMobileMenuOpen, categories, sear
             <div className="flex items-center justify-between px-6 py-2 bg-[var(--bg-soft)] border-b border-[var(--border)]">
                 <button onClick={() => {nav.me(); setIsMobileMenuOpen(false)}} className="p-2 rounded-full hover:bg-[var(--bg-hover)]" style={{ color: 'var(--text-muted)' }}>
                     <img 
-                        src={user.avatar} 
+                        src={user.imgUrl} 
                         alt="Profile" 
                         className="w-10 h-10 rounded-full object-cover border border-[var(--border)]" 
                     />
