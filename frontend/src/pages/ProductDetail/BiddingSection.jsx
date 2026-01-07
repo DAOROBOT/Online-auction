@@ -70,6 +70,14 @@ export default function BiddingSection({ product, ended = false }) {
       return;
     }
 
+    //Yêu cầu xác nhận
+    const isConfirmed = window.confirm(
+        `CONFIRMATION:\n\nAre you sure you want to place a bid of ${formatCurrency(bidAmount)}?\n\n(This action cannot be undone)`
+    );
+    if (!isConfirmed) return; // Nếu user bấm Cancel thì dừng lại
+
+
+
     // 3. Gọi API Đấu giá tự động (Backend Service)
     setLoading(true); // Bật trạng thái loading 
     try {
