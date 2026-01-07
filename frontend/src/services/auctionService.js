@@ -1,31 +1,30 @@
-// frontend/src/services/auctionService.js
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const auctionService = {
-  // Lấy thông tin cơ bản (Header, Giá, Status)
+  // Lấy thông tin cơ bản
   getById: async (id) => {
     const res = await fetch(`${API_URL}/auction/${id}`);
     if (!res.ok) throw new Error('Failed to fetch auction details');
     return res.json();
   },
 
-  // --- CÁC HÀM MỚI---
+  // --- CÁC HÀM MỚI ---
   
-  // 1. Lấy danh sách ảnh
+  // 1. Lấy ảnh
   getImages: async (id) => {
     const res = await fetch(`${API_URL}/auction/images/${id}`);
-    if (!res.ok) return []; // Trả về mảng rỗng nếu lỗi
+    if (!res.ok) return []; 
     return res.json();
   },
 
-  // 2. Lấy mô tả chi tiết (HTML)
+  // 2. Lấy mô tả
   getDescription: async (id) => {
     const res = await fetch(`${API_URL}/auction/description/${id}`);
     if (!res.ok) return { description: "" };
     return res.json();
   },
 
-  // 3. Lấy danh sách comment
+  // 3. Lấy comment
   getComments: async (id) => {
     const res = await fetch(`${API_URL}/auction/comments/${id}`);
     if (!res.ok) return [];
@@ -34,18 +33,18 @@ const auctionService = {
 
   // 4. Lấy lịch sử đấu giá
   getBidHistory: async (id) => {
-    // API này có thể chưa có trong route backend bạn gửi, 
-    // nhưng nếu team yêu cầu tách thì nên gọi route này. 
-    // Tạm thời ta dùng route getById nếu backend chưa tách route /bids.
-    // Nhưng theo cấu trúc team bạn, tôi sẽ giả định route này:
-    const res = await fetch(`${API_URL}/auction/${id}/bids`); 
-    // Lưu ý: Nếu route này chưa có ở backend, bạn phải bảo team backend thêm vào, 
-    // hoặc tạm thời dùng getById để lấy bids.
-    if (!res.ok) return []; 
-    return res.json();
+    try {
+        // Mẹo: Gọi API chi tiết sản phẩm (getById) vì route /bids chưa có
+        const res = await fetch(`${API_URL}/auction/${id}`);
+        if (!res.ok) return [];
+        const data = await res.json();
+        // Trả về mảng bids nếu backend có gửi kèm, nếu không thì trả về mảng rỗng
+        return data.bids || []; 
+    } catch (error) {
+        return [];
+    }
   },
 
-  // --- CÁC HÀM CŨ GIỮ NGUYÊN ---
   getTopAuctions: async ({ id = null, status = 'active', sortBy = 'newest', page = 1, limit = 5 } = {}) => {
     const queryParams = new URLSearchParams({ status, sortBy, page, limit });
     if (id) queryParams.append("userId", id);

@@ -1,73 +1,76 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import auctionService from '../../services/auctionService'; // Import Service
 
-export default function ImageGallery({ product }) {
+export default function ImageGallery({ productId }) { // Nhận productId
+  const [images, setImages] = useState([]);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  const nextImage = () => {
-    if (product && product.images) {
-      setSelectedImage((prev) => (prev + 1) % product.images.length);
-    }
-  };
+  // Tự fetch ảnh
+  useEffect(() => {
+    const fetchImages = async () => {
+        try {
+            const data = await auctionService.getImages(productId);
+            setImages(data || []);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+    if (productId) fetchImages();
+  }, [productId]);
 
-  const prevImage = () => {
-    if (product && product.images) {
-      setSelectedImage((prev) => (prev - 1 + product.images.length) % product.images.length);
-    }
-  };
+  const nextImage = () => setImages(prev => prev.length ? (selectedImage + 1) % prev.length : 0);
+  const prevImage = () => setImages(prev => prev.length ? (selectedImage - 1 + prev.length) % prev.length : 0);
 
-  if (!product) return null;
+  if (loading) return <div className="h-96 bg-gray-100 animate-pulse rounded-xl"></div>;
+  if (!images || images.length === 0) return <div className="h-96 bg-gray-200 rounded-xl flex items-center justify-center">No Images</div>;
+
+  // Xử lý lấy URL ảnh (tùy backend trả về object hay string)
+  const getImgUrl = (img) => img.imageUrl || img.image_url || img; 
 
   return (
     <div className="space-y-2">
       {/* Main Hero Image */}
-      <div className="relative aspect-square overflow-hidden rounded-xl border border-(--border) group bg-white dark:bg-black/20">
+      <div className="relative aspect-square overflow-hidden rounded-xl border border-[var(--border)] group bg-white dark:bg-black/20">
         <img 
-          src={product.images?.[selectedImage] || product.image} 
-          alt={product.title}
+          src={getImgUrl(images[selectedImage])} 
+          alt="Product"
           className="w-full h-full object-contain"
         />
         
-        {/* Navigation Arrows (Only if multiple) */}
-        {product.images && product.images.length > 1 && (
+        {images.length > 1 && (
           <>
-            <button
-              onClick={prevImage}
-              // REDESIGNED: Removed backdrop-blur & opacity-0. Made solid and always visible.
-              className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors shadow-lg"
-            >
+            <button onClick={prevImage} className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/60 text-white hover:bg-black/80 shadow-lg">
               <ChevronLeft size={24} />
             </button>
-            <button
-              onClick={nextImage}
-              // REDESIGNED: Removed backdrop-blur & opacity-0. Made solid and always visible.
-              className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors shadow-lg"
-            >
+            <button onClick={nextImage} className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/60 text-white hover:bg-black/80 shadow-lg">
               <ChevronRight size={24} />
             </button>
-            
-            {/* Badge Indicator */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-black/60 text-white text-xs font-bold tracking-widest shadow-md">
-              {selectedImage + 1} / {product.images.length}
-            </div>
           </>
         )}
       </div>
 
       {/* Thumbnails */}
-      {product.images && product.images.length > 0 && (
+      {images.length > 1 && (
         <div className="flex gap-4 overflow-x-auto p-2 custom-scrollbar">
-            {product.images.map((img, idx) => (
+            {images.map((img, idx) => (
               <button
                 key={idx}
                 onClick={() => setSelectedImage(idx)}
                 className={`shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-all ${
                   selectedImage === idx 
-                    ? 'border-(--accent) ring-2 ring-(--accent) ring-opacity-30 scale-105' 
+                    ? 'border-[var(--accent)] ring-2 ring-[var(--accent)] ring-opacity-30 scale-105' 
                     : 'border-transparent opacity-60 hover:opacity-100'
                 }`}
               >
-                <img src={img} alt="" className="w-full h-full object-cover" />
+                <img 
+                  src={getImgUrl(img)} 
+                  alt="Thumbnail" 
+                  className="w-full h-full object-cover"
+                />
               </button>
             ))}
         </div>
