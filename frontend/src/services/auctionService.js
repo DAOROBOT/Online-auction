@@ -61,8 +61,7 @@ const auctionService = {
       const token = localStorage.getItem('authToken');
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
       const response = await fetch(`${API_URL}/auction/profile?${queryParams.toString()}`, { headers });
-      if (!response.ok) throw new Error('Failed to fetch tab data');
-      return response.json();
+      return response; // Return the Response object, let caller handle parsing
   },
 
   uploadImage: async (file) => {

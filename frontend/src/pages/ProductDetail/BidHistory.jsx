@@ -3,7 +3,7 @@ import { TrendingUp, Gavel, Activity, Filter, Eye, EyeOff, Flame, Zap, Trophy, C
 import { useAuth } from '../../contexts/AuthContext';
 import { products as productService} from '../../data/index';
 import { formatBidderName, formatCurrency, formatTimeAgo } from '../../utils/format';
-
+import auctionService from '../../services/auctionService';
 function formatFullTime(timestamp) {
   const date = new Date(timestamp);
   return date.toLocaleString('en-US', {
@@ -31,7 +31,7 @@ function maskBidderName(username, isCurrentUser) {
 export default function BidHistory({ productId }) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [showMasked, setShowMasked] = useState(true);
+  const [bids, setBids] = useState([]);
   const [filter, setFilter] = useState('all'); 
   const [displayLimit, setDisplayLimit] = useState(10);
 
@@ -40,7 +40,7 @@ export default function BidHistory({ productId }) {
         if (!productId) return;
         setLoading(true);
         try {
-            const data = await productService.getBidHistory(productId);
+            const data = await auctionService.getBidHistory(productId);
             const formattedBids = data.map(bid => ({
                 id: bid.id,
                 bidderId: bid.bidderId,
@@ -60,21 +60,21 @@ export default function BidHistory({ productId }) {
     fetchBids();
   }, [productId, user]);
 
-  const totalBids = bids.length;
-  const uniqueBidders = new Set(bids.map(b => b.bidderId)).size;
-  const myBids = bids.filter(b => b.isCurrentUser);
-  const recentBids = bids.filter(b => Date.now() - new Date(b.bidTime) < 3600000);
+  const totalBids = bids?.length;
+  const uniqueBidders = new Set(bids?.map(b => b.bidderId)).size;
+  const myBids = bids?.filter(b => b.isCurrentUser);
+  const recentBids = bids?.filter(b => Date.now() - new Date(b.bidTime) < 3600000);
 
-  const filteredBids = bids.filter(bid => {
+  const filteredBids = bids?.filter(bid => {
     if (filter === 'mine') return bid.isCurrentUser;
     if (filter === 'recent') return Date.now() - new Date(bid.bidTime) < 3600000;
     return true;
   }).slice(0, displayLimit);
 
   // Logic to separate the leading bid
-  const showLeadingBid = filter === 'all' && filteredBids.length > 0;
+  const showLeadingBid = filter === 'all' && filteredBids?.length > 0;
   const leadingBid = showLeadingBid ? filteredBids[0] : null;
-  const historyBids = showLeadingBid ? filteredBids.slice(1) : filteredBids;
+  const historyBids = showLeadingBid ? filteredBids?.slice(1) : filteredBids;
 
   if (loading) return <div className="p-12 text-center text-(--text-muted)">Loading bid history...</div>;
 
@@ -103,7 +103,7 @@ export default function BidHistory({ productId }) {
               <div className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Bidders</div>
             </div>
             <div className="p-3 rounded-xl border text-center" style={{ backgroundColor: 'var(--bg-soft)', borderColor: 'var(--border)' }}>
-              <div className="text-2xl font-black mb-1" style={{ color: 'var(--success)' }}>{myBids.length}</div>
+              <div className="text-2xl font-black mb-1" style={{ color: 'var(--success)' }}>{myBids?.length}</div>
               <div className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Your Bids</div>
             </div>
           </div>
@@ -173,14 +173,14 @@ export default function BidHistory({ productId }) {
         )}
 
         {/* 4. HISTORY LIST */}
-        {historyBids.length === 0 && !leadingBid ? (
+        {historyBids?.length === 0 && !leadingBid ? (
             <div className="text-center py-12 rounded-xl border-2 border-dashed mb-4" style={{ borderColor: 'var(--border)' }}>
                 <p style={{ color: 'var(--text-muted)' }}>No bids found matching your filter.</p>
             </div>
         ) : (
             <div className="rounded-xl border overflow-hidden mb-4" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border)' }}>
                 <div className="divide-y max-h-[500px] overflow-y-auto custom-scrollbar" style={{ borderColor: 'var(--border)' }}>
-                    {historyBids.map((bid, index) => {
+                    {historyBids?.map((bid, index) => {
                         const previousBid = historyBids[index + 1];
                         const increment = previousBid ? bid.amount - previousBid.amount : null;
 
@@ -225,7 +225,7 @@ export default function BidHistory({ productId }) {
                 </div>
 
                 {/* Load More */}
-                {filteredBids.length < (filter === 'all' ? totalBids : filter === 'mine' ? myBids.length : recentBids.length) && (
+                {filteredBids?.length < (filter === 'all' ? totalBids : filter === 'mine' ? myBids?.length : recentBids?.length) && (
                     <div className="p-4 border-t text-center bg-(--bg-subtle)" style={{ borderColor: 'var(--border)' }}>
                         <button
                             onClick={() => setDisplayLimit(prev => prev + 10)}

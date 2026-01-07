@@ -34,6 +34,9 @@ export default function ProductDetail() {
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   if (!productCore) return <div className="min-h-screen flex items-center justify-center">Product not found</div>;
 
+  // Flag to indicate if auction has ended
+  const ended = productCore.status === 'ended' || productCore.status === 'completed';
+
   const categoryName = productCore.category?.name || productCore.categoryName || productCore.category || 'Category';
 
   return (
@@ -66,7 +69,7 @@ export default function ProductDetail() {
           <div className="lg:col-span-5 relative">
             <div className="sticky top-24 space-y-6">
                 {/* 1. Khu vực đặt giá*/}
-                <BiddingSection product={productCore} />
+                <BiddingSection product={productCore} ended={ended} />
                 <BidHistory productId={id} />
             </div>
           </div>

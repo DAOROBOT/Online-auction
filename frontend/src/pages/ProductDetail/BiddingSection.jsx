@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Clock, MapPin, Gavel, Heart, Share2, ShieldCheck, User, TrendingUp, 
-  Trophy, Zap, AlertCircle, ChevronRight, Crown, Star, CheckCircle 
+  Trophy, Zap, AlertCircle, ChevronRight, Crown, Star, CheckCircle, Lock 
 } from 'lucide-react';
 import { formatCurrency, formatTimeLeft } from '../../utils/format';
 import { useAuth } from '../../contexts/AuthContext';
@@ -10,7 +10,7 @@ import { placeBidSchema } from '../../schemas/auction.schemas';
 import { validateForm } from '../../utils/validation';
 import auctionService from '../../services/auctionService';
 
-export default function BiddingSection({ product }) {
+export default function BiddingSection({ product, ended = false }) {
   const { user } = useAuth();
   
   // --- TÍNH TOÁN GIÁ TRỊ BAN ĐẦU AN TOÀN ---
@@ -96,19 +96,34 @@ export default function BiddingSection({ product }) {
            borderColor: 'var(--border)'
          }}>
       
-      {/* Top Gradient Line*/}
-      <div className="h-1 w-full bg-gradient-to-r from-[var(--accent)] via-orange-500 to-[var(--accent)]"></div>
+      {/* Top Gradient Line - Red when ended */}
+      <div className={`h-1 w-full bg-gradient-to-r ${ended ? 'from-red-500 via-orange-500 to-red-500' : 'from-[var(--accent)] via-orange-500 to-[var(--accent)]'}`}></div>
 
       <div className="p-6 md:p-8">
         
+        {/* --- Auction Ended Notification --- */}
+        {ended && (
+          <div className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-red-100 dark:bg-red-800">
+                <Lock size={20} className="text-red-600 dark:text-red-400" />
+              </div>
+              <div>
+                <p className="font-semibold text-red-700 dark:text-red-400">Auction Has Ended</p>
+                <p className="text-sm text-red-600 dark:text-red-300">Bidding is closed. Only the seller and winner can proceed to order completion.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* --- HEADER: Trạng thái & Tiêu đề --- */}
         <div className="mb-8">
           <div className="flex justify-between items-start gap-4 mb-4">
              {/* Trạng thái đấu giá (Active/Ended) */}
-             <div className="flex items-center gap-2 text-sm font-medium px-3 py-1 rounded-full border w-fit"
-                  style={{ borderColor: 'var(--border)', backgroundColor: 'var(--bg)' }}>
-                <span className={`w-2 h-2 rounded-full ${product.status === 'active' ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></span>
-                <span className="uppercase tracking-wider text-xs">{product.status}</span>
+             <div className={`flex items-center gap-2 text-sm font-medium px-3 py-1 rounded-full border w-fit ${ended ? 'border-red-300 bg-red-50 dark:bg-red-900/20' : ''}`}
+                  style={{ borderColor: ended ? undefined : 'var(--border)', backgroundColor: ended ? undefined : 'var(--bg)' }}>
+                <span className={`w-2 h-2 rounded-full ${ended ? 'bg-red-500' : (product.status === 'active' ? 'bg-green-500 animate-pulse' : 'bg-gray-400')}`}></span>
+                <span className={`uppercase tracking-wider text-xs font-bold ${ended ? 'text-red-600 dark:text-red-400' : ''}`}>{ended ? 'ENDED' : product.status}</span>
              </div>
              
              {/* Nút Like & Share */}
@@ -136,8 +151,12 @@ export default function BiddingSection({ product }) {
 
           {/* Thông tin người bán */}
           <div className="flex items-center gap-3 text-sm">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white font-bold">
-               {product.sellerName ? product.sellerName[0].toUpperCase() : 'S'}
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white font-bold overflow-hidden">
+               {product.seller?.avatarUrl ? (
+                 <img src={product.seller.avatarUrl} alt={product.sellerName} className="w-full h-full object-cover" />
+               ) : (
+                 product.sellerName ? product.sellerName[0].toUpperCase() : 'S'
+               )}
             </div>
             <div>
               <p className="text-[var(--text-muted)] text-xs">Seller</p>
@@ -147,8 +166,8 @@ export default function BiddingSection({ product }) {
             </div>
             <div className="ml-auto flex items-center gap-1 text-xs font-medium px-2 py-1 rounded bg-[var(--bg)] border border-[var(--border)]">
                <Star size={12} className="text-[var(--accent)] fill-current" />
-               <span>4.9</span>
-               <span className="text-[var(--text-muted)]">(120)</span>
+               <span>{product.seller?.rating || 100}%</span>
+               <span className="text-[var(--text-muted)]">({product.seller?.ratingCount || 0})</span>
             </div>
           </div>
         </div>
@@ -186,14 +205,16 @@ export default function BiddingSection({ product }) {
               <div className="h-px w-full bg-[var(--border)] my-4"></div>
 
               {/* --- [FORM NHẬP GIÁ] Đã tích hợp Auto Bid --- */}
-              <form onSubmit={handlePlaceBid} className="space-y-4 mb-6">
+              <form onSubmit={handlePlaceBid} className={`space-y-4 mb-6 ${ended ? 'opacity-50 pointer-events-none' : ''}`}>
                 
                 {/* Label có Badge Auto-Bid để người dùng hiểu tính năng */}
                 <div className="flex justify-between items-center">
-                    <label className="text-sm font-bold text-[var(--text)]">Your Maximum Bid</label>
-                    <span className="text-[10px] bg-[var(--accent)] text-black px-2 py-0.5 rounded-full font-bold shadow-sm flex items-center gap-1 cursor-help" title="System will bid for you automatically up to this amount">
-                        <Zap size={10} fill="black" /> AUTO-BID
-                    </span>
+                    <label className="text-sm font-bold text-[var(--text)]">{ended ? 'Final Price' : 'Your Maximum Bid'}</label>
+                    {!ended && (
+                      <span className="text-[10px] bg-[var(--accent)] text-black px-2 py-0.5 rounded-full font-bold shadow-sm flex items-center gap-1 cursor-help" title="System will bid for you automatically up to this amount">
+                          <Zap size={10} fill="black" /> AUTO-BID
+                      </span>
+                    )}
                 </div>
 
                 <div className="relative">
@@ -204,7 +225,8 @@ export default function BiddingSection({ product }) {
                     type="number"
                     value={bidAmount}
                     onChange={(e) => setBidAmount(e.target.value)}
-                    className="block w-full pl-8 pr-4 py-4 rounded-xl font-bold text-lg focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent transition-all outline-none"
+                    disabled={ended}
+                    className="block w-full pl-8 pr-4 py-4 rounded-xl font-bold text-lg focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent transition-all outline-none disabled:cursor-not-allowed"
                     style={{ backgroundColor: 'var(--input-bg)', color: 'var(--text)', border: '1px solid var(--border)' }}
                     placeholder={`Min ${formatCurrency(initialBid)}`}
                   />
@@ -212,20 +234,25 @@ export default function BiddingSection({ product }) {
                 
                 {/* Giải thích cơ chế tự động */}
                 <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>
-                  Enter {formatCurrency(initialBid)} or more. We'll bid automatically for you.
+                  {ended ? 'This auction has ended. Bidding is no longer available.' : `Enter ${formatCurrency(initialBid)} or more. We'll bid automatically for you.`}
                 </p>
 
                 {/* Nút đặt giá */}
                 <button 
                     type="submit" 
-                    disabled={loading || product.status !== 'active'}
+                    disabled={loading || product.status !== 'active' || ended}
                     className="w-full py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                    style={{ backgroundColor: 'var(--accent)', color: '#1A1205' }}
+                    style={{ backgroundColor: ended ? '#9CA3AF' : 'var(--accent)', color: ended ? '#fff' : '#1A1205' }}
                 >
                     {loading ? (
                         <>
                             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#1A1205]"></div>
                             Processing...
+                        </>
+                    ) : ended ? (
+                        <>
+                            <Lock size={20} />
+                            Bidding Closed
                         </>
                     ) : (
                         <>

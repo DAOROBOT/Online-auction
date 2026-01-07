@@ -206,13 +206,101 @@ const service = {
         }});
     },
 
-    // Tìm thông tin 1 sản phẩm
+    // Tìm thông tin chi tiết 1 sản phẩm (ProductDetail page)
     findById: async function(id) {
-        return await db.query.auctions.findFirst({
+        const auction = await db.query.auctions.findFirst({
             where: eq(auctions.id, id),
-            with: {category : {columns : {name : true}}},
-            limit: 1,
+            with: {
+                category: {
+                    columns: { id: true, name: true }
+                },
+                seller: {
+                    columns: {
+                        id: true,
+                        username: true,
+                        fullName: true,
+                        avatarUrl: true,
+                        ratingCount: true,
+                        positiveRatingCount: true
+                    }
+                },
+                winner: {
+                    columns: {
+                        id: true,
+                        username: true,
+                        fullName: true,
+                        avatarUrl: true
+                    }
+                },
+                images: true,
+            },
         });
+
+        if (!auction) return null;
+
+        // Calculate seller rating
+        const sellerRating = auction.seller.ratingCount > 0 
+            ? (auction.seller.positiveRatingCount / auction.seller.ratingCount) * 100 
+            : 100;
+
+        // Get primary image
+        const primaryImage = auction.images?.find(img => img.isPrimary)?.imageUrl 
+            || auction.images?.[0]?.imageUrl 
+            || null;
+
+        // Return formatted data for ProductDetail
+        return {
+            id: auction.id,
+            title: auction.title,
+            description: auction.description,
+            
+            // Pricing
+            startingPrice: auction.startingPrice,
+            currentPrice: auction.currentPrice,
+            stepPrice: auction.stepPrice,
+            biddingStep: auction.stepPrice, // Alias for frontend compatibility
+            buyNowPrice: auction.buyNowPrice,
+            
+            // Status & Timing
+            status: auction.status,
+            endTime: auction.endTime,
+            createdAt: auction.createdAt,
+            autoExtend: auction.autoExtend,
+            bidCount: auction.bidCount,
+            
+            // IDs for role checking
+            sellerId: auction.sellerId,
+            winnerId: auction.winnerId,
+            categoryId: auction.categoryId,
+            
+            // Seller info
+            sellerName: auction.seller?.username,
+            seller: {
+                id: auction.seller?.id,
+                username: auction.seller?.username,
+                fullName: auction.seller?.fullName,
+                avatarUrl: auction.seller?.avatarUrl,
+                rating: parseFloat(sellerRating.toFixed(1)),
+                ratingCount: auction.seller?.ratingCount || 0,
+            },
+            
+            // Winner info (if auction ended)
+            winnerName: auction.winner?.username || null,
+            winner: auction.winner ? {
+                id: auction.winner.id,
+                username: auction.winner.username,
+                fullName: auction.winner.fullName,
+                avatarUrl: auction.winner.avatarUrl,
+            } : null,
+            
+            // Category
+            category: auction.category,
+            categoryName: auction.category?.name || 'Uncategorized',
+            
+            // Images
+            image: primaryImage,
+            images: auction.images?.map(img => img.imageUrl) || [],
+        };
     },
 
     findImages: async function(id) {
