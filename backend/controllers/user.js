@@ -189,7 +189,7 @@ const controller = {
 
     getUserProfile: async function (req, res) {
         try {
-            const { username } = req.params;
+            const { username } = req.query;
 
             if (!username) {
                 return res.status(400).json({ message: 'Username is required' });
@@ -227,26 +227,19 @@ const controller = {
         }
     },
 
-    getTabContent: async function(req, res) {
+    toggleFavorite: async function(req, res) {
         try {
-            const { userId, tab } = req.params;
-            const { category } = req.query;
+            const userId = req.user.id;
+            const auctionId = parseInt(req.params.auctionId);
 
-            console.log(req.params, userId, tab, category);
-
-            if (!userId || !tab) {
-                return res.status(400).json({ error: "Missing User ID or Tab Name" });
-            }
-
-            const results = await userService.getUserAuctions(userId, tab, category);
+            const result = await userService.toggleFavorite(userId, auctionId);
 
             return res.status(200).json({
-                data: results,
-                meta: { tab }
+                message: 'Favorite status toggled successfully',
+                favorites: result
             });
-
         } catch (error) {
-            console.error("Tab Query Error:", error);
+            console.error("Toggle Favorite Error:", error);
             return res.status(500).json({ error: "Internal Server Error" });
         }
     },

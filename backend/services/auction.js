@@ -1,23 +1,213 @@
 import db from "../db/index.js"
-import { auctions, auctionImages } from "../db/schema.js"
-import { eq } from "drizzle-orm";
+import { categories, auctions, auctionImages, users, userFavorites, bids } from "../db/schema.js"
+import { and, or, eq, asc, desc, count, inArray } from "drizzle-orm";
 
 const service = {
-    // Lấy tất cả, kèm ảnh (Lấy ảnh đầu tiên làm ảnh đại diện)
-    findAll: async function(){
+    // Lấy danh sách top các sản phẩm ứng của mục tương ứng (Homepage)
+    findByOrder: async function({ 
+        userId = null,
+        viewId = null,
+        status = 'active',
+        sortBy = 'newest',
+    } = {}) {
+
+        const limit = 5;
+
+        // Sorting Logic
+        let orderByClause;
+
+        switch(sortBy) {
+            case 'endingSoon':
+                orderByClause = [asc(auctions.endTime)];
+                break;
+            case 'mostBids':
+                orderByClause = [desc(auctions.bidCount)];
+                break;
+            case 'highestPrice':
+                orderByClause = [desc(auctions.currentPrice)];
+                break;
+            default: // 'newest'
+                orderByClause = [desc(auctions.createdAt)];
+        }
+
+        // Dynamic Conditions
+        const whereConditions = [];
+
+        if (status) {
+            whereConditions.push(eq(auctions.status, status));
+        }
+
+        if (userId) {
+            whereConditions.push(eq(auctions.sellerId, userId));
+        }
+
+        const whereClause = whereConditions.length > 0 ? and(...whereConditions) : null;
+
+        const foundAuctions = await db.query.auctions.findMany({
+            where: whereClause,
+            with: {
+                images: true,
+                seller: true,
+                category: true,
+                bids: {
+                    orderBy: [desc(bids.amount)],
+                    limit: 1,
+                    with: {
+                        bidder: true
+                    }
+                },
+            },
+            orderBy: orderByClause,
+            limit: limit,
+        });
+        
+        let favoriteAuctions = new Set();
+        
+        if (viewId && foundAuctions.length > 0) {
+            const auctionIds = foundAuctions.map(a => a.id);
+            
+            const favorites = await db.select({ auctionId: userFavorites.auctionId })
+                .from(userFavorites)
+                .where(and(
+                    eq(userFavorites.userId, viewId),
+                    inArray(userFavorites.auctionId, auctionIds)
+                ));
+
+            favoriteAuctions = new Set(favorites.map(f => f.auctionId));
+        }
+        
+        // Map Result
+        return foundAuctions.map(auction => {
+            const sellerRating = auction.seller.ratingCount > 0 ? (auction.seller.positiveRatingCount / auction.seller.ratingCount) * 100 : 100;
+            return {
+                ...auction,
+                image: auction.images.find(img => img.isPrimary)?.imageUrl || auction.images[0]?.imageUrl || null,
+                seller: {
+                    username: auction.seller.username,
+                    rating: parseFloat(sellerRating.toFixed(1)),
+                },
+                category: auction.category?.name || 'Uncategorized',
+                bids: auction.bids[0],
+                isFavorited: favoriteAuctions.has(auction.id)
+        }});
+    },
+
+    // Lấy danh sách sản phẩm liên quan của mục tương ứng (Profile)
+    findByStatus: async function(username, status, category = null) {
+        const user = await db.query.users.findFirst({
+            where: eq(users.username, username),
+            columns: { id: true }
+        });
+
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        const userId = user.id;
+
+        const conditions = [];
+
+        if (category && category !== 'All Categories') {
+            const categoryFilter = await db.query.categories.findFirst({
+                where: eq(categories.name, category),
+                columns: { id: true }
+            });
+
+            if (categoryFilter) {
+                conditions.push(eq(auctions.categoryId, categoryFilter.id));
+            } else {
+                throw new Error("Category not found");
+            }
+        }
+
+        switch (status) {
+            case 'my-listings':
+                conditions.push(and(eq(auctions.sellerId, userId), eq(auctions.status, 'active')));
+                break;
+
+            case 'sold-items':
+                conditions.push(and(eq(auctions.sellerId, userId), eq(auctions.status, 'sold')));
+                break;
+
+            case 'won-auctions':
+                conditions.push(and(eq(auctions.winnerId, userId), or(eq(auctions.status, 'sold'), eq(auctions.status, 'ended'))));
+                break;
+
+            case 'favorites':
+                const myFavs = await db.query.userFavorites.findMany({
+                    where: eq(userFavorites.userId, userId),
+                    columns: { auctionId: true }
+                });
+                
+                const favIds = myFavs.map(f => f.auctionId);
+                
+                if (favIds.length === 0) return [];
+                
+                conditions.push(inArray(auctions.id, favIds));
+                break;
+
+            case 'active-bids':
+                const myBids = await db.query.bids.findMany({
+                    where: eq(bids.bidderId, userId),
+                    columns: { auctionId: true }
+                });
+
+                const bidAuctionIds = [...new Set(myBids.map(b => b.auctionId))];
+
+                if (bidAuctionIds.length === 0) return [];
+
+                conditions.push(and(inArray(auctions.id, bidAuctionIds), eq(auctions.status, 'active')));
+                break;
+
+            default:
+                throw new Error("Invalid tab specified");
+        }
+
         const result = await db.query.auctions.findMany({
+            where: and(...conditions),
             with: {
                 images: true, 
                 seller: true,
+                category: true,
+                bids: {
+                    orderBy: [desc(bids.amount)],
+                    limit: 1,
+                    with: {
+                        bidder: true
+                    }
+                }
             },
-            orderBy: (auctions, { desc }) => [desc(auctions.createdAt)],
+            // orderBy: [desc(auctions.createdAt)]
         });
-        
-        return result.map(auction => ({
-            ...auction,
-            image: auction.images.length > 0 ? auction.images[0].imageUrl : 'https://via.placeholder.com/300',
-            sellerName: auction.seller.username
-        }));
+
+        let favoriteAuctions = new Set();
+
+        if (status != 'favorites' && result.length > 0) {
+            const auctionIds = result.map(a => a.id);
+            
+            const favorites = await db.select({ auctionId: userFavorites.auctionId })
+                .from(userFavorites)
+                .where(and(
+                    eq(userFavorites.userId, userId),
+                    inArray(userFavorites.auctionId, auctionIds)
+                ));
+
+            favoriteAuctions = new Set(favorites.map(f => f.auctionId));
+        }
+
+        return result.map(auction => {
+            const sellerRating = auction.seller.ratingCount > 0 ? (auction.seller.positiveRatingCount / auction.seller.ratingCount) * 100 : 100;
+            return {
+                ...auction,
+                image: auction.images.find(img => img.isPrimary)?.imageUrl || auction.images[0]?.imageUrl || null,
+                seller: {
+                    username: auction.seller.username,
+                    rating: parseFloat(sellerRating.toFixed(1)),
+                },
+                category: auction.category?.name || 'Uncategorized',
+                bids: auction.bids[0],
+                isFavorited: status === 'favorites' ? true : favoriteAuctions?.has(auction.id)
+        }});
     },
 
     // Lấy chi tiết 1 sản phẩm

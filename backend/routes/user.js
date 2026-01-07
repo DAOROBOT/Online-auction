@@ -6,12 +6,15 @@ import requireAuth, { requireAdmin } from "../middleware/auth.js";
 const route = new Router();
 
 // GET: Get user profile by username
-route.get('/profile/:username', userController.getUserProfile);
+route.get('/profile', userController.getUserProfile);
 
 // GET: get active tab content
-route.get('/:userId/:tab', userController.getTabContent);
+// route.get('/tabs', userController.getTabContent);
 
 route.use(requireAuth);
+
+// POST: Toggle favorite auction
+route.post('/favorites/:auctionId', userController.toggleFavorite);
 
 // PUT: update current user information
 route.put('/info', userController.updateUserInfo);

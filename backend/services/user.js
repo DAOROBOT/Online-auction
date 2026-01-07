@@ -1,6 +1,6 @@
 import db from "../db/index.js"
 
-import {users, bids, auctions, userFavorites} from "../db/schema.js"
+import { users, bids, auctions, userFavorites, categories } from "../db/schema.js"
 
 import { eq, or, ilike, and, sql, count, desc } from "drizzle-orm";
 
@@ -197,113 +197,21 @@ const service = {
             .returning();
         return result[0];
     },
-    
-    // getUserAuctions: async function(userId, role) {
-    //     let activeListings = [];
-    //     let soldItems = []
-    //     if (role === 'seller') {
-    //         activeListings = await db
-    //             .select()
-    //             .from(auctions)
-    //             .where(and(eq(auctions.sellerId, userId), eq(auctions.status, 'active')));
 
-    //         soldItems = await db
-    //             .select()
-    //             .from(auctions)
-    //             .where(and(eq(auctions.sellerId, userId), eq(auctions.status, 'sold')));
-    //     }
-        
-    //     // Get won auctions
-    //     const wonAuctions = await db
-    //         .select()
-    //         .from(auctions)
-    //         .where(eq(auctions.winnerId, userId));
+    toggleFavorite: async function(userId, auctionId) {
+        const existingFavorite = await db
+            .select()
+            .from(userFavorites)
+            .where(and(eq(userFavorites.userId, userId), eq(userFavorites.auctionId, auctionId)));
 
-    //     // Get active bids (auctions where user has placed a bid and auction is still active)
-    //     const activeBids = await db
-    //         .select({
-    //             auction: auctions
-    //         })
-    //         .from(bids)
-    //         .innerJoin(auctions, eq(auctions.id, bids.auctionId))
-    //         .where(and(eq(bids.bidderId, userId), eq(auctions.status, 'active')))
-    //         .groupBy(auctions.id);
-
-    //     // TODO: Add favorites when user_favorites table is created
-    //     const favoriteProducts = await db
-    //         .select({
-    //             auction: auctions
-    //         })
-    //         .from(userFavorites)
-    //         .innerJoin(auctions, eq(auctions.id, userFavorites.auctionId))
-    //         .where(eq(userFavorites.userId, userId));
-
-    //     return {
-    //         activeListings,
-    //         soldItems,
-    //         wonAuctions,
-    //         activeBids: activeBids.map(b => b.auction),
-    //         favoriteProducts,
-    //         // Counts for metadata
-    //         wonAuctionCount: wonAuctions.length,
-    //         activeAuctionCount: activeListings.length,
-    //     };
-    // },
-
-    getUserAuctions: async function(userId, tab, category) {
-        let baseQuery = db
-            .select({
-                ...auctions,
-                image_url: sql`(SELECT image_url FROM auction_images WHERE auction_images.auction_id = auctions.auction_id AND is_primary = true LIMIT 1)`,
-            })
-            .from(auctions);
-
-        let whereConditions = [];
-
-        switch (tab) {
-        case 'active-bids':
-            baseQuery.innerJoin(bids, eq(bids.auctionId, auctions.id));
-            whereConditions.push(and(eq(bids.bidderId, userId), eq(auctions.status, 'active')));
-            baseQuery.groupBy(auctions.id);
-            break;
-
-        case 'favorites':
-            baseQuery.innerJoin(userFavorites, eq(userFavorites.auctionId, auctions.id));
-            whereConditions.push(eq(userFavorites.userId, userId));
-            break;
-
-        case 'my-listings':
-            whereConditions.push(and(eq(auctions.sellerId, userId), eq(auctions.status, 'active')));
-            break;
-
-        case 'sold-items':
-            whereConditions.push(and(eq(auctions.sellerId, userId), eq(auctions.status, 'sold')));
-            break;
-
-        case 'won-auctions':
-            whereConditions.push(and(
-                eq(auctions.winnerId, userId),
-                or(eq(auctions.status, 'sold'), eq(auctions.status, 'ended'))
-            ));
-            break;
-
-        default:
-            return res.status(400).json({ error: "Invalid tab specified" });
+        if (existingFavorite.length > 0) {
+            await db.delete(userFavorites).where(and(eq(userFavorites.userId, userId), eq(userFavorites.auctionId, auctionId)));
+            return false;
+        } else {
+            await db.insert(userFavorites).values({ userId, auctionId });
+            return true;
         }
-
-        if (category && category !== 'All Categories') {
-            // whereConditions.push(eq(auctions.categoryId, parseInt(category)));
-            whereConditions.push(eq(auctions.name, category));
-        }
-
-        const whereClause = whereConditions.length > 0 ? and(...whereConditions) : undefined;
-
-        baseQuery.where(whereClause);
-        
-        // baseQuery.orderBy(desc(auctions.end_time));
-
-        return await baseQuery;
-    }
+    },
 
 }
 

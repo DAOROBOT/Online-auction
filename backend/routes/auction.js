@@ -5,13 +5,16 @@ import { uploadProductImage } from "../config/cloudinary.js";
 
 const route = new Router();
 
-// GET: All Auctions
-route.get('/', auctionController.list);
+// GET: Top Auctions
+route.get('/top', auctionController.listTop);
 
 // Get: Specific Auction
-route.get('/:id', auctionController.get);
+// route.get('/:id', auctionController.get);
 
 route.use(requireAuth);
+
+// GET: Personal Auctions
+route.get('/profile', auctionController.listProfile);
 
 // POST: Create New Auction
 route.post('/', requireSeller, uploadProductImage.array('images', 10), auctionController.create);

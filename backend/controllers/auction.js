@@ -2,13 +2,42 @@ import auctionService from "../services/auction.js";
 
 const controller = {
     
-    // GET /auctions
-    list: async function(req, res, next) {
+    // GET /auctions/top
+    listTop: async function(req, res, next) {
         try {
-            const auctions = await auctionService.findAll();
+            const { userId, status, sortBy, page, limit } = req.query;
+            const viewId = req.user ? req.user.id : null;
+            
+            const auctions = await auctionService.findByOrder({ 
+                userId: userId ? parseInt(userId) : null,
+                viewId: viewId ? parseInt(viewId) : null,
+                status: status || 'active',
+                sortBy: sortBy || 'newest',
+                page: page ? parseInt(page) : 1,
+                limit: limit ? parseInt(limit) : 5,
+            });
+
             res.json(auctions);
         } catch (error) {
             next(error);
+        }
+    },
+
+    listProfile: async function(req, res, next) {
+        try {
+            const { username, status, category } = req.query;
+
+            if (!username || !status) {
+                return res.status(400).json({ error: "Missing Required Fields" });
+            }
+
+            const results = await auctionService.findByStatus(username, status, category);
+
+            return res.status(200).json(results);
+
+        } catch (error) {
+            console.error("Tab Query Error:", error);
+            return res.status(500).json({ error: "Internal Server Error" });
         }
     },
 
