@@ -1,5 +1,5 @@
 import db from "../db/index.js"
-import { auctions, categories, auctionImages, bids } from "../db/schema.js"
+import { auctions, categories, userFavorites, bids } from "../db/schema.js"
 import { sql, eq, or, and, desc, asc, count, inArray, gte, lte } from "drizzle-orm";
 
 const service = {
@@ -7,6 +7,7 @@ const service = {
         return db.select().from(auctions);
     },
     findAuctions: async function({
+        userId = null,
         q = '',
         category = null,
         minPrice = null,
@@ -153,41 +154,35 @@ const service = {
 
         const totalItems = countResult.length > 0 ? parseInt(countResult[0].count) : 0;
 
+        let favoriteAuctions = new Set();
+        
+        if (results.length > 0) {
+            const auctionIds = results.map(a => a.id);
+            
+            const favorites = await db.select({ auctionId: userFavorites.auctionId })
+                .from(userFavorites)
+                .where(and(
+                    eq(userFavorites.userId, userId),
+                    inArray(userFavorites.auctionId, auctionIds)
+                ));
+
+            favoriteAuctions = new Set(favorites.map(f => f.auctionId));
+        }
+
         return {
-            data: results.map(row => {
-                const highestBid = row.bids[0]; // Logic handled by 'limit: 1' in query
-                const primaryImg = row.images[0]?.imageUrl || 'https://via.placeholder.com/300';
-
+            data: results.map(auction => {
+                const sellerRating = auction.seller.ratingCount > 0 ? (auction.seller.positiveRatingCount / auction.seller.ratingCount) * 100 : 100;
                 return {
-                    id: row.id,
-                    title: row.title,
-                    currentPrice: parseFloat(row.currentPrice),
-                    startingPrice: row.startingPrice ? parseFloat(row.startingPrice) : null,
-                    buyNowPrice: row.buyNowPrice ? parseFloat(row.buyNowPrice) : null,
-                    endTime: row.endTime,
-                    createdAt: row.createdAt,
-                    bidCount: parseInt(row.bidCount || 0),
-                    status: row.status,
-                    
-                    // Mapped Relations
-                    category: row.category?.name,
-                    categoryName: row.category?.name,
-                    sellerName: row.seller?.fullName,
-                    sellerId: row.sellerId,
-                    primaryImage: primaryImg,
-                    image: primaryImg,
-                    
+                    ...auction,
+                    image: auction.images.find(img => img.isPrimary)?.imageUrl || auction.images[0]?.imageUrl || null,
                     seller: {
-                        name: row.seller?.fullName
+                        username: auction.seller.username,
+                        rating: parseFloat(sellerRating.toFixed(1)),
                     },
-
-                    highestBidder: highestBid ? {
-                        id: highestBid.bidderId,
-                        name: highestBid.bidder?.fullName,
-                        amount: parseFloat(highestBid.amount)
-                    } : null
-                };
-            }),
+                    category: auction.category?.name || 'Uncategorized',
+                    bids: auction.bids[0],
+                    isFavorited: favoriteAuctions?.has(auction.id)
+            }}),
             total: totalItems
         };
     },

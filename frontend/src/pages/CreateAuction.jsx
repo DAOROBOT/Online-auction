@@ -29,6 +29,7 @@ export default function CreateAuction() {
     categoryId: "", 
     endTime: "",
     autoExtend: true,
+    allowNewbies: true,
     images: [],
   });
 
@@ -289,6 +290,23 @@ export default function CreateAuction() {
                             Enable Auto-Extend
                             <span className="block text-xs text-(--text-muted) font-normal">
                                 Extends 5 mins if bid placed in last 5 mins
+                            </span>
+                        </label>
+                    </div>
+
+                    {/* Option: Allow Newbies */}
+                    <div className="bg-[var(--bg-subtle)] p-4 rounded-xl border border-[var(--border)] flex items-start gap-3 mt-4">
+                        <input 
+                            type="checkbox" 
+                            id="allowNewbies"
+                            checked={formData.allowNewbies}
+                            onChange={(e) => setFormData({...formData, allowNewbies: e.target.checked})}
+                            className="mt-1 w-5 h-5 rounded border-gray-300 text-[var(--accent)] focus:ring-[var(--accent)]"
+                        />
+                        <label htmlFor="allowNewbies" className="cursor-pointer">
+                            <span className="block font-bold text-[var(--text)]">Allow New Bidders</span>
+                            <span className="text-sm text-[var(--text-muted)]">
+                                If unchecked, users with 0 ratings cannot bid on this item.
                             </span>
                         </label>
                     </div>

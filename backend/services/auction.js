@@ -1,5 +1,5 @@
 import db from "../db/index.js"
-import { categories, auctions, auctionImages, users, userFavorites, bids, descriptionLogs, comments } from "../db/schema.js"
+import { categories, auctions, auctionImages, users, userFavorites, bids, descriptionLogs, comments, orders } from "../db/schema.js"
 import { sql, and, or, eq, gte, asc, desc, inArray } from "drizzle-orm";
 
 const service = {
@@ -205,13 +205,101 @@ const service = {
         }});
     },
 
-    // Tìm thông tin 1 sản phẩm
+    // Tìm thông tin chi tiết 1 sản phẩm (ProductDetail page)
     findById: async function(id) {
-        return await db.query.auctions.findFirst({
+        const auction = await db.query.auctions.findFirst({
             where: eq(auctions.id, id),
-            with: {category : {columns : {name : true}}},
-            limit: 1,
+            with: {
+                category: {
+                    columns: { id: true, name: true }
+                },
+                seller: {
+                    columns: {
+                        id: true,
+                        username: true,
+                        fullName: true,
+                        avatarUrl: true,
+                        ratingCount: true,
+                        positiveRatingCount: true
+                    }
+                },
+                winner: {
+                    columns: {
+                        id: true,
+                        username: true,
+                        fullName: true,
+                        avatarUrl: true
+                    }
+                },
+                images: true,
+            },
         });
+
+        if (!auction) return null;
+
+        // Calculate seller rating
+        const sellerRating = auction.seller.ratingCount > 0 
+            ? (auction.seller.positiveRatingCount / auction.seller.ratingCount) * 100 
+            : 100;
+
+        // Get primary image
+        const primaryImage = auction.images?.find(img => img.isPrimary)?.imageUrl 
+            || auction.images?.[0]?.imageUrl 
+            || null;
+
+        // Return formatted data for ProductDetail
+        return {
+            id: auction.id,
+            title: auction.title,
+            description: auction.description,
+            
+            // Pricing
+            startingPrice: auction.startingPrice,
+            currentPrice: auction.currentPrice,
+            stepPrice: auction.stepPrice,
+            biddingStep: auction.stepPrice, // Alias for frontend compatibility
+            buyNowPrice: auction.buyNowPrice,
+            
+            // Status & Timing
+            status: auction.status,
+            endTime: auction.endTime,
+            createdAt: auction.createdAt,
+            autoExtend: auction.autoExtend,
+            bidCount: auction.bidCount,
+            
+            // IDs for role checking
+            sellerId: auction.sellerId,
+            winnerId: auction.winnerId,
+            categoryId: auction.categoryId,
+            
+            // Seller info
+            sellerName: auction.seller?.username,
+            seller: {
+                id: auction.seller?.id,
+                username: auction.seller?.username,
+                fullName: auction.seller?.fullName,
+                avatarUrl: auction.seller?.avatarUrl,
+                rating: parseFloat(sellerRating.toFixed(1)),
+                ratingCount: auction.seller?.ratingCount || 0,
+            },
+            
+            // Winner info (if auction ended)
+            winnerName: auction.winner?.username || null,
+            winner: auction.winner ? {
+                id: auction.winner.id,
+                username: auction.winner.username,
+                fullName: auction.winner.fullName,
+                avatarUrl: auction.winner.avatarUrl,
+            } : null,
+            
+            // Category
+            category: auction.category,
+            categoryName: auction.category?.name || 'Uncategorized',
+            
+            // Images
+            image: primaryImage,
+            images: auction.images?.map(img => img.imageUrl) || [],
+        };
     },
 
     findImages: async function(id) {
@@ -253,15 +341,22 @@ const service = {
     },
 
     findDescription: async function(id) {
-        return await db.query.descriptionLogs.findMany({
+        // Get current description from auctions table
+        const auction = await db.query.auctions.findFirst({
+            where: eq(auctions.id, id),
+            columns: { description: true }
+        });
+
+        // Get history from descriptionLogs
+        const logs = await db.query.descriptionLogs.findMany({
             where: eq(descriptionLogs.auctionId, id),
             orderBy: [desc(descriptionLogs.editedAt)]
         });
 
-        // return {
-        //     current: logs.length > 0 ? logs[0].contentSnapshot : null,
-        //     history: logs
-        // };
+        return {
+            description: auction?.description || "",
+            history: logs
+        };
     },
 
     findComments: async function(id) {
@@ -377,6 +472,31 @@ const service = {
         await db.update(auctions).set(auc).where(eq(auctions.id, id));
     },
 
+    updateDescription: async function(id, description) {
+        // Get current description to log history
+        const auction = await db.query.auctions.findFirst({
+            where: eq(auctions.id, id),
+            columns: { description: true }
+        });
+
+        // Log current description to history before updating
+        if (auction?.description) {
+            await db.insert(descriptionLogs).values({
+                auctionId: id,
+                contentSnapshot: auction.description,
+                editedAt: new Date()
+            });
+        }
+
+        // Update to new description
+        const [updated] = await db.update(auctions)
+            .set({ description })
+            .where(eq(auctions.id, id))
+            .returning({ description: auctions.description });
+
+        return updated;
+    },
+
     delete: async function(id){
         await db.delete(auctionImages).where(eq(auctionImages.auctionId, id));
         await db.delete(auctions).where(eq(auctions.id, id));
@@ -400,6 +520,32 @@ const service = {
             if (auction.status !== 'active') throw new Error("Auction is not active");
             if (new Date(auction.endTime) < new Date()) throw new Error("Auction has ended");
             if (auction.sellerId === userId) throw new Error("Seller cannot bid on their own product");
+
+            //CHECK ĐIỂM TÍN NHIỆM (80% RULE)
+            // Lấy thông tin Bidder hiện tại (người đang ra giá)
+            const bidder = await tx.query.users.findFirst({
+                where: eq(users.id, userId)
+            });
+
+            if (!bidder) throw new Error("Bidder not found");
+
+            const totalRatings = bidder.ratingCount || 0; // Tổng số lần được đánh giá
+            const positiveRatings = bidder.positiveRatingCount || 0; // Số like (+)
+
+            if (totalRatings > 0) {
+                // TRƯỜNG HỢP 1: Đã từng được đánh giá
+                const scorePercentage = (positiveRatings / totalRatings) * 100;
+                if (scorePercentage < 80) {
+                    throw new Error(`Your rating score (${scorePercentage.toFixed(1)}%) is too low. Required: 80%`);
+                }
+            } else {
+                // TRƯỜNG HỢP 2: Chưa từng được đánh giá (Newbie)
+                // Kiểm tra xem người bán có cho phép không
+                if (auction.allowNewbies === false) {
+                    throw new Error("This seller does not accept bids from users with no rating history.");
+                }
+            }
+            // Kết thúc check điểm tín nhiệm
 
             const currentPrice = Number(auction.currentPrice);
             const stepPrice = Number(auction.stepPrice);
@@ -513,6 +659,66 @@ const service = {
 
                 return { status: "success", message: "You are the highest bidder!", currentPrice: priceToWin };
             }
+        });
+    },
+
+    // Buy Now - End auction immediately and create order
+    buyNow: async function(auctionId, buyerId) {
+        return await db.transaction(async (tx) => {
+            // 1. Get auction details
+            const auction = await tx.query.auctions.findFirst({
+                where: eq(auctions.id, auctionId)
+            });
+
+            console.log("Found auction:", auction);
+
+            if (!auction) {
+                throw new Error('Auction not found');
+            }
+
+            // 2. Validate auction state
+            if (auction.status !== 'active') {
+                throw new Error('Auction is not active');
+            }
+
+            if (!auction.buyNowPrice) {
+                throw new Error('This auction does not have a Buy Now option');
+            }
+
+            // 3. Prevent seller from buying their own item
+            if (auction.sellerId === buyerId) {
+                throw new Error('You cannot buy your own auction');
+            }
+
+            // 4. End the auction immediately
+            await tx.update(auctions).set({
+                status: 'ended',
+                currentPrice: auction.buyNowPrice,
+                winnerId: buyerId,
+                endTime: new Date() // End now
+            }).where(eq(auctions.id, auctionId));
+
+            console.log("Auction updated, creating order...");
+
+            // 5. Create order for payment
+            const [newOrder] = await tx.insert(orders).values({
+                auctionId: auctionId,
+                buyerId: buyerId,
+                sellerId: auction.sellerId,
+                finalPrice: String(auction.buyNowPrice), // Convert to string for decimal
+                status: 'pending_payment',
+                createdAt: new Date(),
+                updatedAt: new Date()
+            }).returning();
+
+            console.log("Order created:", newOrder);
+
+            return {
+                status: 'success',
+                message: 'Purchase successful! Redirecting to payment...',
+                orderId: newOrder.id,
+                finalPrice: auction.buyNowPrice
+            };
         });
     }
 

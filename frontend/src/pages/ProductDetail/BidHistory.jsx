@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { TrendingUp, Gavel, Activity, Filter, Ban, Eye, EyeOff, Flame, Zap, Trophy, Clock, User, DollarSign } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { products as productService} from '../../data/index';
-import { formatBidderName, formatCurrency, formatTimeAgo } from '../../utils/format';
 import auctionService from '../../services/auctionService';
+import { formatBidderName, formatCurrency, formatTimeAgo } from '../../utils/format';
 
 export default function BidHistory({ productId, sellerId }) {
   const { user } = useAuth();
@@ -52,13 +51,12 @@ export default function BidHistory({ productId, sellerId }) {
   };
 
   const isSeller = user?.userId === Number(sellerId);
-  console.log(isSeller, user?.userId, sellerId);
   const totalBids = bids?.length;
   const uniqueBidders = new Set(bids?.map(b => b.bidderId)).size;
 
   // Logic to separate the leading bid
   const showLeadingBid = filter === 'all' || filter === 'recent' && bids?.length > 0;
-  const leadingBid = showLeadingBid ? bids[0] : null;
+  const leadingBid = showLeadingBid && bids ? bids[0] : null;
   const historyBids = showLeadingBid ? bids?.slice(1) : bids;
 
   if (loading) return <div className="p-12 text-center text-(--text-muted)">Loading bid history...</div>;
@@ -179,11 +177,11 @@ export default function BidHistory({ productId, sellerId }) {
                 <div className="divide-y max-h-[500px] overflow-y-auto custom-scrollbar" style={{ borderColor: 'var(--border)' }}>
                     {historyBids?.map((bid, index) => {
                         return (
-                          <div className="relative group">
-                            <div key={bid.id} 
-                                 className="grid grid-cols-12 gap-4 px-6 py-3.5 transition-colors hover:bg-(--bg-hover)"
-                                 style={{ backgroundColor: bid.isCurrentUser ? 'var(--accent-soft)' : 'transparent' }}>
-                                
+                          <div key={bid.id} className="relative group">
+                            <div 
+                              className="grid grid-cols-12 gap-4 px-6 py-3.5 transition-colors hover:bg-(--bg-hover)"
+                              style={{ backgroundColor: bid.isCurrentUser ? 'var(--accent-soft)' : 'transparent' }}>
+                            
                                 {/* Time */}
                                 <div className="col-span-4 flex flex-col justify-center">
                                     <span className="font-bold text-sm" style={{ color: 'var(--text)' }}>{formatTimeAgo(bid.bidTime)}</span>

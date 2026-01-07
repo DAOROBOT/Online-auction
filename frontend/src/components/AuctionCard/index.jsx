@@ -41,21 +41,21 @@ export default function AuctionCard({ product }) {
     }
   };
 
-  // const [timeLeft, setTimeLeft] = useState('');
+  const [timeLeft, setTimeLeft] = useState('');
   const [urgencyLevel, setUrgencyLevel] = useState('normal');
 
   const isNew = (new Date() - new Date(product.createdAt) < 96 * 60 * 60 * 1000);
 
-  // useEffect(() => {
-  //   const updateTimeLeft = () => {
-  //     const { timeLeft, urgencyLevel } = formatTimeLeft(product.endTime);
-  //     setTimeLeft(timeLeft);
-  //     setUrgencyLevel(urgencyLevel);
-  //   };
-  //   updateTimeLeft();
-  //   const timer = setInterval(updateTimeLeft, 60000);
-  //   return () => clearInterval(timer);
-  // }, [product.endTime]);
+  useEffect(() => {
+    const updateTimeLeft = () => {
+      const { timeLeft, urgencyLevel } = formatTimeLeft(product.endTime);
+      setTimeLeft(timeLeft);
+      setUrgencyLevel(urgencyLevel);
+    };
+    updateTimeLeft();
+    const timer = setInterval(updateTimeLeft, 60000);
+    return () => clearInterval(timer);
+  }, [product.endTime]);
 
   const handleCardClick = () => {
     // if (product.status == 'active')
@@ -121,7 +121,7 @@ export default function AuctionCard({ product }) {
           {/* Timer Badge */}
           <div className={`absolute bottom-3 left-3 px-3 py-1.5 rounded-lg backdrop-blur-md text-xs font-bold flex items-center gap-1.5 shadow-sm ${timerStyles[urgencyLevel]}`}>
             <Clock size={14} />
-            <span>{product.endTime}</span>
+            <span>{timeLeft}</span>
           </div>
         </div>
 

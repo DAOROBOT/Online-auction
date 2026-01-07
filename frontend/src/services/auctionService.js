@@ -7,6 +7,12 @@ const auctionService = {
     if (!res.ok) throw new Error('Failed to fetch auction details');
     return res.json();
   },
+
+  getCategories: async () => {
+    const res = await fetch(`${API_URL}/categories`);
+    if (!res.ok) throw new Error('Failed to fetch categories');
+    return res.json();
+  },
   
   // 1. Lấy ảnh
   getImages: async (id) => {
@@ -19,6 +25,21 @@ const auctionService = {
   getDescription: async (id) => {
     const res = await fetch(`${API_URL}/auction/description/${id}`);
     if (!res.ok) return { description: "" };
+    return res.json();
+  },
+
+  // 2b. Cập nhật mô tả (chỉ dành cho seller)
+  updateDescription: async (id, description) => {
+    const token = localStorage.getItem('authToken');
+    const res = await fetch(`${API_URL}/auction/${id}/description`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ description })
+    });
+    if (!res.ok) throw new Error('Failed to update description');
     return res.json();
   },
 
@@ -63,8 +84,7 @@ const auctionService = {
       const token = localStorage.getItem('authToken');
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
       const response = await fetch(`${API_URL}/auction/profile?${queryParams.toString()}`, { headers });
-      if (!response.ok) throw new Error('Failed to fetch tab data');
-      return response.json();
+      return response; // Return the Response object, let caller handle parsing
   },
 
   rejectBid: async (productId, bidId) => {
@@ -73,6 +93,8 @@ const auctionService = {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${token}` },
     });
+    if (!res.ok) throw new Error('Failed to reject bid');
+    return res.json();
   },
 
   uploadImage: async (file) => {
@@ -111,6 +133,21 @@ const auctionService = {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || 'Failed to place bid');
+    return data;
+  },
+
+  // Buy Now - End auction immediately at buyNowPrice
+  buyNow: async (auctionId) => {
+    const token = localStorage.getItem('authToken');
+    const res = await fetch(`${API_URL}/auction/${auctionId}/buy-now`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Failed to buy now');
     return data;
   }
 };
