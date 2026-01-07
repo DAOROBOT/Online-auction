@@ -14,7 +14,7 @@ export default function Hero() {
         gradient: "from-amber-600 to-orange-600 dark:from-[#F9E400] dark:to-[#F5004F]", 
         description: "You are all set. Check out the latest listings or manage your active bids from your dashboard.",
         primaryBtn: { text: "Browse Auctions", action: nav.activeListings },
-        secondaryBtn: { text: "My Dashboard", action: nav.me },
+        secondaryBtn: { text: "My Dashboard", action: nav.admin },
       }
     : {
         tag: "Premium Marketplace",
