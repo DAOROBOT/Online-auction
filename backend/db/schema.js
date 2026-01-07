@@ -96,20 +96,9 @@ export const bids = pgTable('bids', {
   auctionId: integer('auction_id').notNull().references(() => auctions.id, { onDelete: 'cascade' }),
   bidderId: integer('bidder_id').notNull().references(() => users.id),
   amount: decimal('amount', { precision: 15, scale: 0 }).notNull(),
+  maxAmount: decimal('max_amount', { precision: 15, scale: 0 }),
   bidTime: timestamp('bid_time', { withTimezone: true }).defaultNow(),
 });
-
-// --- 6. AUTO BIDS ---
-export const autoBids = pgTable('auto_bids', {
-  id: serial('id').primaryKey(),
-  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  auctionId: integer('auction_id').notNull().references(() => auctions.id, { onDelete: 'cascade' }),
-  maxAmount: decimal('max_amount', { precision: 15, scale: 0 }).notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-}, (t) => ({
-  unq: unique().on(t.userId, t.auctionId), // Ràng buộc unique
-}));
 
 export const reviews = pgTable('reviews', {
   id: serial('review_id').primaryKey(),
@@ -268,13 +257,3 @@ export const bidsRelations = relations(bids, ({ one }) => ({
   }),
 }));
 
-export const autoBidsRelations = relations(autoBids, ({ one }) => ({
-  user: one(users, {
-    fields: [autoBids.userId],
-    references: [users.id],
-  }),
-  auction: one(auctions, {
-    fields: [autoBids.auctionId],
-    references: [auctions.id],
-  }),
-}));
