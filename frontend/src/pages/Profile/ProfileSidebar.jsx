@@ -4,16 +4,18 @@ import { useNav } from '../../hooks/useNavigate';
 
 import { 
   MapPin, Calendar, Link as LinkIcon, Share2, MoreHorizontal, ShieldCheck, 
-  MessageCircle, UserPlus, Camera, ThumbsUp, ThumbsDown, LogOut, Save, X
+  MessageCircle, UserPlus, Camera, ThumbsUp, ThumbsDown, LogOut, Save, X, Star, Key
 } from "lucide-react";
 
 import ImageUploadModal from '../../components/ImageUploadModal';
+import ChangePasswordModal from '../../components/ChangePasswordModal';
 import { formatDate } from '../../utils/format';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export default function ProfileSidebar({ userData, isOwnProfile }) {
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+    const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     
     const [formData, setFormData] = useState({
@@ -222,8 +224,63 @@ export default function ProfileSidebar({ userData, isOwnProfile }) {
                             </div>
                             <div className="w-px h-8 bg-(--border)"></div>
                             <div className="text-center flex-1">
-                                <div className="text-lg font-bold text-(--success)">{userData.rating?.percentage || 100}%</div>
-                                <div className="text-[10px] text-(--text-muted) font-bold uppercase tracking-wider">Trust</div>
+                                <div className="text-lg font-bold text-(--text)">{userData.counts?.totalSoldItems || 0}</div>
+                                <div className="text-[10px] text-(--text-muted) font-bold uppercase tracking-wider">SOLD</div>
+                            </div>
+                        </div>
+
+                        {/* Reviews Section */}
+                        <div className="mb-6 p-4 rounded-lg bg-(--bg-soft)/30 border border-(--border)">
+                            <div className="flex items-center justify-between mb-3">
+                                <h3 className="text-sm font-bold text-(--text) uppercase tracking-wider">Reviews</h3>
+                                <button 
+                                    onClick={() => nav.reviews(userData.username)}
+                                    className="text-xs text-(--accent) hover:underline font-medium"
+                                >
+                                    View All
+                                </button>
+                            </div>
+                            
+                            <div className="space-y-3">
+                                {/* Reviews Received */}
+                                <div className="flex items-center justify-between text-sm">
+                                    <div className="flex items-center gap-2 text-(--text-muted)">
+                                        <ThumbsUp size={14} className="text-green-500" />
+                                        <span>Received</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-(--text) font-bold">{userData.counts?.reviewsReceived?.positive || 0}</span>
+                                        <span className="text-(--text-muted)">/</span>
+                                        <span className="text-(--text-muted)">{userData.counts?.reviewsReceived?.total || 0}</span>
+                                    </div>
+                                </div>
+
+                                {/* Reviews Given */}
+                                <div className="flex items-center justify-between text-sm">
+                                    <div className="flex items-center gap-2 text-(--text-muted)">
+                                        <Star size={14} className="text-blue-500" />
+                                        <span>Given</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-(--text) font-bold">{userData.counts?.reviewsGiven?.positive || 0}</span>
+                                        <span className="text-(--text-muted)">/</span>
+                                        <span className="text-(--text-muted)">{userData.counts?.reviewsGiven?.total || 0}</span>
+                                    </div>
+                                </div>
+
+                                {/* Positive Rate */}
+                                <div className="pt-2 border-t border-(--border)">
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-(--text-muted)">Positive Rate</span>
+                                        <span className="text-(--success) font-bold text-base">{userData.counts?.reviewsReceived?.positiveRate || 0}%</span>
+                                    </div>
+                                    <div className="mt-2 h-2 bg-(--border) rounded-full overflow-hidden">
+                                        <div 
+                                            className="h-full bg-gradient-to-r from-green-500 to-green-400 transition-all duration-500"
+                                            style={{ width: `${userData.counts?.reviewsReceived?.positiveRate || 0}%` }}
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -244,22 +301,32 @@ export default function ProfileSidebar({ userData, isOwnProfile }) {
                         </div>
 
                         {/* Main CTA Buttons */}
-                        <div className="flex gap-3">
+                        <div className="space-y-3">
                             {isOwnProfile && (
                                 <>
                                     <button 
                                         onClick={() => setIsEditing(true)} 
-                                        className="flex-1 py-3 rounded-xl font-bold bg-(--text) text-(--bg) hover:opacity-90 transition-all shadow-lg flex items-center justify-center gap-2"
+                                        className="w-full py-3 rounded-xl font-bold bg-(--text) text-(--bg) hover:opacity-90 transition-all shadow-lg flex items-center justify-center gap-2"
                                     >
                                         Edit Profile
                                     </button>
-                                    <button 
-                                        onClick={handleLogout}
-                                        title="Log Out"
-                                        className="p-3 rounded-xl border border-(--border) hover:bg-red-50 dark:hover:bg-red-900/10 text-(--text) hover:text-red-600 hover:border-red-200 transition-colors"
-                                    >
-                                        <LogOut size={20} />
-                                    </button>
+                                    
+                                    <div className="flex gap-3">
+                                        <button 
+                                            onClick={() => setIsChangePasswordModalOpen(true)}
+                                            className="flex-1 py-3 rounded-xl font-bold border-2 border-(--border) hover:border-(--accent) text-(--text) hover:bg-(--bg-hover) transition-all flex items-center justify-center gap-2"
+                                        >
+                                            <Key size={18} />
+                                            <span>Change Password</span>
+                                        </button>
+                                        <button 
+                                            onClick={handleLogout}
+                                            title="Log Out"
+                                            className="p-3 rounded-xl border border-(--border) hover:bg-red-50 dark:hover:bg-red-900/10 text-(--text) hover:text-red-600 hover:border-red-200 transition-colors"
+                                        >
+                                            <LogOut size={20} />
+                                        </button>
+                                    </div>
                                 </>
                             )}
                         </div>
@@ -273,6 +340,12 @@ export default function ProfileSidebar({ userData, isOwnProfile }) {
                 onClose={() => setIsUploadModalOpen(false)} 
                 onUpload={handleAvatarUpload}
                 title="Update Profile Picture"
+            />
+
+            {/* CHANGE PASSWORD MODAL */}
+            <ChangePasswordModal 
+                isOpen={isChangePasswordModalOpen} 
+                onClose={() => setIsChangePasswordModalOpen(false)} 
             />
         </div>
     );

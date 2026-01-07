@@ -26,31 +26,35 @@ export default function Profile() {
   const [loadingTab, setLoadingTab] = useState(false);
 
   useEffect(() => {
+    const viewingOwnProfile = authUser && authUser.username === username;
+
     const fetchProfile = async () => {
       setLoadingProfile(true);
       try {
-        let response = await fetch(`${API_URL}/users/profile?username=${username}`);
+        const response = await fetch(`${API_URL}/users/profile?username=${username}`);
 
-        if (response) {
-          if (response.ok) {
-            const data = await response.json();
-            setUserData(data);
-          } else if (response.status === 401 && isOwnProfile) {
-            logout();
-          } else {
-            console.error("Failed to fetch profile");
-            setUserData(null);
-          }
+        if (!response) return;
+
+        if (response.ok) {
+          const data = await response.json();
+          setUserData(data);
+        } else if (response.status === 401 && viewingOwnProfile) {
+          // If the token is invalid while viewing own profile, log out
+          logout();
+        } else {
+          console.error("Failed to fetch profile");
+          setUserData(null);
         }
       } catch (error) {
-        console.error("Error fetching user profile:", error);
+        console.error("Error fetching profile:", error);
+        setUserData(null);
       } finally {
         setLoadingProfile(false);
       }
     };
-    
+
     fetchProfile();
-  }, [username, isOwnProfile, logout]);
+  }, [username]);
 
   useEffect(() => {
     if (!userData || !userData.id) return;
@@ -82,7 +86,7 @@ export default function Profile() {
     };
 
     fetchTabData();
-  }, [activeTab, userData, searchParams]);
+  }, [activeTab, category, userData]);
 
   const handleTabChange = (newTabId) => {
     setSearchParams(prev => {

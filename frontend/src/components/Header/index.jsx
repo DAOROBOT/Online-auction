@@ -6,7 +6,6 @@ import {
 } from 'lucide-react';
 
 import CategoryDropper from './CategoryDropper.jsx';
-import NotificationDropper from './NotificationDropper.jsx';
 import ProfileDropper from './ProfileDropper.jsx';
 import MobileMenu from './MobileMenu.jsx';
 import ThemeToggle from '../ThemeToggle.jsx';
@@ -152,7 +151,6 @@ export default function Header() {
                     </span>
                   </Link>
 
-                  <NotificationDropper />
                   <ProfileDropper user={user} logout={logout} />
                 </div>
               ) : (

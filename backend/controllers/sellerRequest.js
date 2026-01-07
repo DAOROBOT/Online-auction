@@ -151,7 +151,7 @@ const controller = {
             const updatedRequest = await sellerRequestService.updateStatus(
                 parseInt(id), 
                 'approved', 
-                // adminNote,
+                null,  // adminNote
                 request.userId  // Pass userId to update role immediately
             );
 

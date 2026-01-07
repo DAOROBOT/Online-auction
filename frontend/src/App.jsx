@@ -17,6 +17,8 @@ import NotFound from './pages/NotFound';
 import ForgetPassword from './pages/Auth/ForgetPassword';
 import BecomeSeller from './pages/BecomeSeller';
 import OrderCompletion from './pages/OrderCompletion';
+import Reviews from './pages/Reviews';
+import UserReviews from './pages/UserReviews';
 
 function App() {
   return (
@@ -38,6 +40,8 @@ function App() {
           <Route path="/search" element={<SearchPage />} />
           <Route path="/auction/:id" element={<ProductDetail />} />
           <Route path="/profile/:username" element={<Profile />} />
+          <Route path="/profile/:username/reviews" element={<UserReviews />} />
+          <Route path="/reviews" element={<Reviews />} />
 
           {/* --- STANDARD USERS --- */}
           <Route element={<ProtectedRoute />}>

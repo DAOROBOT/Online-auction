@@ -155,24 +155,24 @@ export const sendWelcomeEmail = async (to, username, verificationCode) => {
 };
 
 // Send login notification
-export const sendLoginNotification = async (to, username, loginDetails) => {
-  const htmlContent = `
-    <h2 style="color: #333; margin-bottom: 20px;">🔐 New Login Detected</h2>
-    <p style="color: #555;">Hello <strong>${username}</strong>,</p>
-    <p style="color: #555; line-height: 1.6;">We detected a new login to your account:</p>
+// export const sendLoginNotification = async (to, username, loginDetails) => {
+//   const htmlContent = `
+//     <h2 style="color: #333; margin-bottom: 20px;">🔐 New Login Detected</h2>
+//     <p style="color: #555;">Hello <strong>${username}</strong>,</p>
+//     <p style="color: #555; line-height: 1.6;">We detected a new login to your account:</p>
     
-    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-      <p style="margin: 5px 0;"><strong>Time:</strong> ${formatDate(new Date())}</p>
-      <p style="margin: 5px 0;"><strong>IP Address:</strong> ${loginDetails.ip || 'Unknown'}</p>
-      <p style="margin: 5px 0;"><strong>Device:</strong> ${loginDetails.device || 'Unknown'}</p>
-    </div>
+//     <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+//       <p style="margin: 5px 0;"><strong>Time:</strong> ${formatDate(new Date())}</p>
+//       <p style="margin: 5px 0;"><strong>IP Address:</strong> ${loginDetails.ip || 'Unknown'}</p>
+//       <p style="margin: 5px 0;"><strong>Device:</strong> ${loginDetails.device || 'Unknown'}</p>
+//     </div>
     
-    <p style="color: #555;">If this was you, you can safely ignore this email.</p>
-    <p style="color: #d9534f;"><strong>If you didn't log in, please secure your account immediately by changing your password.</strong></p>
-  `;
+//     <p style="color: #555;">If this was you, you can safely ignore this email.</p>
+//     <p style="color: #d9534f;"><strong>If you didn't log in, please secure your account immediately by changing your password.</strong></p>
+//   `;
 
-  return sendEmailViaAPI(to, '🔐 New Login to Your Account', htmlContent);
-};
+//   return sendEmailViaAPI(to, '🔐 New Login to Your Account', htmlContent);
+// };
 
 // Send password reset OTP
 export const sendPasswordResetOTP = async (to, username, otp) => {
@@ -194,25 +194,25 @@ export const sendPasswordResetOTP = async (to, username, otp) => {
 };
 
 // Send password reset email with link
-export const sendPasswordResetEmail = async (to, username, resetToken) => {
-  const resetUrl = `${FRONTEND_URL}/reset-password?token=${resetToken}`;
+// export const sendPasswordResetEmail = async (to, username, resetToken) => {
+//   const resetUrl = `${FRONTEND_URL}/reset-password?token=${resetToken}`;
 
-  const htmlContent = `
-    <h2 style="color: #333; margin-bottom: 20px;">🔑 Password Reset Request</h2>
-    <p style="color: #555;">Hello <strong>${username}</strong>,</p>
-    <p style="color: #555; line-height: 1.6;">We received a request to reset your password. Click the button below to reset it:</p>
+//   const htmlContent = `
+//     <h2 style="color: #333; margin-bottom: 20px;">🔑 Password Reset Request</h2>
+//     <p style="color: #555;">Hello <strong>${username}</strong>,</p>
+//     <p style="color: #555; line-height: 1.6;">We received a request to reset your password. Click the button below to reset it:</p>
     
-    ${ctaButton('Reset Password', resetUrl, '#007bff')}
+//     ${ctaButton('Reset Password', resetUrl, '#007bff')}
     
-    <p style="color: #888; font-size: 13px;">Or copy and paste this link into your browser:</p>
-    <p style="color: #007bff; word-break: break-all; font-size: 12px;">${resetUrl}</p>
+//     <p style="color: #888; font-size: 13px;">Or copy and paste this link into your browser:</p>
+//     <p style="color: #007bff; word-break: break-all; font-size: 12px;">${resetUrl}</p>
     
-    <p style="color: #d9534f;"><strong>This link will expire in 1 hour.</strong></p>
-    <p style="color: #888; font-size: 13px;">If you didn't request this, please ignore this email.</p>
-  `;
+//     <p style="color: #d9534f;"><strong>This link will expire in 1 hour.</strong></p>
+//     <p style="color: #888; font-size: 13px;">If you didn't request this, please ignore this email.</p>
+//   `;
 
-  return sendEmailViaAPI(to, '🔑 Password Reset Request - Online Auction', htmlContent);
-};
+//   return sendEmailViaAPI(to, '🔑 Password Reset Request - Online Auction', htmlContent);
+// };
 
 // Send email verification
 export const sendEmailVerification = async (to, username, verificationToken) => {
@@ -556,6 +556,37 @@ export const sendAnswerToAllParticipants = async (recipients, auction, seller, q
 };
 
 /**
+ * Send change password OTP
+ * Sends a 6-digit OTP to the user's email for password change verification
+ */
+export const sendChangePasswordOTP = async (to, username, otp) => {
+  const htmlContent = `
+    <h2 style="color: #333; margin-bottom: 20px;">🔐 Password Change Request</h2>
+    <p style="color: #555;">Hello <strong>${username}</strong>,</p>
+    <p style="color: #555; line-height: 1.6;">You requested to change your password. Please use the following verification code:</p>
+    
+    <div style="background: linear-gradient(135deg, #E0B84C 0%, #d4a83a 100%); border-radius: 12px; padding: 30px; margin: 30px 0; text-align: center;">
+      <p style="margin: 0 0 10px 0; color: #1a1205; font-size: 14px; text-transform: uppercase; letter-spacing: 2px;">Verification Code</p>
+      <p style="margin: 0; color: #1a1205; font-size: 42px; font-weight: bold; letter-spacing: 8px; font-family: 'Courier New', monospace;">${otp}</p>
+    </div>
+    
+    <p style="color: #d9534f; font-weight: 600;">⏰ This code will expire in 10 minutes.</p>
+    
+    <p style="color: #555; line-height: 1.6;">
+      If you didn't request a password change, please ignore this email and ensure your account is secure.
+    </p>
+    
+    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;">
+      <p style="margin: 0; color: #856404; font-size: 13px;">
+        🔒 <strong>Security Tip:</strong> Never share this code with anyone. Our staff will never ask for your verification code.
+      </p>
+    </div>
+  `;
+
+  return sendEmailViaAPI(to, '🔐 Password Change Verification Code', htmlContent);
+};
+
+/**
  *  10. REJECTED REQUEST TO SELLER - SEND TO BUYER
  *  Notifies the buyer that their request to become a seller was rejected
  */
@@ -609,10 +640,9 @@ export const sendEmail = async (to, subject, html) => {
 export default {
   // Auth emails
   sendWelcomeEmail,
-  sendLoginNotification,
   sendPasswordResetOTP,
-  sendPasswordResetEmail,
   sendEmailVerification,
+  sendChangePasswordOTP,
   
   // Bidding emails
   sendNewBidToSeller,

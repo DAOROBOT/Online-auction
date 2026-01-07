@@ -28,6 +28,12 @@ route.post('/verify-reset-otp', authController.verifyResetOtp);
 // POST: reset password
 route.post('/reset-password', authController.resetPassword);
 
+// POST: request change password OTP (protected)
+route.post('/change-password/request-otp', requireAuth, authController.requestChangePasswordOTP);
+
+// POST: verify OTP and change password (protected)
+route.post('/change-password/verify', requireAuth, authController.verifyOTPAndChangePassword);
+
 // ==================== Google OAuth ====================
 route.get('/google', authController.authenticateGoogle);
 
