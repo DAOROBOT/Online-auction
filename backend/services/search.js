@@ -2,9 +2,14 @@ import db from "../db/index.js"
 import { auctions, categories, userFavorites, bids } from "../db/schema.js"
 import { sql, eq, or, and, desc, asc, count, inArray, gte, lte } from "drizzle-orm";
 
+function hellojs()
+{
+    return console.log("Hello world");
+}
 const service = {
     findAll: async function(){
         return db.select().from(auctions);
+        hellojs();
     },
     findAuctions: async function({
         userId = null,
